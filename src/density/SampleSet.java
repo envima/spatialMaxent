@@ -171,7 +171,7 @@ public class SampleSet {
 	return DoubleIndexSort.sort(rnd);
     }
 
-	SampleSet splitForCV(int n) {  // returns sampleset of test data
+	 SampleSet splitForCV(int n) {  // returns sampleset of test data
 	String[] names = getNames();
 	SampleSet testss = new SampleSet();
 	for (int i=0; i<names.length; i++) {
@@ -204,30 +204,125 @@ public class SampleSet {
 
 
 
+public static void main (String[] args){
+
+	final Params params = new Params();
+	params.setOutputdirectory("D:\\maxent\\outputs");
+	params.setEnvironmentallayers("D:\\maxent\\layers");
+	params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial.csv");
+	params.setSelections();
+	Runner runner = new Runner(params);
+	runner.start();
+
+	SampleSet sampleSet = runner.sampleSet;
+	/*System.out.println(sampleSet.dimension);
+	System.out.println(sampleSet.header);
+	System.out.println(sampleSet);*/
 
 
+	String[] names = sampleSet.getNames();
+	String[] result = (String[]) sampleSet.speciesMap.keySet().toArray(new String[0]);
+/*
+	 ArrayList<String[]> data = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
+
+	for (int i = 0; i < data.size(); i++){
+
+		for (int j = 0; j < data.get(i).length; j++){
+			System.out.println("Value " + data.get(i)[j] + "\n");
+
+		}
+		//printWriter.print("Length " + data.get(j). + "\n");
+	}
+*/
+
+
+	sampleSet.speciesMap.get(1);
+	System.out.println(sampleSet.speciesMap.get("bradypus_variegatus]"));
+	System.out.println(Arrays.toString(names));
+	System.out.println(sampleSet.header.toString());
+	//System.out.println(Arrays.toString(sampleSet.speciesMap.get("bradypus_variegatus")));
+	ArrayList old = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
+	System.out.println(old);
+	System.out.println(old.size());
+	System.out.println(old.get(1).toString());
+/*
+	for (int i = 0; i < old.size(); i++){
+
+		for (int j = 0; j < old.get(i).size(); j++){
+			System.out.println("Value " + old.get(i)[j] + "\n");
+
+		}
+		//printWriter.print("Length " + data.get(j). + "\n");
+	}*/
+	
+	int num = old.size() < 10 ? old.size() : 10;
+	System.out.println(num);
+	int[] order = sampleSet.randomPermutation(old.size());
+	System.out.println(Arrays.toString(order));
+	int fold = order[0] % num;
+	System.out.println(fold);
+}
 
 
 
 	SampleSet splitForSpatialCV(int n) {  // returns sampleset of test data
-		String[] names = getNames();
+		String[] names = getNames(); /**[bradypus_variegatus]**/
 		SampleSet testss = new SampleSet();
-		for (int i=0; i<names.length; i++) {
-			ArrayList old = (ArrayList) speciesMap.get(names[i]);
+		for (int i=0; i<names.length; i++) { // ist 1
+			ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
 
-			int[] order = randomPermutation(old.size());
-			int num = old.size() < n ? old.size() : n;
-			ArrayList[] train = new ArrayList[num];
+			int[] order = randomPermutation(old.size()); //114 =old.size 114 rows in df
+			int num = Math.min(old.size(), n); //minimum ist 10
+			ArrayList[] train = new ArrayList[num]; // arraylist mit je 10 elementen
 			ArrayList[] test = new ArrayList[num];
-			for (int j=0; j<num; j++) {
+			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
 				train[j] = new ArrayList();
 				test[j] = new ArrayList();
-			}
-			for (int k=0; k<old.size(); k++) {
-				int fold = order[k] % num;
-				test[fold].add(old.get(k));
+			} // here data gets split in cv Folds!
+			for (int k=0; k<old.size(); k++) { // k = 1:114 & num = 10
+				int fold = order[k] % num; // to one of 10 folds
+				test[fold].add(old.get(k)); // add row to array
 				for (int j=0; j<num; j++)
-					if (j!=fold) train[j].add(old.get(k));
+					if (j!=fold) train[j].add(old.get(k)); // add everything that is not in test fold to train
+			}
+			for (int j=0; j<num; j++) {
+				speciesMap.put(names[i]+"_"+j, train[j]);
+				testss.speciesMap.put(names[i]+"_"+j, test[j]);
+			}
+		}
+		return testss;
+	}
+
+	SampleSet splitForSpatialCV2(int n) {  // returns sampleset of test data
+		String[] names = getNames(); /**[bradypus_variegatus]**/
+		SampleSet testss = new SampleSet();
+
+
+
+		for (int i=0; i<names.length; i++) { // ist 1
+			ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values / all observations
+			String[] locations = getLocations();
+			ArrayList[] train = new ArrayList[locations.length]; // arraylist mit je 10 elementen
+			ArrayList[] test = new ArrayList[locations.length];
+
+			for (int l=0; l<locations.length; l++) {
+
+				/** for each location l add all rows with l to test datensatz,
+				 * alle anderen zum trainingsdatensatz**/
+			}
+			int[] order = randomPermutation(old.size()); //114 =old.size 114 rows in df
+			int num = Math.min(old.size(), n); //minimum ist 10
+
+
+			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
+				train[j] = new ArrayList();
+				test[j] = new ArrayList();
+			} // here data gets split in cv Folds!
+			for (int k=0; k<old.size(); k++) { // k = 1:114 & num = 10
+				int fold = order[k] % num; // to one of 10 folds
+				test[fold].add(old.get(k)); // add row to array
+				for (int j=0; j<num; j++)
+					if (j!=fold) train[j].add(old.get(k)); // add everything that is not in test fold to train
 			}
 			for (int j=0; j<num; j++) {
 				speciesMap.put(names[i]+"_"+j, train[j]);
@@ -240,7 +335,27 @@ public class SampleSet {
 
 
 
-
+	public String[] getLocations() {
+		String[] result = (String[]) speciesMap.keySet().toArray(new String[0]);
+		// sort with numerical suffix sorted numerically
+		Arrays.sort(result, new Comparator<String>() {
+			public int compare(String s1, String s2) {
+				if (s1.indexOf("_")==-1 || s2.indexOf("_")==-1)
+					return s1.compareTo(s2);
+				int loc1=s1.lastIndexOf("_"), loc2=s2.lastIndexOf("_");
+				String sp1 = s1.substring(0,loc1), sp2 = s2.substring(0,loc2);
+				int c = sp1.compareTo(sp2);
+				if (c!=0) return c;
+				try {
+					int n1 = Integer.parseInt(s1.substring(loc1+1));
+					int n2 = Integer.parseInt(s2.substring(loc2+1));
+					return n1<n2 ? -1 : n1>n2 ? 1 : 0;
+				} catch (NumberFormatException e) {
+					return s1.compareTo(s2);
+				}
+			}});
+		return result;
+	}
 
 
 

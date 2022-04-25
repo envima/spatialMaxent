@@ -75,7 +75,7 @@ public class Runner {
 	String projectionLayers() { return params.getString("projectionLayers"); }
 	double betaMultiplier() { return params.getdouble("betaMultiplier"); }
 	String outputFileType() { return "."+params.getString("outputFileType"); }
-	boolean cv() { return params.getString("replicatetype").equals("crossvalidate"); }
+	 boolean cv() { return params.getString("replicatetype").equals("crossvalidate"); }
 	boolean spatialCV() { return params.getString("replicatetype").equals("spatialCrossvalidate"); }
 	boolean bootstrap() { return params.getString("replicatetype").equals("bootstrap"); }
 	boolean subsample() { return params.getString("replicatetype").equals("subsample"); }
