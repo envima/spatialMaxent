@@ -33,15 +33,16 @@ public class SampleSet {
     HashMap speciesMap = new HashMap();  // names to ArrayLists of Samples
 
     // locations in a sample file of species, x, y, env1
-    public static int speciesIndex = 0, xIndex = 1, yIndex = 2, firstEnvVar = 3, necessaryFields = 3;
+    public static int speciesIndex = 0, xIndex = 1, yIndex = 2, spatialIndex = 3, firstEnvVar = 4, necessaryFields = 4;
     public static void setNCEAS_FORMAT() {
 	speciesIndex = 1; xIndex = 4; yIndex = 5; firstEnvVar = 7; necessaryFields = 6;
     }
     static IOException necessaryFieldsException() {
-	return new IOException("Sample file needs three columns: "+
+	return new IOException("Sample file needs four columns: "+
 			       "species (column "+(speciesIndex+1)+"), "+
 			       "longitude (column "+xIndex+"), "+
-			       "latitude (column "+(xIndex+1)+")");
+			       "latitude (column "+xIndex+"), "+
+					"spatial (column "+(spatialIndex+1));
     }
 
     public static int NODATA_value = -9999;
@@ -88,6 +89,7 @@ public class SampleSet {
 			}});
 	return result;
     }
+
 
     public Sample[] getSamples(String s) {
 	if (s==null) return getSamples();
@@ -210,41 +212,51 @@ public static void main (String[] args){
 	params.setOutputdirectory("D:\\maxent\\outputs");
 	params.setEnvironmentallayers("D:\\maxent\\layers");
 	params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial.csv");
+	//params.setReplicatetype("spatial crossvalidate");
 	params.setSelections();
+
 	Runner runner = new Runner(params);
 	runner.start();
 
+	// create sample Set with parameters from Params
 	SampleSet sampleSet = runner.sampleSet;
-	/*System.out.println(sampleSet.dimension);
-	System.out.println(sampleSet.header);
-	System.out.println(sampleSet);*/
 
 
+
+	//String[] result = (String[]) sampleSet.speciesMap.keySet().toArray(new String[0]);
+
+
+	ArrayList union = new ArrayList();
 	String[] names = sampleSet.getNames();
-	String[] result = (String[]) sampleSet.speciesMap.keySet().toArray(new String[0]);
-/*
-	 ArrayList<String[]> data = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
+	ArrayList a = (ArrayList) sampleSet.speciesMap.get(names[0]);
+	//System.out.println(a);
+	for (int i=0; i<a.size(); i++) union.add(a.get(i));
+	Sample[] sampletest =	(Sample[]) union.toArray(new Sample[0]);
+	//System.out.println(sampletest);
 
-	for (int i = 0; i < data.size(); i++){
-
-		for (int j = 0; j < data.get(i).length; j++){
-			System.out.println("Value " + data.get(i)[j] + "\n");
-
-		}
-		//printWriter.print("Length " + data.get(j). + "\n");
-	}
-*/
-
-
-	sampleSet.speciesMap.get(1);
-	System.out.println(sampleSet.speciesMap.get("bradypus_variegatus]"));
-	System.out.println(Arrays.toString(names));
-	System.out.println(sampleSet.header.toString());
-	//System.out.println(Arrays.toString(sampleSet.speciesMap.get("bradypus_variegatus")));
+	//System.out.println(Arrays.toString(names));
+	//System.out.println(sampleSet.header.toString());
 	ArrayList old = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
-	System.out.println(old);
-	System.out.println(old.size());
-	System.out.println(old.get(1).toString());
+
+	//System.out.println(old);
+	//System.out.println(old.size());
+
+	//System.out.println(sampleSet.header);
+	//System.out.println(sampleSet.getSamples());
+	Sample s = (Sample) old.get(1);
+	System.out.println(s.getSpatial());
+	System.out.println(sampleSet.header);
+	String headers = sampleSet.header;
+	System.out.println(headers.length());
+	//Sample s2 = (Sample) old.get(2);
+	System.out.println(s.lat);
+	System.out.println(s.col);
+	System.out.println(s.name);
+	//System.out.println(s.row);
+	//System.out.println(s.point);
+	//System.out.println(s.featureMap);
+	//System.out.println(s.getSpatial());
+
 /*
 	for (int i = 0; i < old.size(); i++){
 
@@ -255,12 +267,12 @@ public static void main (String[] args){
 		//printWriter.print("Length " + data.get(j). + "\n");
 	}*/
 	
-	int num = old.size() < 10 ? old.size() : 10;
-	System.out.println(num);
-	int[] order = sampleSet.randomPermutation(old.size());
-	System.out.println(Arrays.toString(order));
-	int fold = order[0] % num;
-	System.out.println(fold);
+	//int num = old.size() < 10 ? old.size() : 10;
+	//System.out.println(num);
+	//int[] order = sampleSet.randomPermutation(old.size());
+	//System.out.println(Arrays.toString(order));
+	//int fold = order[0] % num;
+	//System.out.println(fold);
 }
 
 
@@ -436,4 +448,6 @@ public static void main (String[] args){
 	double dlat = s1.getLat() - s2.getLat(), dlon = s1.getLon() - s2.getLon();
 	return Math.sqrt(dlat*dlat + dlon*dlon);
     }
+
+
 }

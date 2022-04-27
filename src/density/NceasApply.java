@@ -38,17 +38,18 @@ public class NceasApply {
 	for (i=0; i<headers.length; i++) if (headers[i].equals("")) break;
 	final int last = i;  // deals with nz, which has blank fields at end
 	final ArrayList samples = new ArrayList();
+
 	csv.apply(csv.new Applier() {
 		public void process() {
 		    HashMap map = new HashMap();
-		    for (int j=0; j<4; j++)
+		    for (int j=0; j<5; j++)
 			map.put(headers[j], csv.get(j));
-		    for (int j=4; j<last; j++) {
+		    for (int j=5; j<last; j++) {
 			Double val = new Double(Double.parseDouble(csv.get(j)));
 			map.put(headers[j], val);
 			map.put(headers[j]+"a", val);
 		    }
-		    samples.add(new Sample(0, 0, 0, 0, 0, "", map));
+		    samples.add(new Sample(0, 0, 0, 0, 0, "", "", map));
 		}
 	    });
 	return (Sample[]) samples.toArray(new Sample[0]);

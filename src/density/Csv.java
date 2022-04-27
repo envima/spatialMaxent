@@ -29,7 +29,7 @@ import java.io.*;
 public class Csv {
     String[] headers;
     HashMap headerMap = new HashMap();
-    String fileName;
+    static String fileName = "D:\\maxent\\samples\\bradypus_spatial.csv";
     String[] currentRecord;
     BufferedReader in;
 
@@ -263,6 +263,15 @@ public class Csv {
                 result[i][j-start] = a[j-start].get(i);
         return result;
     }
+
+
+/*
+    public static void main (String[] args) throws IOException {
+        public Csv csv2 = new Csv(fileName);
+        System.out.println(fileName);
+        System.out.println(csv2);
+    }
+*/
 
 }
 

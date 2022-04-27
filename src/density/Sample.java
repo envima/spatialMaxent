@@ -28,17 +28,24 @@ import java.util.HashMap;
 public class Sample {
     int point, row, col;
     double lat, lon;
-    String name;
+    String name, spatial;
     public HashMap featureMap;  // maps feature names to doubles
 
-    public Sample(int p, int r, int c, double lat, double lon, String s) { this(p,r,c,lat,lon,s,null); }
-    public Sample(int p, int r, int c, double lat, double lon, String s, HashMap map) {
+    public Sample(int p, int r, int c, double lat, double lon, String s, String spat) { this(p,r,c,lat,lon,s,spat,null); }
+    public Sample(int p, int r, int c, double lat, double lon, String s, String spat, HashMap map) {
 	point = p; row=r; col=c;
 	this.lat = lat;
 	this.lon = lon;
+    spatial = spat;
 	featureMap = map;
 	name = s;
     }
+
+    public Sample(int p, int r, int c, int lat, int lon, String s, String spat, HashMap map) {
+    }
+   /* public Sample(int p, int r, int c, int lat, int lon, String s, HashMap map) {
+    }  */
+
 
     int getPoint() { return point; }
     public int getRow() { return row; }
@@ -48,4 +55,5 @@ public class Sample {
     public double getLat() { return lat; }
     public double getLon() { return lon; }
     public String getName() { return name; }
+    public String getSpatial() { return spatial; }
 }

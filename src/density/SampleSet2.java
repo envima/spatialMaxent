@@ -32,7 +32,7 @@ public class SampleSet2 extends SampleSet {
     int[] layerToColumn;
     boolean samplesHaveData = false;
     HashMap datamap = new HashMap();
-    String sampleFile;
+    String sampleFile; // is what?
     GridDimension dim;
     Params params;
 
@@ -126,6 +126,7 @@ public class SampleSet2 extends SampleSet {
 	    for (int i=0; i<species.length; i++)
 		speciesSet.add(species[i]);
 
+
 	final Csv csv = new Csv(sampleFile);
 	String[] fields = csv.headers();
 	header = csv.headerString();
@@ -137,7 +138,8 @@ public class SampleSet2 extends SampleSet {
 		public void process() {
 		    String[] fields = csv.getCurrentRecord();
 		    String spid = sanitizeSpeciesName(fields[SampleSet.speciesIndex].replaceAll("\"", ""));
-		    if (speciesSet!=null && !speciesSet.contains(spid))
+			String spatialCol = fields[SampleSet.spatialIndex].replaceAll("\"", "");
+			if (speciesSet!=null && !speciesSet.contains(spid))
 			return;
 		    
 		    double x=0.0, y=0.0;
@@ -159,7 +161,7 @@ public class SampleSet2 extends SampleSet {
 			x = 0.0;
 			y = 0.0;
 		    }
-		    Sample s = new Sample(-1, r, c, y, x, spid, null);
+		    Sample s = new Sample(-1, r, c, y, x, spid, spatialCol);
 		    
 		    int goodvals = 0;
 		    double[] data = new double[n];
@@ -193,6 +195,34 @@ public class SampleSet2 extends SampleSet {
 		}
 	    });
     }
+	//static final Csv csv = new Csv("D:\\maxent\\samples\\bradypus_spatial.csv");
+
+	public static void main (String[] args){
+		final Params params = new Params();
+		params.setOutputdirectory("D:\\maxent\\outputs");
+		params.setEnvironmentallayers("D:\\maxent\\layers");
+		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial.csv");
+		//params.setReplicatetype("spatial crossvalidate");
+		params.setSelections();
+
+		Runner runner = new Runner(params);
+		runner.start();
+		SampleSet sampleSet = runner.sampleSet;
+		System.out.println(Arrays.toString(sampleSet.getNames()));
+		System.out.println(params.getSamplesfile());
+		//final Csv csv = new Csv("D:\\maxent\\samples\\bradypus_spatial.csv"); // is not String of filepath, class sampleset
+	//	String[] fields = csv.headers();
+	//	System.out.println(fields);
+		//header = csv.headerString();
+		//String c2 = fields[xIndex], c3 = fields[yIndex];
+		//final boolean longFirst = !(c2.toLowerCase().indexOf("lat")!=-1 && c3.toLowerCase().indexOf("lat")==-1);
+
+
+
+
+		runner.end();
+
+	}
 
     static void warnPartialData(double x, double y, String sampleFileName, String field) {
 	Utils.warn2("Sample at "+x+", "+y+" in "+
