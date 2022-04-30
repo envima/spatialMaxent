@@ -189,8 +189,8 @@ public class SampleSet {
 		test[j] = new ArrayList();
 	    }
 	    for (int k=0; k<old.size(); k++) {
-		int fold = order[k] % num;
-		test[fold].add(old.get(k));
+		int fold = order[k] % num; // number 0:9
+		test[fold].add(old.get(k)); // add ONE set to test
 		for (int j=0; j<num; j++)
 		    if (j!=fold) train[j].add(old.get(k));
 	    }
@@ -222,40 +222,48 @@ public static void main (String[] args){
 
 	// create sample Set with parameters from Params
 	SampleSet sampleSet = runner.sampleSet;
+	SampleSet test = sampleSet.splitForSpatialCV();
+	SampleSet testCV = sampleSet.splitForCV(3);
+	System.out.println(test.speciesMap);
+	System.out.println(testCV.speciesMap);
 
 
+
+	System.out.println(testCV.speciesMap.get(1));
+	String[] names = testCV.getNames();
+	System.out.println(names[0]);
 
 	//String[] result = (String[]) sampleSet.speciesMap.keySet().toArray(new String[0]);
 
 	//String[] result = (String[]) speciesMap.values().toArray(new String[0]);
-	System.out.println(Arrays.toString(sampleSet.speciesMap.values().toArray()));
-	ArrayList union = new ArrayList();
-	String[] names = sampleSet.getNames();
-	ArrayList a = (ArrayList) sampleSet.speciesMap.get(names[0]);
+	//System.out.println(Arrays.toString(sampleSet.speciesMap.values().toArray()));
+	//ArrayList union = new ArrayList();
+	//String[] names = sampleSet.getNames();
+	//ArrayList a = (ArrayList) sampleSet.speciesMap.get(names[0]);
 	//System.out.println(a);
-	for (int i=0; i<a.size(); i++) union.add(a.get(i));
-	Sample[] sampletest =	(Sample[]) union.toArray(new Sample[0]);
+	//for (int i=0; i<a.size(); i++) union.add(a.get(i));
+	//Sample[] sampletest =	(Sample[]) union.toArray(new Sample[0]);
 	//System.out.println(sampletest);
 
 	//System.out.println(Arrays.toString(names));
 	//System.out.println(sampleSet.header.toString());
-	ArrayList old = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
-	Sample s = (Sample) old.get(1);
-	String t = ((Sample) old.get(1)).spatial;
-	System.out.println(t);
+	//ArrayList old = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
+	//Sample s = (Sample) old.get(1);
+	//String t = ((Sample) old.get(1)).spatial;
+	//System.out.println(t);
 
 
-	List<Sample> species = (List<Sample>) sampleSet.speciesMap.get("bradypus_variegatus");
-	List<String> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+	//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get("bradypus_variegatus");
+	//List<String> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
 	//field1List.forEach(System.out::println);
-	HashSet<String> locHset = new HashSet<String>(locations);
-	System.out.println(locHset.size());
+	//HashSet<String> locHset = new HashSet<String>(locations);
+	//System.out.println(locHset.size());
 
 	// Converting HashSet to ArrayList
-	List<String> locArr = new ArrayList<String>(locHset);
-	System.out.println(locArr.get(1));
-	System.out.println(locArr.get(2));
-	System.out.println(locArr.get(0));
+	//List<String> locArr = new ArrayList<String>(locHset);
+	//System.out.println(locArr.get(1));
+	//System.out.println(locArr.get(2));
+	//System.out.println(locArr.get(0));
 
 	/**convert HashSet back to ArrayList**/
 
@@ -312,7 +320,7 @@ public static void main (String[] args){
 				ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
 
 
-				int num = Math.min(old.size(), species.size()); //minimum ist 3
+				int num = Math.min(old.size(), locArr.size()); //minimum ist 3
 				ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
 				ArrayList[] test = new ArrayList[num];
 				for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
@@ -321,20 +329,27 @@ public static void main (String[] args){
 				} // here data gets split in cv Folds!
 
 
+		/*	for (int k=0; k<old.size(); k++) {
+					int fold = order[k] % num; // number 0:9
+					test[fold].add(old.get(k)); // add ONE set to test
+					for (int j=0; j<num; j++)
+						if (j!=fold) train[j].add(old.get(k));
+*/
+
 			/**for loop over number locations then for loop over each Sample assigning them to
 			 * the fold **/
-				for (int l=0; l<locHset.size(); l++) {
+				for (int l=0; l<locHset.size(); l++) { //l = 0,1,2
 					for (int k = 0; k < old.size(); k++) { // k = 1:114 & num = 10
 						Sample s = (Sample) old.get(k);
 						String fold = s.getSpatial();
-						if (fold == locArr.get(l)) {
+						if (fold.equals(locArr.get(l))) {
 							test[l].add(old.get(k)); // add row to array
 						} else train[l].add(old.get(k)); // fold here should be: 1:3 length of spatial blocks = 3
 					}
 				}
 
 			/**add names to  each test and train set**/
-			for (int j=0; j<num; j++) {
+			for (int j=0; j<num; j++) { //3
 				speciesMap.put(names[i]+"_"+j, train[j]);
 				testss.speciesMap.put(names[i]+"_"+j, test[j]);
 			}

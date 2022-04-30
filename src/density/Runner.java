@@ -355,7 +355,7 @@ public class Runner {
 			} else if (spatialCV()){
 				for (String s: sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
-				testSampleSet = sampleSet.splitForSpatialCV(replicates());
+				testSampleSet = sampleSet.splitForSpatialCV();
 			} else
 				sampleSet.replicate(replicates(), bootstrap());
 			ArrayList<String> torun = new ArrayList();
