@@ -245,11 +245,18 @@ public static void main (String[] args){
 	System.out.println(t);
 
 
-	List<Sample> entities = (List<Sample>) sampleSet.speciesMap.get("bradypus_variegatus");
-	List<String> field1List = entities.stream().map(Sample::getSpatial).collect(Collectors.toList());
+	List<Sample> species = (List<Sample>) sampleSet.speciesMap.get("bradypus_variegatus");
+	List<String> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
 	//field1List.forEach(System.out::println);
-	HashSet<String> hset = new HashSet<String>(field1List);
-	System.out.println(hset);
+	HashSet<String> locHset = new HashSet<String>(locations);
+	System.out.println(locHset.size());
+
+	// Converting HashSet to ArrayList
+	List<String> locArr = new ArrayList<String>(locHset);
+	System.out.println(locArr.get(1));
+	System.out.println(locArr.get(2));
+	System.out.println(locArr.get(0));
+
 	/**convert HashSet back to ArrayList**/
 
 	//System.out.println(old);
@@ -289,130 +296,51 @@ public static void main (String[] args){
 	//System.out.println(fold);
 }
 
-	/*
 
-        SampleSet splitForSpatialCV(int n) {  // returns sampleset of test data //n = number locations
+
+        SampleSet splitForSpatialCV() {  // returns sampleset of test data //n = number locations
             String[] names = getNames(); /**[bradypus_variegatus]**/
-/*		SampleSet testss = new SampleSet();
-		for (int i=0; i<names.length; i++) { // ist 1
-			ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+			SampleSet testss = new SampleSet();
 
-			//int[] order = randomPermutation(old.size()); //114 =old.size 114 rows in df
-			int num = Math.min(old.size(), 3); //minimum ist 10
-			ArrayList[] train = new ArrayList[num]; // arraylist mit je 10 elementen
-			ArrayList[] test = new ArrayList[num];
-			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
-				train[j] = new ArrayList();
-				test[j] = new ArrayList();
-			} // here data gets split in cv Folds!
+			for (int i=0; i<names.length; i++) { // ist 1
+				List<Sample> species = (List<Sample>) speciesMap.get(names[i]);
+				List<String> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+				//field1List.forEach(System.out::println);
+				HashSet<String> locHset = new HashSet<String>(locations);
+				// Converting HashSet to ArrayList
+				List<String> locArr = new ArrayList<String>(locHset);
+				ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
 
 
-			for (int k=0; k<old.size(); k++) { // k = 1:114 & num = 10
-				Sample s = (Sample) old.get(k);
-				String fold = s.getSpatial();
-				if (fold == "a") {
-					test[fold].add(old.get(k)); // add row to array
-				} else train[fold].add(old.get(k)); // fold here should be: 1:3 length of spatial blocks = 3
+				int num = Math.min(old.size(), species.size()); //minimum ist 3
+				ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
+				ArrayList[] test = new ArrayList[num];
+				for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
+					train[j] = new ArrayList();
+					test[j] = new ArrayList();
+				} // here data gets split in cv Folds!
 
 
-			}
-
-
-
-			for (int k=0; k<old.size(); k++) {
-				int fold = order[k] % num;
-				test[fold].add(old.get(k));
-				for (int j=0; j<num; j++)
-					if (j!=fold) train[j].add(old.get(k));
-			}
-			for (int j=0; j<num; j++) {
-				speciesMap.put(names[i]+"_"+j, train[j]);
-				testss.speciesMap.put(names[i]+"_"+j, test[j]);
-			}
-
-
-
-		}
-		return testss;
-	}
-*/
-	SampleSet splitForSpatialCV(int n) {  // returns sampleset of test data
-		String[] names = getNames(); /**[bradypus_variegatus]**/
-		SampleSet testss = new SampleSet();
-
-
-
-		for (int i=0; i<names.length; i++) { // ist 1
-			ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values / all observations
-			String[] locations = getLocations();
-			ArrayList[] train = new ArrayList[locations.length]; // arraylist mit je 10 elementen
-			ArrayList[] test = new ArrayList[locations.length];
-
-			for (int l=0; l<locations.length; l++) {
-
-				/** for each location l add all rows with l to test datensatz,
-				 * alle anderen zum trainingsdatensatz**/
-			}
-			int[] order = randomPermutation(old.size()); //114 =old.size 114 rows in df
-			int num = Math.min(old.size(), n); //minimum ist 10
-
-
-			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
-				train[j] = new ArrayList();
-				test[j] = new ArrayList();
-			} // here data gets split in cv Folds!
-			for (int k=0; k<old.size(); k++) { // k = 1:114 & num = 10
-				int fold = order[k] % num; // to one of 10 folds
-				test[fold].add(old.get(k)); // add row to array
-				for (int j=0; j<num; j++)
-					if (j!=fold) train[j].add(old.get(k)); // add everything that is not in test fold to train
-			}
-			for (int j=0; j<num; j++) {
-				speciesMap.put(names[i]+"_"+j, train[j]);
-				testss.speciesMap.put(names[i]+"_"+j, test[j]);
-			}
-		}
-		return testss;
-	}
-
-
-
-
-	public String[] getLocations() {
-		String[] result = (String[]) speciesMap.keySet().toArray(new String[0]);
-
-		// sort with numerical suffix sorted numerically
-		Arrays.sort(result, new Comparator<String>() {
-			public int compare(String s1, String s2) {
-				if (s1.indexOf("_")==-1 || s2.indexOf("_")==-1)
-					return s1.compareTo(s2);
-				int loc1=s1.lastIndexOf("_"), loc2=s2.lastIndexOf("_");
-				String sp1 = s1.substring(0,loc1), sp2 = s2.substring(0,loc2);
-				int c = sp1.compareTo(sp2);
-				if (c!=0) return c;
-				try {
-					int n1 = Integer.parseInt(s1.substring(loc1+1));
-					int n2 = Integer.parseInt(s2.substring(loc2+1));
-					return n1<n2 ? -1 : n1>n2 ? 1 : 0;
-				} catch (NumberFormatException e) {
-					return s1.compareTo(s2);
+			/**for loop over number locations then for loop over each Sample assigning them to
+			 * the fold **/
+				for (int l=0; l<locHset.size(); l++) {
+					for (int k = 0; k < old.size(); k++) { // k = 1:114 & num = 10
+						Sample s = (Sample) old.get(k);
+						String fold = s.getSpatial();
+						if (fold == locArr.get(l)) {
+							test[l].add(old.get(k)); // add row to array
+						} else train[l].add(old.get(k)); // fold here should be: 1:3 length of spatial blocks = 3
+					}
 				}
-			}});
-		return result;
+
+			/**add names to  each test and train set**/
+			for (int j=0; j<num; j++) {
+				speciesMap.put(names[i]+"_"+j, train[j]);
+				testss.speciesMap.put(names[i]+"_"+j, test[j]);
+			}
+		}
+		return testss;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
