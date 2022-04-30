@@ -26,13 +26,13 @@ package density;
 import java.util.HashMap;
 
 public class Sample {
-    int point, row, col;
+    int point, row, col, spatial;
     double lat, lon;
-    String name, spatial;
+    String name;
     public HashMap featureMap;  // maps feature names to doubles
 
-    public Sample(int p, int r, int c, double lat, double lon, String s, String spat) { this(p,r,c,lat,lon,s,spat,null); }
-    public Sample(int p, int r, int c, double lat, double lon, String s, String spat, HashMap map) {
+    public Sample(int p, int r, int c, double lat, double lon, String s, int spat) { this(p,r,c,lat,lon,s,spat,null); }
+    public Sample(int p, int r, int c, double lat, double lon, String s, int spat, HashMap map) {
 	point = p; row=r; col=c;
 	this.lat = lat;
 	this.lon = lon;
@@ -55,5 +55,5 @@ public class Sample {
     public double getLat() { return lat; }
     public double getLon() { return lon; }
     public String getName() { return name; }
-    public String getSpatial() { return spatial; }
+    public int getSpatial() { return spatial; }
 }

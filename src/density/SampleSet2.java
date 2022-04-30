@@ -138,15 +138,17 @@ public class SampleSet2 extends SampleSet {
 		public void process() {
 		    String[] fields = csv.getCurrentRecord();
 		    String spid = sanitizeSpeciesName(fields[SampleSet.speciesIndex].replaceAll("\"", ""));
-			String spatialCol = fields[SampleSet.spatialIndex].replaceAll("\"", "");
+			
 			if (speciesSet!=null && !speciesSet.contains(spid))
 			return;
 		    
 		    double x=0.0, y=0.0;
 		    int r=-1, c=-1;
+			int spatialCol = Integer.parseInt(fields[SampleSet.spatialIndex]);
 		    try {
 			x = Double.parseDouble(fields[SampleSet.xIndex]);
 			y = Double.parseDouble(fields[SampleSet.yIndex]);
+
 			if (!longFirst) {
 			    double tmp = x;
 			    x = y;
@@ -197,6 +199,7 @@ public class SampleSet2 extends SampleSet {
     }
 	//static final Csv csv = new Csv("D:\\maxent\\samples\\bradypus_spatial.csv");
 
+	/*
 	public static void main (String[] args){
 		final Params params = new Params();
 		params.setOutputdirectory("D:\\maxent\\outputs");
@@ -223,7 +226,7 @@ public class SampleSet2 extends SampleSet {
 		runner.end();
 
 	}
-
+*/
     static void warnPartialData(double x, double y, String sampleFileName, String field) {
 	Utils.warn2("Sample at "+x+", "+y+" in "+
 		    sampleFileName+
