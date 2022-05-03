@@ -43,6 +43,7 @@ public class MaxEnt {
 
     public static void main(String args[]) {
         final Params params = new Params();
+
         params.readFromArgs(args);
         Utils.applyStaticParams(params);  // also in runner
         if (params.getboolean("visible")) {

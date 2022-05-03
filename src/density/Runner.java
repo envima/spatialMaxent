@@ -63,7 +63,7 @@ public class Runner {
 	boolean cumulative() { return params.cumulative(); }
 	int replicates() { return params.getint("replicates"); }
 	int replicates(String species) {
-		if (speciesCount==null || !cv() || speciesCount.get(species)==null || speciesCount.get(species) > replicates())
+		if (speciesCount==null || !cv() || !spatialCV() || speciesCount.get(species)==null || speciesCount.get(species) > replicates())
 			return replicates();
 		return speciesCount.get(species);
 	}
@@ -76,13 +76,32 @@ public class Runner {
 	double betaMultiplier() { return params.getdouble("betaMultiplier"); }
 	String outputFileType() { return "."+params.getString("outputFileType"); }
 	 boolean cv() { return params.getString("replicatetype").equals("crossvalidate"); }
-	boolean spatialCV() { return params.getString("replicatetype").equals("spatialCrossvalidate"); }
+	boolean spatialCV() { return params.getString("replicatetype").equals("spatial crossvalidate"); }
 	boolean bootstrap() { return params.getString("replicatetype").equals("bootstrap"); }
 	boolean subsample() { return params.getString("replicatetype").equals("subsample"); }
 
 	static String raw2cumfile(String lambdafile) {
 		return lambdafile.replaceAll(".lambdas$", "_omission.csv");
 	}
+
+	/*
+	public static void main (String[] args){
+		final Params params = new Params();
+		params.setOutputdirectory("D:\\maxent\\outputs");
+		params.setEnvironmentallayers("D:\\maxent\\layers");
+		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
+		params.setReplicatetype("Spatial Crossvalidate");
+		params.setSelections();
+
+		Runner runner = new Runner(params);
+		runner.start();
+		System.out.println(params.getReplicatetype());
+		//System.out.println(runner.);
+		System.out.println(runner.cv());
+		System.out.println(runner.spatialCV());
+		runner.end();
+	}
+*/
 
 	public static class MaxentRunResults {
 		double gain, time;
@@ -248,7 +267,7 @@ public class Runner {
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
 			params.setSelections();
-		if (cv() && replicates()>1 && params.getRandomtestpoints() != 0) {
+		if (cv() || spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
 			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
 			params.setRandomtestpoints(0);
 		}
@@ -256,9 +275,12 @@ public class Runner {
 			popupError("Subsampled replicates require nonzero random test percentage", null);
 			return;
 		}
-		if (!cv() && replicates()>1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
-			Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
-			params.setValue("randomseed", true);
+
+		if (!spatialCV()) {
+			if (!cv() && replicates()>1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
+				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
+				params.setValue("randomseed", true);
+			}
 		}
 
 		if (outDir()==null || outDir().trim().equals("")) {
@@ -712,7 +734,7 @@ public class Runner {
 		htmlout.println("<title>Replicated maxent model for " + species + "</title>");
 		htmlout.println("<CENTER><H1>Replicated maxent model for " + species + "</H1></CENTER>");
 		htmlout.print("<br> This page summarizes the results of " + replicates(species));
-		if (cv())
+		if (cv() || spatialCV())
 			htmlout.print("-fold cross-validation");
 		else if (bootstrap())
 			htmlout.print(" bootstrap models");
