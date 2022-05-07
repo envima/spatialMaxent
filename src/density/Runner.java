@@ -1723,7 +1723,7 @@ public class Runner {
 		System.out.println(comb);
 		System.out.println(comb.size());
 		System.out.println(Arrays.toString(comb.toArray()));
-		Array combArr = new Array comb.toArray();
+		//Array combArr = new Array comb.toArray();
 
 
 
