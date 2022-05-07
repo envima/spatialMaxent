@@ -28,18 +28,14 @@ package density;
 //   remove DoubleIterator class
 
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import ptolemy.plot.MyPlot;
-import com.google.common.collect.Sets.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
@@ -1611,7 +1607,7 @@ public class Runner {
 	/**
 	 * iterate over all posible variable combinations and create models
 	 * -> or in the jackknifeGain function? **/
-	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2) {
+	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me1, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2) {
 
 		/** num has to be set to length of possible var combinations**/
 		int num = getTrueBaseFeatures(baseFeatures).length;
@@ -1629,7 +1625,7 @@ public class Runner {
 		if (res==null) return;
 		Utils.echoln("Res.gain: " + res.gain);
 		res.removeBiasDistribution();
-		gain[num+me] = res.gain;
+		gain[num+me1] = res.gain;
 		if (hastest) {
 			DoubleIterator backgroundIterator = null;
 	    /*
@@ -1638,10 +1634,10 @@ public class Runner {
 			double getNext() { return res.X.getDensity(i++); }
 		    };
 	    */
-			auc[num+me] = res.X.getAUC(backgroundIterator, testSamples);
+			auc[num+me1] = res.X.getAUC(backgroundIterator, testSamples);
 			if (backgroundIterator!=null)
 				res.X.setDensityNormalizer(backgroundIterator);
-			testgain[num+me] = getTestGain(res.X);
+			testgain[num+me1] = getTestGain(res.X);
 		}
 	}
 
@@ -1663,8 +1659,8 @@ public class Runner {
 
 
 		boolean isFile = runner.gridsFromFile();
-		String[] layers=params.layers;
-		String[] layerTypes=params.layerTypes;
+		String[] layers = params.layers;
+		String[] layerTypes = params.layerTypes;
 
 		System.out.println(layers.getClass()); // Ljava.lang.String
 		System.out.println(layerTypes.getClass()); // Ljava.lang.String
@@ -1673,8 +1669,8 @@ public class Runner {
 		System.out.println(isFile);
 
 
-		SampleSet sampleSet, testSampleSet=null;
-		Layer[] allLayers= runner.allLayers;
+		SampleSet sampleSet, testSampleSet = null;
+		Layer[] allLayers = runner.allLayers;
 		ArrayList result = new ArrayList();
 		double[][] coords;
 
@@ -1685,8 +1681,7 @@ public class Runner {
 		System.out.println(gs.getClass()); // class density.Extractor
 
 
-
-		if (Utils.interrupt || gs==null) return;
+		if (Utils.interrupt || gs == null) return;
 
 		SampleSet2 sampleSet2 = gs.train;
 
@@ -1699,12 +1694,10 @@ public class Runner {
 			sampleSet2.removeDuplicates(runner.gridsFromFile() ? null : gs.getDimension());
 
 
-
-
 		Feature[] baseFeatures;
-		baseFeatures = (gs==null) ? null : gs.toFeatures();
+		baseFeatures = (gs == null) ? null : gs.toFeatures();
 		coords = gs.getDimension().coords;
-		if (baseFeatures==null || baseFeatures.length==0 || baseFeatures[0].n==0) {
+		if (baseFeatures == null || baseFeatures.length == 0 || baseFeatures[0].n == 0) {
 			runner.popupError("No background points with data in all layers", null);
 			return;
 		}
@@ -1713,17 +1706,48 @@ public class Runner {
 		Feature feature = baseFeatures[1];
 
 		Feature feature1 = baseFeatures[0];
-		System.out.println(feature.name + " "+ feature1.name);
+		System.out.println(feature.name + " " + feature1.name);
 
 		//System.out.println(baseFeatures.length);
-		List<Integer> range = IntStream.rangeClosed(0, baseFeatures.length)
+		List<Integer> range = IntStream.rangeClosed(0, baseFeatures.length - 1)
 				.boxed().collect(Collectors.toList());
 
 		Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
-		System.out.println(comb);
+		System.out.println(comb.getClass());
 		System.out.println(comb.size());
-		System.out.println(Arrays.toString(comb.toArray()));
-		//Array combArr = new Array comb.toArray();
+		//List<List<Integer>> ar = new ArrayList<>(comb);
+
+
+
+		// create empty array
+		Integer[][] allComb = new Integer[91][2];
+
+	for (int i=0;i<allComb.length;i++) {
+
+		Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
+		//System.out.println(Arrays.toString(arr.toArray()));
+
+
+		//int test1 = arr.stream().collect(Collectors.toList()).get(0);
+		//int test = arr.stream().collect(Collectors.toList()).get(1);
+
+		allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
+		allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
+
+	}
+
+	System.out.println(Arrays.toString(comb.toArray()));
+	System.out.println(Arrays.deepToString(allComb));
+	Object[] list = comb.toArray();
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1882,7 +1906,6 @@ public class Runner {
 	*/
 
 
-
 		runner.end();
 	}
 
@@ -1898,18 +1921,31 @@ public class Runner {
 			parallelRunner.clear();
 
 
-		//Set<Set<Integer>> combinations = Sets.combinations(ImmutableSet.of(0, 1, 2, 3, 4, 5), 2);
 		/** ArrayList with possible variable names?
 		 * -> get features over features.name ?
 		 * me = number of features 14
 		 * features have fixed index?
 		 * **/
 
+
+		// range Integer predictor number
 		List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
 				.boxed().collect(Collectors.toList());
-		ArrayList rangeArr = new ArrayList(range);
 
+		// create guava Sets with all possible combinations of var Integer
+		Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
 
+		// create empty array
+		Integer[][] allComb = new Integer[comb.size()][2];
+
+		//add values from Set<Set<Integer>> to Array
+		for (int i=0;i<allComb.length;i++) {
+			//get one set
+			Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
+			// get each element of set
+			allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
+			allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
+		}
 
 		/** hier eine list mit allen möglichen Kombinationen aus den zwei ArrayLists
 		 * dann: i iterates over first column. Tabelle ist länger als n-features -> does not work like this
@@ -1917,16 +1953,15 @@ public class Runner {
 		 * [var1, var2
 		 * var1, var3 ...] **/
 
-		for (int i=0; i<num; i++) {
+		for (int i=0; i<allComb.length; i++) {
 			if (Utils.interrupt) return null;
 			String myname = "Forward Feature Selection: using only " + features[i].name + " & " + features[i].name;
 			Utils.echoln(myname);
-			final int me2 = i;
-			final int me1 = i;
-			final int me = i;
+			final int me2 = allComb[i][0];
+			final int me1 = allComb[i][1];
 			Runnable task = new Runnable() {
 				public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
-					onlyTwoRun(baseFeatures, ss, testSamples, me, gain, testgain, auc, features[me1], features[me2]);
+					onlyTwoRun(baseFeatures, ss, testSamples, me1, gain, testgain, auc, features[me1], features[me2]);
 				}
 			};
 			if (threads()<=1) task.run();
