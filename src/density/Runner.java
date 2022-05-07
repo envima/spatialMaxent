@@ -27,17 +27,25 @@ package density;
 //   remove backgroundIterator from here and FeaturedSpace
 //   remove DoubleIterator class
 
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import ptolemy.plot.MyPlot;
+import com.google.common.collect.Sets.*;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
-
-import javax.imageio.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
-import gnu.getopt.*;
+import java.lang.reflect.Array;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.List;
 import java.util.*;
-import ptolemy.plot.*;
-import java.text.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Runner {
 	GridSet gs;
@@ -67,6 +75,7 @@ public class Runner {
 			return replicates();
 		return speciesCount.get(species);
 	}
+
 	int threads() { return params.getint("threads"); }
 	String outDir() { return params.getString("outputdirectory"); }
 	String biasFile() { return params.getString("biasFile"); }
@@ -75,7 +84,7 @@ public class Runner {
 	String projectionLayers() { return params.getString("projectionLayers"); }
 	double betaMultiplier() { return params.getdouble("betaMultiplier"); }
 	String outputFileType() { return "."+params.getString("outputFileType"); }
-	 boolean cv() { return params.getString("replicatetype").equals("crossvalidate"); }
+	boolean cv() { return params.getString("replicatetype").equals("crossvalidate"); }
 	boolean spatialCV() { return params.getString("replicatetype").equals("spatial crossvalidate"); }
 	boolean bootstrap() { return params.getString("replicatetype").equals("bootstrap"); }
 	boolean subsample() { return params.getString("replicatetype").equals("subsample"); }
@@ -84,24 +93,6 @@ public class Runner {
 		return lambdafile.replaceAll(".lambdas$", "_omission.csv");
 	}
 
-	/*
-	public static void main (String[] args){
-		final Params params = new Params();
-		params.setOutputdirectory("D:\\maxent\\outputs");
-		params.setEnvironmentallayers("D:\\maxent\\layers");
-		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
-		params.setReplicatetype("Spatial Crossvalidate");
-		params.setSelections();
-
-		Runner runner = new Runner(params);
-		runner.start();
-		System.out.println(params.getReplicatetype());
-		//System.out.println(runner.);
-		System.out.println(runner.cv());
-		System.out.println(runner.spatialCV());
-		runner.end();
-	}
-*/
 
 	public static class MaxentRunResults {
 		double gain, time;
@@ -811,8 +802,33 @@ public class Runner {
 		return sum/num;
 	}
 
-	void replicatedJackknife(PrintWriter htmlout, String species, Feature[] baseFeatures) throws IOException {
+/*
+	public static void main (String[] args){
+		final Params params = new Params();
+		params.setOutputdirectory("D:\\maxent\\outputs");
+		params.setEnvironmentallayers("D:\\maxent\\layers");
+		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
+		//params.setReplicatetype("Spatial Crossvalidate");
+		params.setJackknife(true);
+		params.setSelections();
+		Runner runner = new Runner(params);
+		runner.start();
+
+
+
+		Feature[] baseFeatures;
 		int nf = baseFeatures.length;
+		System.out.println(params.isJackknife());
+
+		runner.end();
+	}
+
+*/
+
+
+	void replicatedJackknife(PrintWriter htmlout, String species, Feature[] baseFeatures) throws IOException {
+		int nf = baseFeatures.length; // number of predictors ?
+
 		results.close();
 		String res = results.filename();
 		double[] gain = new double[nf*2];
@@ -839,6 +855,9 @@ public class Runner {
 		makeJackknifePlots(htmlout, species, gain, testgain, auc, baseFeatures, allGain, allTestGain, allauc, hastest, "  Values shown are averages over replicate runs.");
 		results.reopen();
 	}
+
+
+
 
 
 	void replicatedProfiles(String species, Feature[] baseFeatures) throws IOException {
@@ -1342,6 +1361,16 @@ public class Runner {
 		return onlya.toArray(new Feature[0]);
 	}
 
+	Feature[] onlyTwoFeatures(Feature[] baseFeatures, Feature feature1, Feature feature2) {
+		ArrayList<Feature> onlya = new ArrayList();
+		onlya.add(feature1);
+		onlya.add(feature2);
+		for (int i=0; i<baseFeatures.length; i++)
+			if (!isTrueBaseFeature(baseFeatures[i]))
+				onlya.add(baseFeatures[i]);
+		return onlya.toArray(new Feature[0]);
+	}
+
 	void oneVarResponseRun(Feature[] baseFeatures, Sample[] ss, Feature f) {
 		Feature[] only = onlyOneFeature(baseFeatures, f);
 		Feature[] features = makeFeatures(only);
@@ -1550,7 +1579,7 @@ public class Runner {
 	}
 
 	void onlyOneRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature onlyfeature) {
-		int num = getTrueBaseFeatures(baseFeatures).length;
+		int num = getTrueBaseFeatures(baseFeatures).length; // number of predictors??
 		boolean hastest = testSamples!=null && testSamples.length>0;
 		Feature[] only = onlyOneFeature(baseFeatures, onlyfeature);
 		Feature[] features = //(addSamplesToFeatures) ?
@@ -1579,9 +1608,345 @@ public class Runner {
 		}
 	}
 
+	/**
+	 * iterate over all posible variable combinations and create models
+	 * -> or in the jackknifeGain function? **/
+	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2) {
+
+		/** num has to be set to length of possible var combinations**/
+		int num = getTrueBaseFeatures(baseFeatures).length;
+		boolean hastest = testSamples!=null && testSamples.length>0;
+
+		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i JackKnifeGain function to iterate over all features
+
+		Feature[] features = //(addSamplesToFeatures) ?
+				//	    makeFeatures(featuresWithSamples(only, ss)) :
+				makeFeatures(two);
+		if (features==null) return;
+		if (Utils.interrupt) return;
+		Utils.reportDoing(theSpecies + " " + feature1.name + " & " + feature2.name + ": ");
+		final MaxentRunResults res = maxentRun(features, ss, testSamples);
+		if (res==null) return;
+		Utils.echoln("Res.gain: " + res.gain);
+		res.removeBiasDistribution();
+		gain[num+me] = res.gain;
+		if (hastest) {
+			DoubleIterator backgroundIterator = null;
+	    /*
+	    if (addSamplesToFeatures)
+		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
+			double getNext() { return res.X.getDensity(i++); }
+		    };
+	    */
+			auc[num+me] = res.X.getAUC(backgroundIterator, testSamples);
+			if (backgroundIterator!=null)
+				res.X.setDensityNormalizer(backgroundIterator);
+			testgain[num+me] = getTestGain(res.X);
+		}
+	}
+
+	public static void main (String[] args) {
+
+		final Params params = new Params();
+		params.setOutputdirectory("D:\\maxent\\outputs");
+		params.setEnvironmentallayers("D:\\maxent\\layers");
+		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
+		//params.setReplicatetype("spatial crossvalidate");
+		params.setSelections();
+
+		Runner runner = new Runner(params);
+		runner.start();
+		// bradypus_variegatus
+
+		System.out.println(runner.theSpecies);
+		System.out.println(runner.allLayers.length); // 14 predictors
+
+
+		boolean isFile = runner.gridsFromFile();
+		String[] layers=params.layers;
+		String[] layerTypes=params.layerTypes;
+
+		System.out.println(layers.getClass()); // Ljava.lang.String
+		System.out.println(layerTypes.getClass()); // Ljava.lang.String
+		System.out.println(Arrays.toString(layers)); //[cld6190_ann, dtr6190_ann, ecoreg, frs6190_ann, h_dem, pre6190_ann, pre6190_l1, pre6190_l10, pre6190_l4, pre6190_l7, tmn6190_ann, tmp6190_ann, tmx6190_ann, vap6190_ann]
+		System.out.println(Arrays.toString(layerTypes)); // [Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous, Continuous]
+		System.out.println(isFile);
+
+
+		SampleSet sampleSet, testSampleSet=null;
+		Layer[] allLayers= runner.allLayers;
+		ArrayList result = new ArrayList();
+		double[][] coords;
+
+		System.out.println(allLayers.length);
+
+
+		GridSet gs = runner.initializeGrids();
+		System.out.println(gs.getClass()); // class density.Extractor
+
+
+
+		if (Utils.interrupt || gs==null) return;
+
+		SampleSet2 sampleSet2 = gs.train;
+
+		if (!runner.testSamplesFile().equals("")) {
+			testSampleSet = gs.test;
+		}
+
+		if (Utils.interrupt) return;
+		if (runner.is("removeDuplicates"))
+			sampleSet2.removeDuplicates(runner.gridsFromFile() ? null : gs.getDimension());
+
+
+
+
+		Feature[] baseFeatures;
+		baseFeatures = (gs==null) ? null : gs.toFeatures();
+		coords = gs.getDimension().coords;
+		if (baseFeatures==null || baseFeatures.length==0 || baseFeatures[0].n==0) {
+			runner.popupError("No background points with data in all layers", null);
+			return;
+		}
+
+
+		Feature feature = baseFeatures[1];
+
+		Feature feature1 = baseFeatures[0];
+		System.out.println(feature.name + " "+ feature1.name);
+
+		//System.out.println(baseFeatures.length);
+		List<Integer> range = IntStream.rangeClosed(0, baseFeatures.length)
+				.boxed().collect(Collectors.toList());
+
+		Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
+		System.out.println(comb);
+		System.out.println(comb.size());
+		System.out.println(Arrays.toString(comb.toArray()));
+		Array combArr = new Array comb.toArray();
+
+
+
+		/*
+
+		// LeaveOneOutRun function:
+
+
+		/////////////////////////////
+		int num = runner.getTrueBaseFeatures(baseFeatures).length; // number of predictors = 14
+		System.out.println(num);
+		Sample[] testSamples;
+
+		boolean hastest = testSamples!=null && testSamples.length>0;
+
+
+		Feature[] only = runner.onlyOneFeature(baseFeatures, onlyfeature);
+
+		/*
+		Feature[] features = //(addSamplesToFeatures) ?
+				//	    makeFeatures(featuresWithSamples(only, ss)) :
+				makeFeatures(only);
+		if (features==null) return;
+		if (Utils.interrupt) return;
+		Utils.reportDoing(theSpecies + " " + onlyfeature.name + ": ");
+		final MaxentRunResults res = maxentRun(features, ss, testSamples);
+		if (res==null) return;
+		Utils.echoln("Res.gain: " + res.gain);
+		res.removeBiasDistribution();
+		gain[num+me] = res.gain;
+		if (hastest) {
+			DoubleIterator backgroundIterator = null;
+	    /*
+	    if (addSamplesToFeatures)
+		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
+			double getNext() { return res.X.getDensity(i++); }
+		    };
+	    */
+		/*
+			auc[num+me] = res.X.getAUC(backgroundIterator, testSamples);
+			if (backgroundIterator!=null)
+				res.X.setDensityNormalizer(backgroundIterator);
+			testgain[num+me] = getTestGain(res.X);
+		}
+
+
+
+
+		/*
+
+
+		boolean isTrueBaseFeature(Feature f) {
+			int type=f.type();
+			return type==Feature.L_CONT || type==Feature.L_CAT;
+		}
+
+		Feature[] getTrueBaseFeatures(Feature[] f) {
+			ArrayList result=new ArrayList();
+			for (int i=0; i<f.length; i++)
+				if (isTrueBaseFeature(f[i]))
+					result.add(f[i]);
+			return (Feature []) result.toArray(new Feature[0]);
+		}
+
+		boolean gridsFromFile() {
+			return new File(environmentalLayers()).isFile();
+		}
+
+		GridSet initializeGrids() {
+			String dir=environmentalLayers(); //D:\maxent\layers
+			boolean isFile = gridsFromFile();
+			String[] layers=params.layers;
+			String[] layerTypes=params.layerTypes;
+			GridSet result=null;
+			ArrayList allLayersList = new ArrayList();
+
+			for (int i=0; i<layers.length; i++) {
+				Layer layer = new Layer(layers[i],layerTypes[i]);
+				allLayersList.add(layer);
+			}
+			try {
+				ArrayList full = new ArrayList();
+				ArrayList fileLayersList = new ArrayList();
+
+				for (int i=0; i<layers.length; i++) {
+					Layer layer = new Layer(layers[i],layerTypes[i]);
+					// 10/17/2006: commented out next line as only makes dupes
+					// allLayersList.add(layer);
+					fileLayersList.add(layer);
+					if (!isFile && !dir.equals(""))
+						full.add(Utils.getGridAbsolutePath(dir, layers[i]));
+				}
+
+				if (!biasFile().equals("")) {
+					File f = new File(biasFile());
+					if (f.exists()) {
+						Layer layer = new Layer(f,params.getint("biasType"));
+						allLayersList.add(layer);
+						full.add(f.getAbsolutePath());
+						fileLayersList.add(layer);
+					}
+					else {
+						popupError("Error opening bias file " + biasFile(), null);
+						return null;
+					}
+				}
+
+				String[] fileNames = (String[]) full.toArray(new String[0]);
+				Layer[] fileLayers = (Layer[]) fileLayersList.toArray(new Layer[0]);
+				allLayers = (Layer[]) allLayersList.toArray(new Layer[0]);
+
+				String[] selectSpecies = params.species;
+				if (isFile) {
+					result = new GridSetFromFile(dir, allLayers);
+					if (!params.getString("samplesFile").equals("")) {
+						result.train = new SampleSet2(params.getString("samplesFile"), fileLayers, null, params);
+						if (!result.train.samplesHaveData) {
+							popupError("Samples need to be in SWD format when background data is in SWD format",null);
+							return null;
+						}
+						result.train.params = params;
+						result.train.read(selectSpecies);
+						result.train.createMaps();
+					}
+					if (!testSamplesFile().equals("")) {
+						result.test = new SampleSet2(testSamplesFile(), fileLayers, null, params);
+						if (!result.test.samplesHaveData) {
+							popupError("Test samples need to be in SWD format when background data is in SWD format",null);
+							return null;
+						}
+						result.test.params = params;
+						// if replicates, test samples may end in _0, _1 etc
+						result.test.read(replicates()==0?selectSpecies:null);
+						//		    System.out.println("tt");
+						result.test.createMaps();
+					}
+				}
+				else {
+					if (fileNames.length==0) return null;
+					result = new Extractor();
+					((Extractor) result).params = params;
+					((Extractor) result).extractSamples(fileNames, params.getint("maximumBackground"), params.getString("samplesFile"), testSamplesFile(), fileLayers, selectSpecies);
+				}
+			}
+			catch (Exception e) {
+				String msg = "Error reading files";
+				if (Extractor.readingFile!=null)
+					msg = "Error reading file " + Extractor.readingFile;
+				popupError(msg, e);
+				Utils.interrupt = true;
+				return null;
+			}
+			return result;
+		}
+
+	*/
+
+
+
+		runner.end();
+	}
+
+
+	double[][] forwardFeatureSelection(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
+		final Feature[] features = getTrueBaseFeatures(baseFeatures);
+		int num = features.length; // number of predictors?
+		final double[] gain = new double[num*2];
+		final double[] testgain = new double[num*2];
+		final double[] auc = new double[num*2];
+		final boolean hastest = testSamples!=null && testSamples.length>0;
+		if (threads()>1)
+			parallelRunner.clear();
+
+
+		//Set<Set<Integer>> combinations = Sets.combinations(ImmutableSet.of(0, 1, 2, 3, 4, 5), 2);
+		/** ArrayList with possible variable names?
+		 * -> get features over features.name ?
+		 * me = number of features 14
+		 * features have fixed index?
+		 * **/
+
+		List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
+				.boxed().collect(Collectors.toList());
+		ArrayList rangeArr = new ArrayList(range);
+
+
+
+		/** hier eine list mit allen möglichen Kombinationen aus den zwei ArrayLists
+		 * dann: i iterates over first column. Tabelle ist länger als n-features -> does not work like this
+		 * -> rest me
+		 * [var1, var2
+		 * var1, var3 ...] **/
+
+		for (int i=0; i<num; i++) {
+			if (Utils.interrupt) return null;
+			String myname = "Forward Feature Selection: using only " + features[i].name + " & " + features[i].name;
+			Utils.echoln(myname);
+			final int me2 = i;
+			final int me1 = i;
+			final int me = i;
+			Runnable task = new Runnable() {
+				public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
+					onlyTwoRun(baseFeatures, ss, testSamples, me, gain, testgain, auc, features[me1], features[me2]);
+				}
+			};
+			if (threads()<=1) task.run();
+			else parallelRunner.add(task, myname);
+		}
+		if (threads()>1)
+			parallelRunner.runall("jackknife", is("verbose"));
+		if (is("plots"))
+			makeJackknifePlots(htmlout, theSpecies, gain, testgain, auc, features, allGain, allTestGain, allauc, hastest, "");
+		if (!hastest) return new double[][] { gain };
+		return new double[][] { gain, testgain, auc };
+	}
+
+
+
+
+
 	double[][] jackknifeGain(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
-		int num = features.length;
+		int num = features.length; // number of predictors?
 		final double[] gain = new double[num*2];
 		final double[] testgain = new double[num*2];
 		final double[] auc = new double[num*2];
