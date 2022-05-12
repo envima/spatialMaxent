@@ -620,6 +620,10 @@ public class Runner {
 					jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 					null;
 
+			double[][] ffsGain = (is("ffs")  && (baseFeaturesNoBias.length > 1)) ?
+					forwardFeatureSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
+					null;
+
 			writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 
 			writeHtmlDetails(res, testGain, auc, aucSD, trainauc);
@@ -1361,6 +1365,10 @@ public class Runner {
 		ArrayList<Feature> onlya = new ArrayList();
 		onlya.add(feature1);
 		onlya.add(feature2);
+
+		/**baseFeature length the Issue here??
+		 * what is this part actually doing?**/
+
 		for (int i=0; i<baseFeatures.length; i++)
 			if (!isTrueBaseFeature(baseFeatures[i]))
 				onlya.add(baseFeatures[i]);
@@ -1604,16 +1612,15 @@ public class Runner {
 		}
 	}
 
-	/**
-	 * iterate over all posible variable combinations and create models
-	 * -> or in the jackknifeGain function? **/
-	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me1, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2) {
+
+
+	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me1, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2, int maxComb) {
 
 		/** num has to be set to length of possible var combinations**/
-		int num = getTrueBaseFeatures(baseFeatures).length;
+		int num = maxComb;
 		boolean hastest = testSamples!=null && testSamples.length>0;
 
-		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i JackKnifeGain function to iterate over all features
+		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i forwardFeatureSelection function to iterate over all features
 
 		Feature[] features = //(addSamplesToFeatures) ?
 				//	    makeFeatures(featuresWithSamples(only, ss)) :
@@ -1741,6 +1748,27 @@ public class Runner {
 	Object[] list = comb.toArray();
 
 
+/**test onlyTwoFeatures method **/
+
+
+		Feature feature2 = baseFeatures[1];
+
+
+		ArrayList<Feature> onlya = new ArrayList();
+		onlya.add(feature1);
+		onlya.add(feature2);
+
+
+
+			/**baseFeature length the Issue here??
+			 * what is this part actually doing?**/
+
+			for (int i=0; i<baseFeatures.length; i++)
+				if (!runner.isTrueBaseFeature(baseFeatures[i]))
+					onlya.add(baseFeatures[i]);
+			onlya.toArray(new Feature[0]);
+			System.out.println(onlya.get(1));
+			System.out.println(onlya.get(1).name);
 
 
 
@@ -1913,21 +1941,13 @@ public class Runner {
 	double[][] forwardFeatureSelection(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
 		int num = features.length; // number of predictors?
-		final double[] gain = new double[num*2];
-		final double[] testgain = new double[num*2];
-		final double[] auc = new double[num*2];
-		final boolean hastest = testSamples!=null && testSamples.length>0;
-		if (threads()>1)
-			parallelRunner.clear();
 
 
 		/** ArrayList with possible variable names?
-		 * -> get features over features.name ?
-		 * me = number of features 14
-		 * features have fixed index?
-		 * **/
-
-
+ 			* -> get features over features.name ?
+ 			* me = number of features 14
+ 			* features have fixed index?
+ 			* **/
 		// range Integer predictor number
 		List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
 				.boxed().collect(Collectors.toList());
@@ -1939,7 +1959,7 @@ public class Runner {
 		Integer[][] allComb = new Integer[comb.size()][2];
 
 		//add values from Set<Set<Integer>> to Array
-		for (int i=0;i<allComb.length;i++) {
+		for (int i=0;i<comb.size();i++) {
 			//get one set
 			Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
 			// get each element of set
@@ -1947,30 +1967,44 @@ public class Runner {
 			allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
 		}
 
+
+		final double[] gain = new double[allComb.length*2];
+		final double[] testgain = new double[allComb.length*2];
+		final double[] auc = new double[allComb.length*2];
+		final boolean hastest = testSamples!=null && testSamples.length>0;
+		if (threads()>1)
+			parallelRunner.clear();
+
+
+
+
+
+
 		/** hier eine list mit allen möglichen Kombinationen aus den zwei ArrayLists
 		 * dann: i iterates over first column. Tabelle ist länger als n-features -> does not work like this
 		 * -> rest me
 		 * [var1, var2
 		 * var1, var3 ...] **/
 
-		for (int i=0; i<allComb.length; i++) {
+		for (int i=0; i<comb.size(); i++) {
 			if (Utils.interrupt) return null;
-			String myname = "Forward Feature Selection: using only " + features[i].name + " & " + features[i].name;
-			Utils.echoln(myname);
 			final int me2 = allComb[i][0];
 			final int me1 = allComb[i][1];
+			String myname = "Forward Feature Selection: using only " + features[me1].name + " & " + features[me2].name;
+			Utils.echoln(myname);
 			Runnable task = new Runnable() {
 				public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
-					onlyTwoRun(baseFeatures, ss, testSamples, me1, gain, testgain, auc, features[me1], features[me2]);
+					onlyTwoRun(baseFeatures, ss, testSamples, me1, gain, testgain, auc, features[me1], features[me2], allComb.length);
 				}
 			};
 			if (threads()<=1) task.run();
 			else parallelRunner.add(task, myname);
 		}
-		if (threads()>1)
-			parallelRunner.runall("jackknife", is("verbose"));
+		/*if (threads()>1)
+			parallelRunner.runall("ffs", is("verbose"));
 		if (is("plots"))
 			makeJackknifePlots(htmlout, theSpecies, gain, testgain, auc, features, allGain, allTestGain, allauc, hastest, "");
+			 */
 		if (!hastest) return new double[][] { gain };
 		return new double[][] { gain, testgain, auc };
 	}
