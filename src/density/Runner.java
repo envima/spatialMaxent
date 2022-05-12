@@ -1620,7 +1620,6 @@ public class Runner {
 	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2, int maxComb) {
 
 		/** num has to be set to length of possible var combinations**/
-		int num = maxComb;
 		boolean hastest = testSamples!=null && testSamples.length>0;
 
 		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i forwardFeatureSelection function to iterate over all features
@@ -1635,7 +1634,7 @@ public class Runner {
 		if (res==null) return;
 		Utils.echoln("Res.gain: " + res.gain);
 		res.removeBiasDistribution();
-		gain[num+me] = res.gain;
+		gain[me] = res.gain;
 		if (hastest) {
 			DoubleIterator backgroundIterator = null;
 	    /*
@@ -1644,10 +1643,10 @@ public class Runner {
 			double getNext() { return res.X.getDensity(i++); }
 		    };
 	    */
-			auc[num+me] = res.X.getAUC(backgroundIterator, testSamples);
+			auc[me] = res.X.getAUC(backgroundIterator, testSamples);
 			if (backgroundIterator!=null)
 				res.X.setDensityNormalizer(backgroundIterator);
-			testgain[num+me] = getTestGain(res.X);
+			testgain[me] = getTestGain(res.X);
 		}
 	}
 
@@ -1658,7 +1657,8 @@ public class Runner {
 		params.setEnvironmentallayers("D:\\maxent\\layers");
 		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
 		//params.setReplicatetype("spatial crossvalidate");
-		params.setFfs(true);
+		//params.setFfs(true);
+		params.setJackknife(true);
 		params.setSelections();
 
 		Runner runner = new Runner(params);
@@ -2042,10 +2042,17 @@ public class Runner {
 					runner.jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 					null;
 
-			double[][] ffsGain = (runner.is("ffs") && (baseFeaturesNoBias.length > 1)) ?
+			double[][] ffsGain =  (baseFeaturesNoBias.length > 1) ?
 					runner.forwardFeatureSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 					null;
 			System.out.println(Arrays.deepToString(ffsGain));
+			System.out.println(Arrays.deepToString(jackknifeGain));
+			System.out.println(auc);
+			System.out.println(aucSD);
+			System.out.println(aucmax);
+			System.out.println(trainauc);
+
+
 			runner.writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 			//writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, ffsGain, entropy, prevalence, permcontribs);
 
@@ -2072,12 +2079,6 @@ public class Runner {
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
 		int num = features.length; // number of predictors?
 
-
-		/** ArrayList with possible variable names?
- 			* -> get features over features.name ?
- 			* me = number of features 14
- 			* features have fixed index?
- 			* **/
 		// range Integer predictor number
 		List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
 				.boxed().collect(Collectors.toList());
@@ -2098,23 +2099,16 @@ public class Runner {
 		}
 
 
-		final double[] gain = new double[allComb.length*2];
-		final double[] testgain = new double[allComb.length*2];
-		final double[] auc = new double[allComb.length*2];
+		/** Warum alle arrays doppelt so lang wie die eigentliche Anzahl der Ergebnisse????
+		 * **/
+
+		final double[] gain = new double[allComb.length];
+		final double[] testgain = new double[allComb.length];
+		final double[] auc = new double[allComb.length];
 		final boolean hastest = testSamples!=null && testSamples.length>0;
 		if (threads()>1)
 			parallelRunner.clear();
 
-
-
-
-
-
-		/** hier eine list mit allen möglichen Kombinationen aus den zwei ArrayLists
-		 * dann: i iterates over first column. Tabelle ist länger als n-features -> does not work like this
-		 * -> rest me
-		 * [var1, var2
-		 * var1, var3 ...] **/
 
 		for (int i=0; i<comb.size(); i++) {
 			if (Utils.interrupt) return null;
@@ -2150,6 +2144,12 @@ public class Runner {
 	double[][] jackknifeGain(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
 		int num = features.length; // number of predictors?
+		/** weil zwei runs ausgeführt werden?
+		 * 1. nur eine var,
+		 * zweiter alle außer eine var??? Ja! in leave one out gain[me] in only one [num+me]!!!!!!
+		 *
+		 * In results aber 14 gain und 14 auc nur gain??**/
+
 		final double[] gain = new double[num*2];
 		final double[] testgain = new double[num*2];
 		final double[] auc = new double[num*2];
