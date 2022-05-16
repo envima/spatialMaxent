@@ -29,6 +29,7 @@ package density;
 
 
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Doubles;
 import ptolemy.plot.MyPlot;
 
 import javax.imageio.ImageIO;
@@ -1165,6 +1166,9 @@ public class Runner {
 			htmlputs("Command line to repeat this species model: " + params.commandLine(theSpecies));
 	}
 
+
+	/** alle kombinationen wie ffs testen! **/
+
 	String regularizationConstants() {
 		return "linear/quadratic/product: " + nf.format(beta_lqp) + ", categorical: " + nf.format(beta_cat) + ", threshold: " + nf.format(beta_thr) + ", hinge: " + nf.format(beta_hge);
 	}
@@ -1589,6 +1593,42 @@ public class Runner {
 		}
 	}
 
+
+	void addFfsFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature toLeaveOut) {
+		boolean hastest = testSamples!=null && testSamples.length>0;
+		// we need the number of features
+		Feature[] leaveOneOut = new Feature[baseFeatures.length-1];
+		int cnt=0;
+		for (int j=0; j<baseFeatures.length; j++)
+			if (baseFeatures[j] != toLeaveOut)
+				leaveOneOut[cnt++] = baseFeatures[j];
+		Feature[] features = //(addSamplesToFeatures) ?
+				//	    makeFeatures(featuresWithSamples(leaveOneOut, ss)) :
+				makeFeatures(leaveOneOut);
+		if (features==null) return;
+		if (Utils.interrupt) return;
+		Utils.reportDoing(theSpecies + " " + toLeaveOut.name + ": ");
+		final MaxentRunResults res = maxentRun(features, ss, testSamples);
+		if (res==null) return;
+		res.removeBiasDistribution();
+		gain[me] = res.gain;
+		if (hastest) {
+			DoubleIterator backgroundIterator = null;
+	    /*
+	    if (addSamplesToFeatures)
+		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
+			double getNext() { return res.X.getDensity(i++); }
+		    };
+	    */
+			auc[me] = res.X.getAUC(backgroundIterator, testSamples);
+			if (backgroundIterator!=null)
+				res.X.setDensityNormalizer(backgroundIterator);
+			testgain[me] = getTestGain(res.X);
+		}
+	}
+
+
+
 	void onlyOneRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature onlyfeature) {
 		int num = getTrueBaseFeatures(baseFeatures).length; // number of predictors??
 		boolean hastest = testSamples!=null && testSamples.length>0;
@@ -1662,7 +1702,8 @@ public class Runner {
 		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
 		params.setReplicatetype("crossvalidate");
 		params.setReplicates(2); // needs to be larger 1 for spatcv!!!!!!!
-		params.setJackknife(true);
+		//params.setJackknife(true);
+		params.setFfs(true);
 		params.setSelections();
 		Runner runner = new Runner(params);
 
@@ -2023,15 +2064,139 @@ System.out.println(testSampleSet.speciesMap);
 					runner.jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 					null;
 			System.out.println(Arrays.deepToString(jackknifeGain));
-			double[][] ffsGain = (runner.is("ffs")  && (baseFeaturesNoBias.length > 1)) ?
-					runner.forwardFeatureSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
-					null;
+			//double[][] ffsGain = (runner.is("ffs")  && (baseFeaturesNoBias.length > 1)) ?
+			//		runner.forwardFeatureSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
+			//		null;
+			//System.out.println(Arrays.deepToString(ffsGain));
+
+			/** start forward feature selection here:
+			 * umbenannte variablen= auc = aucFFS
+			 * features = featuresFFS
+			 * final Sample[] ssFFS = ss;
+			 * **/
+
+		final Sample[] ssFFS = ss;
+			final Feature[] featuresFFS =  baseFeaturesWithSamples;
+			int num = featuresFFS.length; // number of predictors?
+		// contains the names of all variables, the selected ones will be removed later on...
+			ArrayList<String> varNames = new ArrayList<String>();
+			for(int i=0; i<num; i++){
+				varNames.add(featuresFFS[i].name);
+			}
+			System.out.println(varNames);
 
 
-			runner.writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
+			// range Integer predictor number
+			List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
+					.boxed().collect(Collectors.toList());
+
+			// create guava Sets with all possible combinations of var Integer
+			Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
+
+			// create empty array
+			Integer[][] allComb = new Integer[comb.size()][2];
+
+			//add values from Set<Set<Integer>> to Array
+			for (int i=0;i<comb.size();i++) {
+				//get one set
+				Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
+				// get each element of set
+				allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
+				allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
+			}
+
+
+			/** Warum alle arrays doppelt so lang wie die eigentliche Anzahl der Ergebnisse????
+			 * weil in jackiknife zwei runs!
+			 * **/
+			Sample[] testSamples = X.testSamples;
+			final double[] gain = new double[allComb.length];
+			final double[] testgain = new double[allComb.length];
+			final double[] aucFFS = new double[allComb.length];
+			final boolean hastest = testSamples!=null && testSamples.length>0;
+			if (runner.threads()>1)
+				runner.parallelRunner.clear();
+
+
+			for (int i=0; i<comb.size(); i++) {
+				//if (Utils.interrupt) return null; include again in function!!!!!
+				final int me2 = allComb[i][0];
+				final int me1 = allComb[i][1];
+				final int me = i;
+				String myname = "Forward Feature Selection: using only " + featuresFFS[me1].name + " & " + featuresFFS[me2].name;
+				Utils.echoln(myname);
+				Runnable task = new Runnable() {
+					public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
+						runner.onlyTwoRun(baseFeatures, ssFFS, testSamples, me, gain, testgain, aucFFS, featuresFFS[me1], featuresFFS[me2], allComb.length);
+					}
+				};
+				if (runner.threads()<=1) task.run();
+				else runner.parallelRunner.add(task, myname);
+			}
+
+
+
+			//double[][]twoVarRes = new double[][] { gain, testgain, auc };
+			System.out.println(Arrays.toString(testgain));
+			// get best model
+		System.out.print("Best testgain: ");
+			double max = Arrays.stream(testgain).max().getAsDouble();
+			System.out.println(max);
+			// get var combination of best model
+		int index = Doubles.indexOf(testgain, max);
+		System.out.println(index);
+		System.out.println(Arrays.deepToString(allComb));
+		//get position of two best variables:
+		int var2 = allComb[52][0];
+		int var1 = allComb[52][1];
+
+	System.out.println("Forward Feature Selection best variable combination " + featuresFFS[var1].name + " & " + featuresFFS[var2].name);
+	System.out.println("Forward Feature Selection best variable combination " + featuresFFS[var1].name + " & " + featuresFFS[var2].name);
+
+	ArrayList<String> selectedVars = new ArrayList<>();
+	// 1. get index of selected variables in varNames
+	System.out.println(varNames.get(var1));
+	System.out.println(varNames.get(var2));
+
+
+	//	2. add selected vars to selectedVars arrayList
+	selectedVars.add(varNames.get(var1));
+	selectedVars.add(varNames.get(var2));
+	System.out.println(selectedVars);
+	// 3. remove selected vars from varNames
+	varNames.remove(var1);
+	varNames.remove(var2);
+	System.out.println(varNames);
+	// 4. Train again with 3 variables!!!!!
+
+
+
+
+
+		// array with all variable names (e.g. 14 ) delete the ones used here already
+
+
+		/*if (threads()>1)
+			parallelRunner.runall("ffs", is("verbose"));
+		if (is("plots"))
+			makeJackknifePlots(htmlout, theSpecies, gain, testgain, aucFFS, features, allGain, allTestGain, allauc, hastest, "");
+			 */
+
+
+			//if (!hastest) return new double[][] { gain };
+			//return new double[][] { gain, testgain, aucFFS };
+
+
+
+
+		/** end forward feature selection here:
+         *
+         * **/
+
+			//runner.writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 			//writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, ffsGain, entropy, prevalence, permcontribs);
 
-			runner.writeHtmlDetails(res, testGain, auc, aucSD, trainauc);
+			//runner.writeHtmlDetails(res, testGain, auc, aucSD, trainauc);
 			runner.htmlout.close();
 			// if gsfromfile, we'll need to do something different,
 			// using (GridSetFromFile) gs instead of params.environmentallayers.
@@ -2113,7 +2278,7 @@ System.out.println(testSampleSet.speciesMap);
 		//double[][]twoVarRes = new double[][] { gain, testgain, auc };
 
 		// get best model
-		//double max = Arrays.stream(gain).max().getAsDouble();
+		double max = Arrays.stream(testgain).max().getAsDouble();
 		// get var combination of best model
 
 		//int indexbestMod = ArrayUtils.indexOf(allComb, max);
