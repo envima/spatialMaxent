@@ -1386,6 +1386,28 @@ public class Runner {
 		return onlya.toArray(new Feature[0]);
 	}
 
+
+	Feature[] variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars) {
+
+		ArrayList<Feature> usedFeatures = new ArrayList<>();
+
+		// add all Variables in ArrayList selectedVars
+		for (int k = 0; k < tempSelectedVars.size(); k++) {
+			for (int j = 0; j < baseFeatures.length; j++) {
+				if (baseFeatures[j].name.equals(tempSelectedVars.get(k))) {
+					usedFeatures.add(baseFeatures[j]);
+				}
+			}
+		}
+		return usedFeatures.toArray(new Feature[0]);
+
+	}
+
+
+
+
+
+
 	void oneVarResponseRun(Feature[] baseFeatures, Sample[] ss, Feature f) {
 		Feature[] only = onlyOneFeature(baseFeatures, f);
 		Feature[] features = makeFeatures(only);
@@ -1593,38 +1615,26 @@ public class Runner {
 		}
 	}
 
-
-	void addFfsFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature toLeaveOut) {
+	void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gainTmp, double[] testgainTmp, double[] aucTmp, ArrayList<String> tempSelectedVars) {
 		boolean hastest = testSamples!=null && testSamples.length>0;
-		// we need the number of features
-		Feature[] leaveOneOut = new Feature[baseFeatures.length-1];
-		int cnt=0;
-		for (int j=0; j<baseFeatures.length; j++)
-			if (baseFeatures[j] != toLeaveOut)
-				leaveOneOut[cnt++] = baseFeatures[j];
-		Feature[] features = //(addSamplesToFeatures) ?
-				//	    makeFeatures(featuresWithSamples(leaveOneOut, ss)) :
-				makeFeatures(leaveOneOut);
-		if (features==null) return;
-		if (Utils.interrupt) return;
-		Utils.reportDoing(theSpecies + " " + toLeaveOut.name + ": ");
+
+		Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, tempSelectedVars));
+			if (features==null) return;
+			if (Utils.interrupt) return;
+			Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
+
 		final MaxentRunResults res = maxentRun(features, ss, testSamples);
-		if (res==null) return;
-		res.removeBiasDistribution();
-		gain[me] = res.gain;
+			if (res==null) return;
+			res.removeBiasDistribution();
+			gainTmp[me] = res.gain;
 		if (hastest) {
 			DoubleIterator backgroundIterator = null;
-	    /*
-	    if (addSamplesToFeatures)
-		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
-			double getNext() { return res.X.getDensity(i++); }
-		    };
-	    */
-			auc[me] = res.X.getAUC(backgroundIterator, testSamples);
-			if (backgroundIterator!=null)
+
+			aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
+					if (backgroundIterator!=null)
 				res.X.setDensityNormalizer(backgroundIterator);
-			testgain[me] = getTestGain(res.X);
-		}
+			testgainTmp[me] = getTestGain(res.X);
+			}
 	}
 
 
@@ -1712,7 +1722,7 @@ public class Runner {
 /** beginn runner.start function**/
 
 
-		int j;
+		//int j;
 
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
@@ -2135,7 +2145,6 @@ System.out.println(testSampleSet.speciesMap);
 			}
 
 
-
 			//double[][]twoVarRes = new double[][] { gain, testgain, auc };
 			System.out.println(Arrays.toString(testgain));
 			// get best model
@@ -2166,12 +2175,59 @@ System.out.println(testSampleSet.speciesMap);
 	// 3. remove selected vars from varNames
 	varNames.remove(var1);
 	varNames.remove(var2);
-	System.out.println(varNames);
+
 	// 4. Train again with 3 variables!!!!!
+		ArrayList<String> tempSelectedVars = selectedVars;
+		tempSelectedVars.add(varNames.get(0));
+
+		//Save results of each run in:
+		final double[] gainTmp = new double[selectedVars.size()];
+		final double[] testgainTmp = new double[selectedVars.size()];
+		final double[] aucTmp = new double[selectedVars.size()];
+
+	// 5. run maxEntRun in loop with each variable combination
 
 
 
 
+
+
+		/////////////////////////////////////////////////////////////////////////////////
+
+	//	void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gainTmp, double[] testgainTmp, double[] aucTmp, ArrayList<String>) {
+			//boolean hastest = testSamples!=null && testSamples.length>0;
+			// we need the number of features
+		/**
+		 * rename:
+		 * features -> features4
+		 * res -> res2
+		 */
+/*
+			int me = 0;
+			Feature[] features4 = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, tempSelectedVars));
+			if (features4==null) return;
+			if (Utils.interrupt) return;
+			Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
+
+			final MaxentRunResults res2 = runner.maxentRun(features4, ss, testSamples);
+			if (res==null) return;
+			res2.removeBiasDistribution();
+			gainTmp[me] = res2.gain;
+			//if (hastest) {
+			//	DoubleIterator runner.backgroundIterator = null;
+
+				aucTmp[me] = res2.X.getAUC(backgroundIterator, testSamples);
+				if (backgroundIterator!=null)
+					res2.X.setDensityNormalizer(backgroundIterator);
+				testgainTmp[me] = runner.getTestGain(res2.X);
+		//	}
+
+
+	//	}
+
+*/
+
+/** addFfsFeaturesToRun end **/
 
 		// array with all variable names (e.g. 14 ) delete the ones used here already
 
