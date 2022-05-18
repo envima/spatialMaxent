@@ -2199,7 +2199,7 @@ System.out.println(testSampleSet.speciesMap);
 
 			//	if (runner.threads()<=1) task.run();
 			//	else runner.parallelRunner.add(task, myname);
-
+		
 			}
 			//Best Model:
 			double currentTestGain = Arrays.stream(testgainTmp).max().getAsDouble();
@@ -2213,8 +2213,8 @@ System.out.println(testSampleSet.speciesMap);
 
 
 			} else {
-				if (!hastest) return new double[][] { gainTmp };
-				return new double[][] { gainTmp, testgainTmp, aucTmp };
+			//	if (!hastest) return new double[][] { gainTmp };
+			//	return new double[][] { gainTmp, testgainTmp, aucTmp };
 				//return best model and finish
 				break;
 			}
@@ -2227,38 +2227,7 @@ System.out.println(testSampleSet.speciesMap);
 		 * 	- add variable to selected vars
 		 * 	rerun...**/
 
-		///////////////////////test stuff
-/*
-		final double[] gainTmp = new double[selectedVars.size()];
-		final double[] testgainTmp = new double[selectedVars.size()];
-		final double[] aucTmp = new double[selectedVars.size()];
-		int me = 0;
-		Feature[] features4 = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, tempSelectedVars));
 
-		if (features4==null) return;
-		if (Utils.interrupt) return;
-		Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
-
-		final MaxentRunResults res2 = runner.maxentRun(features4, ss, testSamples);
-		if (res2==null) return;
-		res2.removeBiasDistribution();
-		gainTmp[me] = res2.gain;
-		if (hastest) {
-			//DoubleIterator backgroundIterator = null;
-
-			aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
-			if (backgroundIterator!=null)
-				res2.X.setDensityNormalizer(backgroundIterator);
-			testgainTmp[me] = runner.getTestGain(res2.X);
-		}
-
-		System.out.println(Arrays.toString(gainTmp));
-
-		//////////////////////// test stuff
-
-*/
-
-/**another for/while loop needed:  we need to compare goodness of model to model-before here and break if no improvement is seen**/
 
 		/////////////////////////////////////////////////////////////////////////////////
 
@@ -2476,6 +2445,7 @@ System.out.println(testSampleSet.speciesMap);
 
 		/** add return statment here:
 		 * **/
+		return new double[][]{gain, testgain, auc};
 	}
 
 
