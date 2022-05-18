@@ -2116,9 +2116,6 @@ System.out.println(testSampleSet.speciesMap);
 			}
 
 
-			/** Warum alle arrays doppelt so lang wie die eigentliche Anzahl der Ergebnisse????
-			 * weil in jackiknife zwei runs!
-			 * **/
 			Sample[] testSamples = X.testSamples;
 			final double[] gain = new double[allComb.length];
 			final double[] testgain = new double[allComb.length];
@@ -2144,53 +2141,126 @@ System.out.println(testSampleSet.speciesMap);
 				else runner.parallelRunner.add(task, myname);
 			}
 
+		// get best model
 
-			//double[][]twoVarRes = new double[][] { gain, testgain, auc };
-			System.out.println(Arrays.toString(testgain));
-			// get best model
-		System.out.print("Best testgain: ");
-			double max = Arrays.stream(testgain).max().getAsDouble();
-			System.out.println(max);
-			// get var combination of best model
-		int index = Doubles.indexOf(testgain, max);
-		System.out.println(index);
-		System.out.println(Arrays.deepToString(allComb));
+		double bestTestGain = Arrays.stream(testgain).max().getAsDouble();
+		// get var combination of best model
+		int index = Doubles.indexOf(testgain, bestTestGain);
 		//get position of two best variables:
-		int var2 = allComb[52][0];
-		int var1 = allComb[52][1];
+		int var2 = allComb[index][0];
+		int var1 = allComb[index][1];
 
-	System.out.println("Forward Feature Selection best variable combination " + featuresFFS[var1].name + " & " + featuresFFS[var2].name);
-	System.out.println("Forward Feature Selection best variable combination " + featuresFFS[var1].name + " & " + featuresFFS[var2].name);
+		Utils.echoln("Forward Feature Selection best two variable combination " + featuresFFS[var1].name + " & " + featuresFFS[var2].name);
 
-	ArrayList<String> selectedVars = new ArrayList<>();
-	// 1. get index of selected variables in varNames
-	System.out.println(varNames.get(var1));
-	System.out.println(varNames.get(var2));
+		// Needed Variables:
+		ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
+
+		//double currentTestGain; // store the best TestGain of the current Models inside
+
+		//add selected vars to selectedVars ArrayList
+		selectedVars.add(varNames.get(var1));
+		selectedVars.add(varNames.get(var2));
+
+		// remove selected vars from varNames
+		varNames.remove(var1);
+		varNames.remove(var2);
+
+		/**
+		 * run MaxEnt while adding on variable each time:
+		 * **/
+
+		for(int k=0; k<varNames.size(); k++){
 
 
-	//	2. add selected vars to selectedVars arrayList
-	selectedVars.add(varNames.get(var1));
-	selectedVars.add(varNames.get(var2));
-	System.out.println(selectedVars);
-	// 3. remove selected vars from varNames
-	varNames.remove(var1);
-	varNames.remove(var2);
-
-	// 4. Train again with 3 variables!!!!!
+		//if (runner.threads()>1)
+		//	runner.parallelRunner.clear();
 		ArrayList<String> tempSelectedVars = selectedVars;
-		tempSelectedVars.add(varNames.get(0));
+		tempSelectedVars.add(varNames.get(k));
 
-		//Save results of each run in:
+			for (int i=0; i<tempSelectedVars.size(); i++) {
+					//save result of the selected vars in array:
+				final double[] gainTmp = new double[varNames.size()];
+				final double[] testgainTmp = new double[varNames.size()];
+				final double[] aucTmp = new double[varNames.size()];
+
+
+				//ArrayList<String> tempSelectedVars = selectedVars;
+				//tempSelectedVars.add(varNames.get(i));
+				//if (Utils.interrupt) return null; include again in function!!!!!
+
+				int me = i;
+				String myname = "Forward Feature Selection: using " + tempSelectedVars;
+				Utils.echoln(myname);
+				Runnable task = new Runnable() {
+					public void run() {
+						runner.addSelectedFeaturesRun(baseFeatures, ssFFS, testSamples, me, gainTmp, testgainTmp, aucTmp, tempSelectedVars);
+					}
+				};
+
+			//	System.out.println(Arrays.toString(gainTmp));
+
+			//	if (runner.threads()<=1) task.run();
+			//	else runner.parallelRunner.add(task, myname);
+
+			/**
+			//Best Model:
+				double currentTestGain = Arrays.stream(testgainTmp).max().getAsDouble();
+				// get var combination of best model
+				int indexTemp = Doubles.indexOf(testgainTmp, currentTestGain);
+				if(currentTestGain > bestTestGain){
+					bestTestGain = currentTestGain;
+					selectedVars.add(varNames.get(indexTemp));
+					varNames.remove(indexTemp);
+
+
+				} else {
+					//if (!hastest) return new double[][] { gain };
+					//return new double[][] { gain, testgain, auc };
+					//return best model and finish
+				}
+**/
+			}
+		}
+		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
+		 * - compare to previous best testGain
+		 * - if (better)
+		 * 	- get index of Variable Name
+		 * 	- remove variable from varNames
+		 * 	- add variable to selected vars
+		 * 	rerun...**/
+
+		///////////////////////test stuff
+/*
 		final double[] gainTmp = new double[selectedVars.size()];
 		final double[] testgainTmp = new double[selectedVars.size()];
 		final double[] aucTmp = new double[selectedVars.size()];
+		int me = 0;
+		Feature[] features4 = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, tempSelectedVars));
 
-	// 5. run maxEntRun in loop with each variable combination
+		if (features4==null) return;
+		if (Utils.interrupt) return;
+		Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
 
+		final MaxentRunResults res2 = runner.maxentRun(features4, ss, testSamples);
+		if (res2==null) return;
+		res2.removeBiasDistribution();
+		gainTmp[me] = res2.gain;
+		if (hastest) {
+			//DoubleIterator backgroundIterator = null;
 
+			aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
+			if (backgroundIterator!=null)
+				res2.X.setDensityNormalizer(backgroundIterator);
+			testgainTmp[me] = runner.getTestGain(res2.X);
+		}
 
+		System.out.println(Arrays.toString(gainTmp));
 
+		//////////////////////// test stuff
 
+*/
+
+/**another for/while loop needed:  we need to compare goodness of model to model-before here and break if no improvement is seen**/
 
 		/////////////////////////////////////////////////////////////////////////////////
 
