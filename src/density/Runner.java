@@ -1615,7 +1615,7 @@ public class Runner {
 		}
 	}
 
-	void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gainTmp, double[] testgainTmp, double[] aucTmp, ArrayList<String> tempSelectedVars) {
+	void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me,ArrayList<Double> testGainTmp, ArrayList<String> tempSelectedVars) {
 		boolean hastest = testSamples!=null && testSamples.length>0;
 
 		Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, tempSelectedVars));
@@ -1626,18 +1626,38 @@ public class Runner {
 		final MaxentRunResults res = maxentRun(features, ss, testSamples);
 			if (res==null) return;
 			res.removeBiasDistribution();
-			gainTmp[me] = res.gain;
+			//gainTmp[me] = res.gain;
+		if (hastest) {
+			DoubleIterator backgroundIterator = null;
+
+		//	aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
+					if (backgroundIterator!=null)
+				res.X.setDensityNormalizer(backgroundIterator);
+			testGainTmp.add(me, getTestGain(res.X));
+			}
+	}
+
+	void addSelectedFeaturesRun2(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gainTmp, double[] testgainTmp, double[] aucTmp, ArrayList<String> tempSelectedVars) {
+		boolean hastest = testSamples!=null && testSamples.length>0;
+
+		Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, tempSelectedVars));
+		if (features==null) return;
+		if (Utils.interrupt) return;
+		Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
+
+		final MaxentRunResults res = maxentRun(features, ss, testSamples);
+		if (res==null) return;
+		res.removeBiasDistribution();
+		gainTmp[me] = res.gain;
 		if (hastest) {
 			DoubleIterator backgroundIterator = null;
 
 			aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
-					if (backgroundIterator!=null)
+			if (backgroundIterator!=null)
 				res.X.setDensityNormalizer(backgroundIterator);
 			testgainTmp[me] = getTestGain(res.X);
-			}
+		}
 	}
-
-
 
 	void onlyOneRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature onlyfeature) {
 		int num = getTrueBaseFeatures(baseFeatures).length; // number of predictors??
@@ -1771,7 +1791,7 @@ public class Runner {
 		baseFeatures = (gs==null) ? null : gs.toFeatures();
 		coords = gs.getDimension().coords;
 
-		System.out.println(baseFeatures.length);
+		//System.out.println(baseFeatures.length);
 		// note.
 		boolean addSamplesToFeatures = runner.samplesAddedToFeatures =
 				runner.is("addSamplesToBackground") &&
@@ -1786,7 +1806,7 @@ public class Runner {
 		 * **/
 		Feature[] features=null;
 		features = runner.makeFeatures(baseFeatures);
-		System.out.println(!addSamplesToFeatures); // false
+		//System.out.println(!addSamplesToFeatures); // false
 		if (!addSamplesToFeatures) { //false
 			features = runner.makeFeatures(baseFeatures);
 			if (Utils.interrupt) return;
@@ -1815,7 +1835,7 @@ public class Runner {
 		}
 
 
-System.out.println(testSampleSet.speciesMap);
+//System.out.println(testSampleSet.speciesMap);
 
 
 
@@ -1836,7 +1856,7 @@ System.out.println(testSampleSet.speciesMap);
 				return;
 			}
 		}
-System.out.println(testSampleSet.speciesMap);
+//System.out.println(testSampleSet.speciesMap);
 
 		//for (int sample=0; sample<params.species.length; sample++) {
 		int sample = 0;
@@ -1877,7 +1897,7 @@ System.out.println(testSampleSet.speciesMap);
 			}
 			Utils.reportMemory("getSamples");
 
-			System.out.println(testSampleSet.speciesMap);
+			//System.out.println(testSampleSet.speciesMap);
 
 			if (lf.exists()) {
 				if (runner.is("skipIfExists")) {
@@ -1901,11 +1921,11 @@ System.out.println(testSampleSet.speciesMap);
 			}
 
 			Feature[] baseFeaturesWithSamples = baseFeatures;
-			System.out.println(addSamplesToFeatures);
+			//System.out.println(addSamplesToFeatures);
 			if (addSamplesToFeatures) { // true
 				//features = null;  // free up memory before makeFeatures
 				baseFeaturesWithSamples = runner.featuresWithSamples(baseFeatures, ss);
-				System.out.println(baseFeaturesWithSamples==null); //false
+				//System.out.println(baseFeaturesWithSamples==null); //false
 				if (baseFeaturesWithSamples==null)
 				features = runner.makeFeatures(baseFeaturesWithSamples);
 			}
@@ -1928,7 +1948,7 @@ System.out.println(testSampleSet.speciesMap);
 			if (res==null) return;
 			Utils.echoln("Resulting gain: " + res.gain);
 			final FeaturedSpace X = res.X;
-			System.out.println(res.gain);
+			//System.out.println(res.gain);
 
 			//	    if (X.biasDist != null)
 			//		X.setBiasDist(null); // remove biasDist
@@ -2073,7 +2093,7 @@ System.out.println(testSampleSet.speciesMap);
 			double[][] jackknifeGain = (runner.is("jackknife")  && (baseFeaturesNoBias.length > 1)) ?
 					runner.jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 					null;
-			System.out.println(Arrays.deepToString(jackknifeGain));
+			//System.out.println(Arrays.deepToString(jackknifeGain));
 			//double[][] ffsGain = (runner.is("ffs")  && (baseFeaturesNoBias.length > 1)) ?
 			//		runner.forwardFeatureSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 			//		null;
@@ -2093,7 +2113,7 @@ System.out.println(testSampleSet.speciesMap);
 			for(int i=0; i<num; i++){
 				varNames.add(featuresFFS[i].name);
 			}
-			System.out.println(varNames);
+			//System.out.println(varNames);
 
 
 			// range Integer predictor number
@@ -2120,6 +2140,7 @@ System.out.println(testSampleSet.speciesMap);
 			final double[] gain = new double[allComb.length];
 			final double[] testgain = new double[allComb.length];
 			final double[] aucFFS = new double[allComb.length];
+			ArrayList<Double> testGainTmp = new ArrayList<>();
 			final boolean hastest = testSamples!=null && testSamples.length>0;
 			if (runner.threads()>1)
 				runner.parallelRunner.clear();
@@ -2169,56 +2190,96 @@ System.out.println(testSampleSet.speciesMap);
 		 * run MaxEnt while adding on variable each time:
 		 * **/
 
+		//final double[] gainTmp = new double[varNames.size()];
+		//final double[] testgainTmp = new double[varNames.size()];
+
+		//final double[] aucTmp = new double[varNames.size()];
+
+
+
+
+		////////////////////////////////////////////////////
+		ArrayList<String> tempSelectedVars = new ArrayList<>();
+		System.out.println("Start loop: ");
 		for(int k=0; k<varNames.size(); k++){
 
-			final double[] gainTmp = new double[varNames.size()];
-			final double[] testgainTmp = new double[varNames.size()];
-			final double[] aucTmp = new double[varNames.size()];
+
 		//if (runner.threads()>1)
 		//	runner.parallelRunner.clear();
-		ArrayList<String> tempSelectedVars = selectedVars;
+
+		tempSelectedVars.addAll(selectedVars);
 		tempSelectedVars.add(varNames.get(k));
 
-			for (int i=0; i<tempSelectedVars.size(); i++) {
+
+
+			//for (int i=0; i<tempSelectedVars.size(); i++) {
+
+
 				//save result of the selected vars in array:
 
-				//ArrayList<String> tempSelectedVars = selectedVars;
-				//tempSelectedVars.add(varNames.get(i));
 				//if (Utils.interrupt) return null; include again in function!!!!!
 
-				int me = i;
+				int me = k;
 				String myname = "Forward Feature Selection: using " + tempSelectedVars;
 				Utils.echoln(myname);
+				System.out.println("Forward Feature Selection: using " + tempSelectedVars);
 				Runnable task = new Runnable() {
 					public void run() {
-						runner.addSelectedFeaturesRun(baseFeatures, ssFFS, testSamples, me, gainTmp, testgainTmp, aucTmp, tempSelectedVars);
+						runner.addSelectedFeaturesRun(baseFeatures, ssFFS, testSamples, me,  testGainTmp, tempSelectedVars);
 					}
 				};
+				tempSelectedVars.clear();
+/*
 
-			//	System.out.println(Arrays.toString(gainTmp));
+			//void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me,ArrayList<Double> testGainTmp, ArrayList<String> tempSelectedVars) {
+				boolean hastest2 = testSamples!=null && testSamples.length>0;
+				System.out.println("hastes2: ");
+				System.out.println(hastest2);
+				Feature[] featuresFVS = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, tempSelectedVars));
+				if (features==null) return;
+				if (Utils.interrupt) return;
+				Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
 
+				final MaxentRunResults res4 = runner.maxentRun(featuresFVS, ss, testSamples);
+				if (res4==null) return;
+				res4.removeBiasDistribution();
+				//gainTmp[me] = res.gain;
+				if (hastest2) {
+					DoubleIterator backgroundIterator2 = null;
+
+					//	aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
+					if (backgroundIterator2!=null)
+						res4.X.setDensityNormalizer(backgroundIterator2);
+					testGainTmp.add(me, runner.getTestGain(res4.X));
+				}
+				*/
+
+			} // end for loop
 			//	if (runner.threads()<=1) task.run();
 			//	else runner.parallelRunner.add(task, myname);
-		
-			}
+
+System.out.println(testGainTmp);
+			//}
+		//System.out.println();
 			//Best Model:
-			double currentTestGain = Arrays.stream(testgainTmp).max().getAsDouble();
+			//double currentTestGain = Arrays.stream(testgainTmp).max().getAsDouble();
 			// get var combination of best model
-			int indexTemp = Doubles.indexOf(testgainTmp, currentTestGain);
-			if(currentTestGain > bestTestGain){
-				bestTestGain = currentTestGain;
-				selectedVars.add(varNames.get(indexTemp));
-				varNames.remove(indexTemp);
+			//int indexTemp = Doubles.indexOf(testgainTmp, currentTestGain);
+			//if(currentTestGain > bestTestGain){
+			//	bestTestGain = currentTestGain;
+		//		selectedVars.add(varNames.get(indexTemp));
+				//varNames.remove(indexTemp);
 
 
 
-			} else {
+			//} else {
 			//	if (!hastest) return new double[][] { gainTmp };
-			//	return new double[][] { gainTmp, testgainTmp, aucTmp };
+			//	return new double[][] { gainTmp, testGainTmp, aucTmp };
 				//return best model and finish
-				break;
-			}
-		}
+		//		break;
+			//}
+
+		//}
 		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
 		 * - compare to previous best testGain
 		 * - if (better)
@@ -2229,40 +2290,18 @@ System.out.println(testSampleSet.speciesMap);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 		/////////////////////////////////////////////////////////////////////////////////
-
-	//	void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gainTmp, double[] testgainTmp, double[] aucTmp, ArrayList<String>) {
-			//boolean hastest = testSamples!=null && testSamples.length>0;
-			// we need the number of features
-		/**
-		 * rename:
-		 * features -> features4
-		 * res -> res2
-		 */
-/*
-			int me = 0;
-			Feature[] features4 = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, tempSelectedVars));
-			if (features4==null) return;
-			if (Utils.interrupt) return;
-			Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
-
-			final MaxentRunResults res2 = runner.maxentRun(features4, ss, testSamples);
-			if (res==null) return;
-			res2.removeBiasDistribution();
-			gainTmp[me] = res2.gain;
-			//if (hastest) {
-			//	DoubleIterator runner.backgroundIterator = null;
-
-				aucTmp[me] = res2.X.getAUC(backgroundIterator, testSamples);
-				if (backgroundIterator!=null)
-					res2.X.setDensityNormalizer(backgroundIterator);
-				testgainTmp[me] = runner.getTestGain(res2.X);
-		//	}
-
-
-	//	}
-
-*/
 
 /** addFfsFeaturesToRun end **/
 
@@ -2413,7 +2452,7 @@ System.out.println(testSampleSet.speciesMap);
 				Utils.echoln(myname);
 				Runnable task = new Runnable() {
 					public void run() {
-						addSelectedFeaturesRun(baseFeatures, ss, testSamples, me, gainTmp, testgainTmp, aucTmp, tempSelectedVars);
+						addSelectedFeaturesRun2(baseFeatures, ss, testSamples, me, gainTmp, testgainTmp, aucTmp, tempSelectedVars);
 					}
 				};
 
@@ -2432,18 +2471,25 @@ System.out.println(testSampleSet.speciesMap);
 				selectedVars.add(varNames.get(indexTemp));
 				varNames.remove(indexTemp);
 
+				/**
+				 * wo muss dieser Codeblock hin?
+				 * vor dem zweiten Loop? (wie FFS)
+				 * should it break the first or the second loop? **/
+
 
 			} else {
 				if (!hastest) return new double[][]{gainTmp};
 				return new double[][]{gainTmp, testgainTmp, aucTmp};
 				//return best model and finish
-				break;
+				//break;
 			}
 		}
 		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
 		 * 	-> rerun...**/
 
-		/** add return statment here:
+		/** add return statement here:
+		 * we need to return: bestModel, testGain, auc, gain, selectedVariables:
+		 * ArrayList, Array, HashMap with Results?
 		 * **/
 		return new double[][]{gain, testgain, auc};
 	}
