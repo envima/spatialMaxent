@@ -471,8 +471,41 @@ public class Runner {
 			Utils.reportDoing(theSpecies + ": ");
 
 			contributions = null;
-			MaxentRunResults res = maxentRun(features, ss,
-					testSampleSet!=null ? testSampleSet.getSamples(theSpecies) : null);
+			MaxentRunResults res=null;
+			////////////////////////////////////// add fvs
+			ArrayList<String> FvsVariables = new ArrayList<>();
+
+			if (is("ffs") ) {
+				/** add Forward Variable Selection here: ?
+				 * -> just use selected features for run
+				 * -> would mean: ffs returns ArrayList with variable names
+				 * 				-> features are set with makeFeatures and variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars)
+				 *
+				 *
+				 * **/
+
+				forwardFeatureSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
+				features = makeFeatures(variableNoOfFeatures(baseFeatures, FvsVariables));
+				res = maxentRun(features, ss,
+						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+
+			} else {
+
+
+
+				//contributions = null;
+				res = maxentRun(features, ss,
+						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+
+			}
+			//////////////////////////////////// end fvs
+
+
+
+
+
+			// res = maxentRun(features, ss,
+			//		testSampleSet!=null ? testSampleSet.getSamples(theSpecies) : null);
 			if (res==null) return;
 			Utils.echoln("Resulting gain: " + res.gain);
 			final FeaturedSpace X = res.X;
@@ -1935,13 +1968,15 @@ public class Runner {
 			contributions = null;
 			// empty arrayList to return selected Variables from FVS to
 			ArrayList<String> FvsVariables = new ArrayList<>();
+			/*
 			runner.forwardFeatureSelection(baseFeatures, ss,
+
 					testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,
 					FvsVariables);
 			System.out.println("FFS works ...?");
 			System.out.println(FvsVariables);
+*/
 
-/*
 			if (runner.is("ffs") ) {
 			/** add Forward Variable Selection here: ?
 			 * -> just use selected features for run
@@ -1950,12 +1985,12 @@ public class Runner {
 			 *
 			 *
 			 * **/
-		/*
-				runner.forwardFeatureSelection( baseFeatures,  ss,  testSamples,  FvsVariables);
+
+				runner.forwardFeatureSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
 				features = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, FvsVariables));
 				res = runner.maxentRun(features, ss,
 						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-/*
+
 			} else {
 
 
@@ -1967,10 +2002,10 @@ public class Runner {
 			}
 		///////////////////////////////////////// end new input
 
- */
+
 		//contributions = null;
-		res = runner.maxentRun(features, ss,
-				testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+		//res = runner.maxentRun(features, ss,
+		//		testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
 
 			if (res==null) return;
 			Utils.echoln("Resulting gain: " + res.gain);
@@ -2126,219 +2161,6 @@ public class Runner {
 			//		null;
 			//System.out.println(Arrays.deepToString(ffsGain));
 
-			/** start forward feature selection here:
-			 * umbenannte variablen= auc = aucFFS
-			 * features = featuresFFS
-			 * final Sample[] ssFFS = ss;
-			 * **/
-
-		final Sample[] ssFFS = ss;
-			final Feature[] featuresFFS =  baseFeaturesWithSamples;
-			int num = featuresFFS.length; // number of predictors?
-		// contains the names of all variables, the selected ones will be removed later on...
-			ArrayList<String> varNames = new ArrayList<String>();
-			for(int i=0; i<num; i++){
-				varNames.add(featuresFFS[i].name);
-			}
-			//System.out.println(varNames);
-
-
-			// range Integer predictor number
-			List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
-					.boxed().collect(Collectors.toList());
-
-			// create guava Sets with all possible combinations of var Integer
-			Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
-
-			// create empty array
-			Integer[][] allComb = new Integer[comb.size()][2];
-
-			//add values from Set<Set<Integer>> to Array
-			for (int i=0;i<comb.size();i++) {
-				//get one set
-				Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
-				// get each element of set
-				allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
-				allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
-			}
-
-
-			Sample[] testSamples = X.testSamples;
-			final double[] gain = new double[allComb.length];
-			final double[] testgain = new double[allComb.length];
-			final double[] aucFFS = new double[allComb.length];
-			ArrayList<Double> testGainTmp = new ArrayList<>();
-			final double[] gainTmp = new double[varNames.size()];
-			final double[] testgainTmp = new double[varNames.size()];
-			final double[] aucTmp = new double[varNames.size()];
-
-
-			final boolean hastest = testSamples!=null && testSamples.length>0;
-			if (runner.threads()>1)
-				runner.parallelRunner.clear();
-
-
-			for (int i=0; i<comb.size(); i++) {
-				//if (Utils.interrupt) return null; include again in function!!!!!
-				final int me2 = allComb[i][0];
-				final int me1 = allComb[i][1];
-				final int me = i;
-				String myname = "Forward Feature Selection: using only " + featuresFFS[me1].name + " & " + featuresFFS[me2].name;
-				Utils.echoln(myname);
-				Runnable task = new Runnable() {
-					public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
-						runner.onlyTwoRun(baseFeatures, ssFFS, testSamples, me, gain, testgain, aucFFS, featuresFFS[me1], featuresFFS[me2], allComb.length);
-					}
-				};
-				if (runner.threads()<=1) task.run();
-				else runner.parallelRunner.add(task, myname);
-			}
-
-		// get best model
-
-		double bestTestGain = Arrays.stream(testgain).max().getAsDouble();
-		// get var combination of best model
-		int index = Doubles.indexOf(testgain, bestTestGain);
-		//get position of two best variables:
-		int var2 = allComb[index][0];
-		int var1 = allComb[index][1];
-
-		Utils.echoln("Forward Feature Selection best two variable combination " + featuresFFS[var1].name + " & " + featuresFFS[var2].name);
-
-		// Needed Variables:
-		ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
-
-		//double currentTestGain; // store the best TestGain of the current Models inside
-
-		//add selected vars to selectedVars ArrayList
-		selectedVars.add(varNames.get(var1));
-		selectedVars.add(varNames.get(var2));
-
-		// remove selected vars from varNames
-		varNames.remove(var1);
-		varNames.remove(var2);
-
-		/**
-		 * run MaxEnt while adding on variable each time:
-		 * **/
-
-
-
-
-		////////////////////////////////////////////////////
-		ArrayList<String> tempSelectedVars = new ArrayList<>();
-		int noPredictors = varNames.size();
-
-		for (int i=0; i <noPredictors; i++){
-
-
-		for(int k=0; k<varNames.size(); k++){
-
-
-		//if (runner.threads()>1)
-		//	runner.parallelRunner.clear();
-
-		tempSelectedVars.addAll(selectedVars);
-		tempSelectedVars.add(varNames.get(k));
-
-
-				//if (Utils.interrupt) return null; include again in function!!!!!
-
-				int me = k;
-				String myname = "Forward Feature Selection: using " + tempSelectedVars;
-				Utils.echoln(myname);
-
-				System.out.println("Forward Feature Selection: using " + tempSelectedVars);
-				/*
-				Runnable task = new Runnable() {
-					public void run() {
-						runner.addSelectedFeaturesRun(baseFeatures, ssFFS, testSamples, me,  testGainTmp, tempSelectedVars);
-					}
-				};
-
-
-				 */
-
-
-			//void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me,ArrayList<Double> testGainTmp, ArrayList<String> tempSelectedVars) {
-				boolean hastest2 = testSamples!=null && testSamples.length>0;
-				Feature[] featuresFVS = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, tempSelectedVars));
-				if (features==null) return;
-				if (Utils.interrupt) return;
-				Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
-
-				final MaxentRunResults res4 = runner.maxentRun(featuresFVS, ss, testSamples);
-				if (res4==null) return;
-				res4.removeBiasDistribution();
-				//gainTmp[me] = res.gain;
-				if (hastest2) {
-					DoubleIterator backgroundIterator2 = null;
-
-					//	aucTmp[me] = res.X.getAUC(backgroundIterator, testSamples);
-					if (backgroundIterator2!=null)
-						res4.X.setDensityNormalizer(backgroundIterator2);
-					testGainTmp.add(me, runner.getTestGain(res4.X));
-				}
-			tempSelectedVars.clear();
-
-			} // end for loop
-			//	if (runner.threads()<=1) task.run();
-			//	else runner.parallelRunner.add(task, myname);
-
-			System.out.println(testGainTmp);
-			//}
-
-			//Best Model:
-			double currentTestGain = Collections.max(testGainTmp);
-			System.out.println(currentTestGain);
-			// get var combination of best model
-			int indexTemp = testGainTmp.indexOf(currentTestGain);
-			if(currentTestGain > bestTestGain) {
-				bestTestGain = currentTestGain;
-				selectedVars.add(varNames.get(indexTemp));
-				varNames.remove(indexTemp);
-			} else {
-			/** return what ?
-			 * needs to return: ArrayList FvsVariables
-			 * **/
-			FvsVariables.addAll(selectedVars);
-			System.out.println(FvsVariables);
-			break;
-			}
-
-		} // end for-loop
-		System.out.println(bestTestGain);
-		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
-		 * - compare to previous best testGain
-		 * - if (better)
-		 * 	- get index of Variable Name
-		 * 	- remove variable from varNames
-		 * 	- add variable to selected vars
-		 * 	rerun...**/
-
-
-
-
-
-		// array with all variable names (e.g. 14 ) delete the ones used here already
-
-
-		/*if (threads()>1)
-			parallelRunner.runall("ffs", is("verbose"));
-		if (is("plots"))
-			makeJackknifePlots(htmlout, theSpecies, gain, testgain, aucFFS, features, allGain, allTestGain, allauc, hastest, "");
-			 */
-
-
-			//if (!hastest) return new double[][] { gain };
-			//return new double[][] { gain, testgain, aucFFS };
-
-
-
-
-		/** end forward feature selection here:
-         *
-         * **/
 
 			//runner.writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 			//writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, ffsGain, entropy, prevalence, permcontribs);
