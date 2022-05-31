@@ -2140,12 +2140,12 @@ public class Runner {
 			final double[] testgain = new double[allComb.length];
 			final double[] aucFFS = new double[allComb.length];
 			ArrayList<Double> testGainTmp = new ArrayList<>();
-		final double[] gainTmp = new double[varNames.size()];
-		final double[] testgainTmp = new double[varNames.size()];
-		final double[] aucTmp = new double[varNames.size()];
+			final double[] gainTmp = new double[varNames.size()];
+			final double[] testgainTmp = new double[varNames.size()];
+			final double[] aucTmp = new double[varNames.size()];
 
 
-		final boolean hastest = testSamples!=null && testSamples.length>0;
+			final boolean hastest = testSamples!=null && testSamples.length>0;
 			if (runner.threads()>1)
 				runner.parallelRunner.clear();
 
@@ -2199,7 +2199,9 @@ public class Runner {
 
 		////////////////////////////////////////////////////
 		ArrayList<String> tempSelectedVars = new ArrayList<>();
+		int noPredictors = varNames.size();
 
+		for (int i=0; i <noPredictors; i++){
 
 
 		for(int k=0; k<varNames.size(); k++){
@@ -2267,17 +2269,14 @@ public class Runner {
 				bestTestGain = currentTestGain;
 				selectedVars.add(varNames.get(indexTemp));
 				varNames.remove(indexTemp);
-			}
-System.out.println(bestTestGain);
-
 			} else {
-			//	if (!hastest) return new double[][] { gainTmp };
-			//	return new double[][] { gainTmp, testGainTmp, aucTmp };
-				//return best model and finish
-			//break;
+			/** return what ?
+			 * needs to return: model, ArrayList of selected Variables, gain, testGain, auc
+			 * **/
+			break;
 			}
-
-		//}
+			System.out.println(bestTestGain);
+		} // end for-loop
 		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
 		 * - compare to previous best testGain
 		 * - if (better)
@@ -2289,19 +2288,6 @@ System.out.println(bestTestGain);
 
 
 
-
-
-
-
-
-
-
-
-
-
-		/////////////////////////////////////////////////////////////////////////////////
-
-/** addFfsFeaturesToRun end **/
 
 		// array with all variable names (e.g. 14 ) delete the ones used here already
 
