@@ -1933,16 +1933,38 @@ public class Runner {
 
 			Utils.reportDoing(theSpecies + ": ");
 
-			/** works perfectly fine until here !!!!!!!!!
+			///////////////////////////////////////////// new input
+			MaxentRunResults res=null;
+			contributions = null;
+			// empty arrayList to return selected Variables from FVS to
+			ArrayList<String> FvsVariables = new ArrayList<>();
+
+			if (runner.is("ffs") ) {
+			/** add Forward Variable Selection here: ?
+			 * -> just use selected features for run
+			 * -> would mean: ffs returns ArrayList with variable names
+			 * 				-> features are set with makeFeatures and variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars)
 			 *
 			 *
 			 * **/
+				runner.forwardFeatureSelection();
+				features = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, FvsVariables));
+				res = runner.maxentRun(features, ss,
+						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+
+			} else {
 
 
-			contributions = null;
-			MaxentRunResults res = runner.maxentRun(features, ss,
-					testSampleSet!=null ? testSampleSet.getSamples(theSpecies) : null);
 
+				//contributions = null;
+				res = runner.maxentRun(features, ss,
+						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+
+			}
+		///////////////////////////////////////// end new input
+		//contributions = null;
+		//res = runner.maxentRun(features, ss,
+		//		testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
 
 			if (res==null) return;
 			Utils.echoln("Resulting gain: " + res.gain);
@@ -2271,12 +2293,15 @@ public class Runner {
 				varNames.remove(indexTemp);
 			} else {
 			/** return what ?
-			 * needs to return: model, ArrayList of selected Variables, gain, testGain, auc
+			 * needs to return: ArrayList FvsVariables
 			 * **/
+			FvsVariables.addAll(selectedVars);
+			System.out.println(FvsVariables);
 			break;
 			}
-			System.out.println(bestTestGain);
+
 		} // end for-loop
+		System.out.println(bestTestGain);
 		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
 		 * - compare to previous best testGain
 		 * - if (better)
@@ -2333,7 +2358,7 @@ public class Runner {
 
 
 	/** needs to return: model, ArrayList of selected Variables, gain, testGain, auc*/
-	double[][] forwardFeatureSelection(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
+	void forwardFeatureSelection(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
 		int num = features.length; // number of predictors?
 
