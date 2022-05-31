@@ -75,6 +75,7 @@ public class Runner {
 		return speciesCount.get(species);
 	}
 
+
 	int threads() { return params.getint("threads"); }
 	String outDir() { return params.getString("outputdirectory"); }
 	String biasFile() { return params.getString("biasFile"); }
@@ -262,6 +263,8 @@ public class Runner {
 			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
 			params.setRandomtestpoints(0);
 		}
+
+
 		if (subsample() && replicates()>1 && params.getint("randomTestPoints") <= 0 && !is("manualReplicates")) {
 			popupError("Subsampled replicates require nonzero random test percentage", null);
 			return;
@@ -361,6 +364,24 @@ public class Runner {
 
 		sampleSet=sampleSet2;
 		speciesCount = new HashMap();
+
+		// set replicates for spatial cv
+		// get number of distinct locations
+		if(spatialCV()) {
+			String[] names = sampleSet.getNames();
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			int num = locArr.size(); //minimum ist 3
+
+			// reset replicates
+			Utils.warn2("Resetting replicates to number of distinct locations (replicates: " + num + ") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setReplicates(num);
+		}
+
 		if (replicates()>1 && !is("manualReplicates")) {
 
 			if (cv()) {
@@ -371,6 +392,8 @@ public class Runner {
 				for (String s: sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
 				testSampleSet = sampleSet.splitForSpatialCV();
+
+
 			} else
 				sampleSet.replicate(replicates(), bootstrap());
 			ArrayList<String> torun = new ArrayList();
@@ -380,8 +403,6 @@ public class Runner {
 
 			params.species = torun.toArray(new String[0]);
 		}
-
-
 
 
 
@@ -1859,6 +1880,12 @@ public class Runner {
 				for (String s: sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
 				testSampleSet = sampleSet.splitForSpatialCV();
+				String[] names = testSampleSet.getNames();
+				// needs to be changed for more then one species in one run !!
+				List<Sample> species = (List<Sample>) testSampleSet.speciesMap.get(names[0]);
+				List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+				Utils.warn2("Resetting replicates to number of distinct locations (" + locations.size() +") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
+				params.setReplicates(locations.size());
 			} else
 				sampleSet.replicate(runner.replicates(), runner.bootstrap());
 			ArrayList<String> torun = new ArrayList();
