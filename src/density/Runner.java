@@ -475,16 +475,16 @@ public class Runner {
 			////////////////////////////////////// add fvs
 			ArrayList<String> FvsVariables = new ArrayList<>();
 
-			if (is("ffs") ) {
+			if (is("fvs") ) {
 				/** add Forward Variable Selection here: ?
 				 * -> just use selected features for run
-				 * -> would mean: ffs returns ArrayList with variable names
+				 * -> would mean: fvs returns ArrayList with variable names
 				 * 				-> features are set with makeFeatures and variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars)
 				 *
 				 *
 				 * **/
 
-				forwardFeatureSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
+				forwardVariableSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
 				features = makeFeatures(variableNoOfFeatures(baseFeatures, FvsVariables));
 				res = maxentRun(features, ss,
 						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
@@ -664,7 +664,7 @@ public class Runner {
 
 			writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 
-			writeHtmlDetails(res, testGain, auc, aucSD, trainauc);
+			writeHtmlDetails(res, testGain, auc, aucSD, trainauc, FvsVariables);
 			htmlout.close();
 			// if gsfromfile, we'll need to do something different,
 			// using (GridSetFromFile) gs instead of params.environmentallayers.
@@ -1140,7 +1140,7 @@ public class Runner {
 		htmlputs();
 	}
 
-	void writeHtmlDetails(MaxentRunResults res, double testGain, double auc, double aucSD, double trainauc) {
+	void writeHtmlDetails(MaxentRunResults res, double testGain, double auc, double aucSD, double trainauc, ArrayList<String> FvsVariables) {
 		double gain = res.gain;
 		int iters = res.iterations;
 		FeaturedSpace X = res.X;
@@ -1181,8 +1181,14 @@ public class Runner {
 		for (int i=0; i<params.layers.length; i++)
 			if (params.layerTypes[i].equals("Categorical")) allcont = false;
 		htmlputsn("Environmental layers used" + (allcont ? " (all continuous):" : ":"));
-		for (int i=0; i<params.layers.length; i++)
-			htmlputsn(" " + params.layers[i] + (params.layerTypes[i].equals("Continuous") ? "" : "(categorical)"));
+		if(is("fvs")){
+			for (int i=0; i<FvsVariables.size(); i++)
+				htmlputsn(" " + FvsVariables.get(i));
+		} else {
+			for (int i=0; i<params.layers.length; i++)
+				htmlputsn(" " + params.layers[i] + (params.layerTypes[i].equals("Continuous") ? "" : "(categorical)"));
+		}
+
 		htmlputs();
 		htmlputs("Regularization values: " + regularizationConstants());
 		int numSamples = X.numSamples;
@@ -1197,7 +1203,7 @@ public class Runner {
 	}
 
 
-	/** alle kombinationen wie ffs testen! **/
+	/** alle kombinationen wie fvs testen! **/
 
 	String regularizationConstants() {
 		return "linear/quadratic/product: " + nf.format(beta_lqp) + ", categorical: " + nf.format(beta_cat) + ", threshold: " + nf.format(beta_thr) + ", hinge: " + nf.format(beta_hge);
@@ -1725,7 +1731,7 @@ public class Runner {
 		/** num has to be set to length of possible var combinations**/
 		boolean hastest = testSamples!=null && testSamples.length>0;
 
-		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i forwardFeatureSelection function to iterate over all features
+		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i forwardVariableSelection function to iterate over all features
 
 		Feature[] features = //(addSamplesToFeatures) ?
 				//	    makeFeatures(featuresWithSamples(only, ss)) :
@@ -1762,7 +1768,7 @@ public class Runner {
 		params.setReplicatetype("crossvalidate");
 		params.setReplicates(2); // needs to be larger 1 for spatcv!!!!!!!
 		//params.setJackknife(true);
-		params.setFfs(true);
+		params.setFvs(true);
 		params.setSelections();
 		Runner runner = new Runner(params);
 
@@ -1969,24 +1975,24 @@ public class Runner {
 			// empty arrayList to return selected Variables from FVS to
 			ArrayList<String> FvsVariables = new ArrayList<>();
 			/*
-			runner.forwardFeatureSelection(baseFeatures, ss,
+			runner.forwardVariableSelection(baseFeatures, ss,
 
 					testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,
 					FvsVariables);
-			System.out.println("FFS works ...?");
+			System.out.println("FvS works ...?");
 			System.out.println(FvsVariables);
 */
 
-			if (runner.is("ffs") ) {
+			if (runner.is("fvs") ) {
 			/** add Forward Variable Selection here: ?
 			 * -> just use selected features for run
-			 * -> would mean: ffs returns ArrayList with variable names
+			 * -> would mean: fvs returns ArrayList with variable names
 			 * 				-> features are set with makeFeatures and variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars)
 			 *
 			 *
 			 * **/
 
-				runner.forwardFeatureSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
+				runner.forwardVariableSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
 				features = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, FvsVariables));
 				res = runner.maxentRun(features, ss,
 						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
@@ -2156,14 +2162,14 @@ public class Runner {
 					runner.jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 					null;
 			//System.out.println(Arrays.deepToString(jackknifeGain));
-			//double[][] ffsGain = (runner.is("ffs")  && (baseFeaturesNoBias.length > 1)) ?
-			//		runner.forwardFeatureSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
+			//double[][] fvsGain = (runner.is("fvs")  && (baseFeaturesNoBias.length > 1)) ?
+			//		runner.forwardVariableSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
 			//		null;
-			//System.out.println(Arrays.deepToString(ffsGain));
+			//System.out.println(Arrays.deepToString(fvsGain));
 
 
 			//runner.writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
-			//writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, ffsGain, entropy, prevalence, permcontribs);
+			//writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, fvsGain, entropy, prevalence, permcontribs);
 
 			//runner.writeHtmlDetails(res, testGain, auc, aucSD, trainauc);
 			runner.htmlout.close();
@@ -2186,11 +2192,11 @@ public class Runner {
 
 
 	/** needs to return: model, ArrayList of selected Variables, gain, testGain, auc*/
-	void forwardFeatureSelection(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, ArrayList<String> FvsVariables) {
-		/** start forward feature selection here:
-		 * umbenannte variablen= auc = aucFFS
-		 * features = featuresFFS
-		 * final Sample[] ssFFS = ss;
+	void forwardVariableSelection(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, ArrayList<String> FvsVariables) {
+		/** start forward variable selection here:
+		 * umbenannte variablen= auc = aucFVS
+		 * features = featuresFVS
+		 * final Sample[] ssFVS = ss;
 		 * **/
 
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
@@ -2226,7 +2232,7 @@ public class Runner {
 		//Sample[] testSamples = X.testSamples;
 		final double[] gain = new double[allComb.length];
 		final double[] testgain = new double[allComb.length];
-		final double[] aucFFS = new double[allComb.length];
+		final double[] aucFVS = new double[allComb.length];
 		ArrayList<Double> testGainTmp = new ArrayList<>();
 
 
@@ -2241,11 +2247,11 @@ public class Runner {
 			final int me2 = allComb[i][0];
 			final int me1 = allComb[i][1];
 			final int me = i;
-			String myname = "Forward Feature Selection: using only " + features[me1].name + " & " + features[me2].name;
+			String myname = "Forward FVariable Selection: using only " + features[me1].name + " & " + features[me2].name;
 			Utils.echoln(myname);
 			Runnable task = new Runnable() {
 				public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
-					onlyTwoRun(baseFeatures, ss, testSamples, me, gain, testgain, aucFFS, features[me1], features[me2], allComb.length);
+					onlyTwoRun(baseFeatures, ss, testSamples, me, gain, testgain, aucFVS, features[me1], features[me2], allComb.length);
 				}
 			};
 			if (threads()<=1) task.run();
@@ -2261,7 +2267,7 @@ public class Runner {
 		int var2 = allComb[index][0];
 		int var1 = allComb[index][1];
 
-		//Utils.echoln("Forward Feature Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
+		//Utils.echoln("Forward Variable Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
 
 		// Needed Variables:
 		ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
@@ -2296,14 +2302,14 @@ public class Runner {
 				//if (Utils.interrupt) return null; include again in function!!!!!
 
 				int me = k;
-				String myname = "Forward Feature Selection: using " + tempSelectedVars;
+				String myname = "Forward Variable Selection: using " + tempSelectedVars;
 				Utils.echoln(myname);
 
-				System.out.println("Forward Feature Selection: using " + tempSelectedVars);
+				System.out.println("Forward Variable Selection: using " + tempSelectedVars);
 				/*
 				Runnable task = new Runnable() {
 					public void run() {
-						runner.addSelectedFeaturesRun(baseFeatures, ssFFS, testSamples, me,  testGainTmp, tempSelectedVars);
+						runner.addSelectedFeaturesRun(baseFeatures, ssFVS, testSamples, me,  testGainTmp, tempSelectedVars);
 					}
 				};
 
@@ -2375,19 +2381,19 @@ public class Runner {
 
 
 		/*if (threads()>1)
-			parallelRunner.runall("ffs", is("verbose"));
+			parallelRunner.runall("fvs", is("verbose"));
 		if (is("plots"))
-			makeJackknifePlots(htmlout, theSpecies, gain, testgain, aucFFS, features, allGain, allTestGain, allauc, hastest, "");
+			makeJackknifePlots(htmlout, theSpecies, gain, testgain, aucFVS, features, allGain, allTestGain, allauc, hastest, "");
 			 */
 
 
 		//if (!hastest) return new double[][] { gain };
-		//return new double[][] { gain, testgain, aucFFS };
+		//return new double[][] { gain, testgain, aucFVS };
 
 
 
 
-		/** end forward feature selection here:
+		/** end forward variable selection here:
 		 *
 		 * **/
 	}

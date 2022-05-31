@@ -32,7 +32,7 @@ public class Params extends ParamsPre {
      * Get a list of all Maxent parameters
      * @return The list of parameters
      */
-    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "ffs" ,"outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
+    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "fvs" ,"outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
     /**
      * Set value of <i>responsecurves</i> parameter: Create graphs showing how predicted relative probability of occurrence depends on the value of each environmental variable
      * <p>
@@ -70,8 +70,8 @@ public class Params extends ParamsPre {
      */
     public boolean isJackknife() { return getboolean("jackknife"); }
 
-    public void setFfs(boolean value) { setValue("ffs", value); }
-    public boolean isFfs() { return getboolean("ffs"); }
+    public void setFvs(boolean value) { setValue("fvs", value); }
+    public boolean isFvs() { return getboolean("fvs"); }
 
     /**
      * Set value of <i>outputformat</i> parameter: Representation of probabilities used in writing output grids.  See Help for details
