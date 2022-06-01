@@ -195,7 +195,7 @@ public class Runner {
 			allLayers = (Layer[]) allLayersList.toArray(new Layer[0]);
 
 			String[] selectSpecies = params.species;
-			System.out.println(selectSpecies);
+			//System.out.println(selectSpecies);
 			if (isFile) {
 				result = new GridSetFromFile(dir, allLayers);
 				if (!params.getString("samplesFile").equals("")) {
@@ -249,6 +249,10 @@ public class Runner {
 		Utils.closeLog();
 		Utils.disposeProgressMonitor();
 	}
+
+
+
+
 
 	/**
 	 * Start a run, as if the "Run" button was pressed
@@ -506,6 +510,9 @@ public class Runner {
 				 * **/
 
 				forwardVariableSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
+				System.out.println(FvsVariables);
+				//String[] strs = {"pre6190_l10", "h_dem", "pre6190_l7", "tmn6190_ann"};
+				//FvsVariables.addAll(Arrays.asList(strs));
 				features = makeFeatures(variableNoOfFeatures(baseFeatures, FvsVariables));
 				res = maxentRun(features, ss,
 						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
@@ -784,8 +791,10 @@ public class Runner {
 		htmlout.println("<title>Replicated maxent model for " + species + "</title>");
 		htmlout.println("<CENTER><H1>Replicated maxent model for " + species + "</H1></CENTER>");
 		htmlout.print("<br> This page summarizes the results of " + replicates(species));
-		if (cv() || spatialCV())
+		if (cv())
 			htmlout.print("-fold cross-validation");
+		else if (spatialCV())
+			htmlout.print("-fold spatial cross-validation");
 		else if (bootstrap())
 			htmlout.print(" bootstrap models");
 		else htmlout.print(" split-sample models");
@@ -861,7 +870,7 @@ public class Runner {
 		return sum/num;
 	}
 
-/*
+
 	public static void main (String[] args){
 		final Params params = new Params();
 		params.setOutputdirectory("D:\\maxent\\outputs");
@@ -871,6 +880,10 @@ public class Runner {
 		params.setJackknife(true);
 		params.setSelections();
 		Runner runner = new Runner(params);
+
+		int len = params.species.length;System.out.println(len);
+
+		/*
 		runner.start();
 
 
@@ -880,9 +893,11 @@ public class Runner {
 		System.out.println(params.isJackknife());
 
 		runner.end();
+
+		 */
 	}
 
-*/
+
 
 
 	void replicatedJackknife(PrintWriter htmlout, String species, Feature[] baseFeatures) throws IOException {
@@ -1752,14 +1767,14 @@ public class Runner {
 		/** num has to be set to length of possible var combinations**/
 		boolean hastest = testSamples!=null && testSamples.length>0;
 
-		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i forwardVariableSelection function to iterate over all features
+		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i fvs function to iterate over all features
 
 		Feature[] features = //(addSamplesToFeatures) ?
 				//	    makeFeatures(featuresWithSamples(only, ss)) :
 				makeFeatures(two);
 		if (features==null) return;
 		if (Utils.interrupt) return;
-		Utils.reportDoing(theSpecies + " " + feature1.name + " & " + feature2.name + ": ");
+		Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + feature1.name + " & " + feature2.name + ": ");
 		final MaxentRunResults res = maxentRun(features, ss, testSamples);
 		if (res==null) return;
 		Utils.echoln("Res.gain: " + res.gain);
@@ -1779,439 +1794,6 @@ public class Runner {
 			testgain[me] = getTestGain(res.X);
 		}
 	}
-
-	public static void main (String[] args) {
-
-		final Params params = new Params();
-		params.setOutputdirectory("D:\\maxent\\outputs");
-		params.setEnvironmentallayers("D:\\maxent\\layers");
-		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
-		params.setReplicatetype("crossvalidate");
-		params.setReplicates(2); // needs to be larger 1 for spatcv!!!!!!!
-		//params.setJackknife(true);
-		params.setFvs(true);
-		params.setSelections();
-		Runner runner = new Runner(params);
-
-
-
-/** beginn runner.start function**/
-
-
-		//int j;
-
-		Utils.applyStaticParams(params);
-		if (params.layers==null)
-			params.setSelections();
-		if (runner.cv() || runner.spatialCV() && runner.replicates()>1 && params.getRandomtestpoints() != 0) {
-			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
-			params.setRandomtestpoints(0);
-		}
-
-
-
-
-
-
-
-		Utils.startTimer();
-		Utils.echoln(new Date().toString());
-		Utils.echoln("MaxEnt version "+Utils.version);
-		Utils.interrupt = false;
-
-		if (Utils.progressMonitor!=null)
-			Utils.progressMonitor.setMaximum(100);
-
-		Utils.generator = new Random(!params.isRandomseed() ? 0 : System.currentTimeMillis());
-		gs = runner.initializeGrids(); // checked != null
-
-
-		SampleSet2 sampleSet2 = gs.train;
-
-		if (runner.projectionLayers().length()>0) {
-			String[] dirs = runner.projectionLayers().trim().split(",");
-			projectPrefix = new String[dirs.length];
-			for (int i=0; i<projectPrefix.length; i++)
-				projectPrefix[i] = (new File(dirs[i].trim())).getPath();
-		}
-
-		if (!runner.testSamplesFile().equals("")) {
-			testSampleSet = gs.test;
-		}
-
-		if (Utils.interrupt) return;
-		if (runner.is("removeDuplicates"))
-			sampleSet2.removeDuplicates(runner.gridsFromFile() ? null : gs.getDimension());
-
-		Feature[] baseFeatures;
-		baseFeatures = (gs==null) ? null : gs.toFeatures();
-		coords = gs.getDimension().coords;
-
-		//System.out.println(baseFeatures.length);
-		// note.
-		boolean addSamplesToFeatures = runner.samplesAddedToFeatures =
-				runner.is("addSamplesToBackground") &&
-						(sampleSet2.samplesHaveData || (gs instanceof Extractor));
-
-		if (addSamplesToFeatures)
-			Utils.echoln("Adding samples to background in feature space");
-
-		/** features null !!!
-		 *
-		 *
-		 * **/
-		Feature[] features=null;
-		features = runner.makeFeatures(baseFeatures);
-		//System.out.println(!addSamplesToFeatures); // false
-		if (!addSamplesToFeatures) { //false
-			features = runner.makeFeatures(baseFeatures);
-			if (Utils.interrupt) return;
-		}
-
-		sampleSet=sampleSet2;
-		speciesCount = new HashMap();
-		if (runner.replicates()>1 && !runner.is("manualReplicates")) {
-
-			if (runner.cv()) {
-				for (String s: sampleSet.getNames())
-					speciesCount.put(s, sampleSet.getSamples(s).length);
-				testSampleSet = sampleSet.splitForCV(runner.replicates());
-			} else if (runner.spatialCV()){
-				for (String s: sampleSet.getNames())
-					speciesCount.put(s, sampleSet.getSamples(s).length);
-				testSampleSet = sampleSet.splitForSpatialCV();
-				String[] names = testSampleSet.getNames();
-				// needs to be changed for more then one species in one run !!
-				List<Sample> species = (List<Sample>) testSampleSet.speciesMap.get(names[0]);
-				List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
-				Utils.warn2("Resetting replicates to number of distinct locations (" + locations.size() +") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
-				params.setReplicates(locations.size());
-			} else
-				sampleSet.replicate(runner.replicates(), runner.bootstrap());
-			ArrayList<String> torun = new ArrayList();
-			for (String s: sampleSet.getNames())
-				if (s.matches(".*_[0-9]+$"))
-					torun.add(s);
-
-			params.species = torun.toArray(new String[0]);
-		}
-
-
-//System.out.println(testSampleSet.speciesMap);
-
-
-
-
-		if (runner.testSamplesFile().equals("") && params.getint("randomTestPoints")!=0) {
-			SampleSet train=null;
-			if (!runner.is("randomseed")) Utils.generator = new Random(11111);
-			testSampleSet =
-					sampleSet.randomSample(params.getint("randomTestPoints"));
-		}
-		if (Utils.interrupt) return;
-
-		runner.writeLog();
-		if (!runner.is("perSpeciesResults")) {
-			try { results = new CsvWriter(new File(runner.outDir(), "maxentResults.csv"), runner.is("appendtoresultsfile")); }
-			catch (IOException e) {
-				runner.popupError("Problem opening results file", e);
-				return;
-			}
-		}
-//System.out.println(testSampleSet.speciesMap);
-
-		//for (int sample=0; sample<params.species.length; sample++) {
-		int sample = 0;
-			theSpecies = params.species[sample];
-
-
-			if (Utils.interrupt) return;
-			if (runner.is("perSpeciesResults")) {
-				try { results = new CsvWriter(new File(runner.outDir(),theSpecies + "Results.csv")); }
-				catch (IOException e) {
-					runner.popupError("Problem opening " + theSpecies + " results file", e);
-					return;
-				}
-			}
-			String suffix = runner.outputFileType();
-			File f = new File(runner.outDir(), theSpecies + suffix);
-			File lf = new File(runner.outDir(), theSpecies + ".lambdas");
-			String lambdafile = lf.getAbsolutePath();
-
-			Sample[] sss = sampleSet.getSamples(theSpecies);
-			if (!params.allowpartialdata())
-				sss = runner.withAllData(baseFeatures, sss);
-			final Sample[] ss = sss;
-			if (ss.length == 0) {
-				Utils.warn2("Skipping " + theSpecies + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
-
-			}
-
-
-			if (testSampleSet!=null) {
-				int len = testSampleSet.getSamples(theSpecies).length;
-				if (len == 0) {
-					//		    if (MaxEnt.bootstrapBetaResults!=null)
-					//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
-					Utils.warn2("Skipping " + theSpecies + " because it has 0 test samples", "skippingBecauseNoTestSamples");
-
-				}
-			}
-			Utils.reportMemory("getSamples");
-
-			//System.out.println(testSampleSet.speciesMap);
-
-			if (lf.exists()) {
-				if (runner.is("skipIfExists")) {
-					if (runner.is("appendtoresultsfile"))
-						runner.maybeReplicateHtml(theSpecies, runner.getTrueBaseFeatures(baseFeatures));
-
-				}
-				if (runner.is("askoverwrite") && Utils.topLevelFrame!=null) {
-					Object[] options = {"Skip", "Skip all", "Redo", "Redo all"};
-					int val = JOptionPane.showOptionDialog(Utils.topLevelFrame, "Output file exists for " + theSpecies, "File already exists", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-					switch(val) {
-						case 1: params.setValue("skipIfExists", true);
-						case 0:
-							if (runner.is("appendtoresultsfile"))
-								runner.maybeReplicateHtml(theSpecies, runner.getTrueBaseFeatures(baseFeatures));
-
-						case 3: params.setValue("askoverwrite", false);
-						case 2: break;
-					}
-				}
-			}
-
-			Feature[] baseFeaturesWithSamples = baseFeatures;
-			//System.out.println(addSamplesToFeatures);
-			if (addSamplesToFeatures) { // true
-				//features = null;  // free up memory before makeFeatures
-				baseFeaturesWithSamples = runner.featuresWithSamples(baseFeatures, ss);
-				//System.out.println(baseFeaturesWithSamples==null); //false
-				if (baseFeaturesWithSamples==null)
-				features = runner.makeFeatures(baseFeaturesWithSamples);
-			}
-			Feature[] baseFeaturesNoBias = runner.getTrueBaseFeatures(baseFeaturesWithSamples);
-			if (Utils.interrupt) return;
-
-			Utils.reportDoing(theSpecies + ": ");
-
-			///////////////////////////////////////////// new input
-			MaxentRunResults res=null;
-			contributions = null;
-			// empty arrayList to return selected Variables from FVS to
-			ArrayList<String> FvsVariables = new ArrayList<>();
-			/*
-			runner.forwardVariableSelection(baseFeatures, ss,
-
-					testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,
-					FvsVariables);
-			System.out.println("FvS works ...?");
-			System.out.println(FvsVariables);
-*/
-
-			if (runner.is("fvs") ) {
-			/** add Forward Variable Selection here: ?
-			 * -> just use selected features for run
-			 * -> would mean: fvs returns ArrayList with variable names
-			 * 				-> features are set with makeFeatures and variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars)
-			 *
-			 *
-			 * **/
-
-				runner.forwardVariableSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
-				features = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, FvsVariables));
-				res = runner.maxentRun(features, ss,
-						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-
-			} else {
-
-
-
-				//contributions = null;
-				res = runner.maxentRun(features, ss,
-						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-
-			}
-		///////////////////////////////////////// end new input
-
-
-		//contributions = null;
-		//res = runner.maxentRun(features, ss,
-		//		testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-
-			if (res==null) return;
-			Utils.echoln("Resulting gain: " + res.gain);
-			final FeaturedSpace X = res.X;
-			//System.out.println(res.gain);
-
-			//	    if (X.biasDist != null)
-			//		X.setBiasDist(null); // remove biasDist
-			res.removeBiasDistribution();
-
-			boolean gsfromfile = (gs instanceof GridSetFromFile);
-			boolean writeRaw2cumfile = true;
-
-			//	    boolean saveInterpolate = Grid.interpolateSamples;
-			//	    Grid.interpolateSamples = false;
-			DoubleIterator backgroundIterator = null;
-
-			double auc = X.getAUC(backgroundIterator, X.testSamples);
-			double aucSD = X.aucSD;
-			double trainauc = X.getAUC(backgroundIterator, X.samples);
-			aucmax = X.aucmax;
-			//	    Grid.interpolateSamples = saveInterpolate;
-			if (backgroundIterator!=null)
-				X.setDensityNormalizer(backgroundIterator);
-
-			double entropy = X.getEntropy(); // needs to be after setDensityNormalizer
-			double prevalence = X.getPrevalence(params);
-			try { X.writeFeatureWeights(lambdafile); }
-			catch (IOException e) {
-				runner.popupError("Error writing feature weights file", e);
-				return;
-			}
-
-			double testGain = (testSampleSet==null) ? 0 : runner.getTestGain(X);
-			runner.startHtmlPage();
-
-			if (writeRaw2cumfile) {
-				raw2cumfile = raw2cumfile(lambdafile);
-				try {
-					double[] weights = (backgroundIterator==null) ? X.getWeights() :
-							backgroundIterator.getvals(X.densityNormalizer);
-					runner.writeCumulativeIndex(weights, raw2cumfile, X, auc, trainauc, baseFeaturesNoBias, entropy);
-				} catch (IOException e) {
-					runner.popupError("Error writing raw-to-cumulative index file", e);
-					return;
-				}
-			}
-
-			writtenGrid = null;
-			if (Utils.interrupt) return;
-
-			boolean explain = true;
-			for (String s: res.featureTypes)
-				if (s.equals("product"))
-					explain = false;
-			startedPictureHtmlSection = false;
-			if (runner.is("outputGrids")) {
-				String filename = gsfromfile ?
-						new File(runner.outDir(), theSpecies + ".csv").getPath() :
-						f.getPath();
-				try {
-					Project proj = new Project(params);
-					//	if (params.biasIsBayesianPrior) {
-					//	  String name = new File(params.biasFile).getName();
-					//	  for (int i=0; i<Utils.inputFileTypes.length; i++)
-					//	     name = name.replaceAll(Utils.inputFileTypes[i]+"$", "");
-					//	  proj.priorDistribution = gs.getGrid(name);
-					//  }
-					proj.entropy = entropy;
-					if (gsfromfile)
-						proj.doProject(lambdafile, (GridSetFromFile) gs, filename);
-					else
-						proj.doProject(lambdafile, runner.environmentalLayers(), filename, null);
-					proj.entropy = -1.0;
-					if (Utils.interrupt) return;
-					writtenGrid = filename;
-					if (runner.is("pictures") && !gsfromfile)
-						runner.makePicture(f.getPath(), ss, X.testSamples, null);
-					runner.makeExplain(explain, f, lambdafile, theSpecies + "_explain.bat", new File(runner.environmentalLayers()).getAbsolutePath());
-					if (applyThresholdValue != -1 && !gsfromfile)
-						new Threshold().applyThreshold(f.getPath(), applyThresholdValue);
-				} catch (IOException e) {
-					runner.popupError("Error writing output file " + new File(filename).getName(), e);
-					return;
-				}
-			}
-
-			if (Utils.interrupt) return;
-			projectedGrids = new ArrayList();
-			if (projectPrefix!=null && runner.is("outputGrids"))
-				for (int i=0; i<projectPrefix.length; i++) {
-					if (Utils.interrupt) return;
-					String prefix = new File(projectPrefix[i]).getName();
-					if (prefix.endsWith(".csv"))
-						prefix = prefix.substring(0, prefix.length()-4);
-					boolean isFile = (new File(projectPrefix[i]).isFile());
-					File ff = new File(runner.outDir(), theSpecies + "_" + prefix + (isFile ? ".csv" : suffix));
-					File ffclamp = new File(runner.outDir(), theSpecies + "_" + prefix + "_clamping" + (isFile ? ".csv" : suffix));
-					try {
-						Project proj = new Project(params);
-						//			if (params.biasIsBayesianPrior)
-						//			    proj.priorDistribution = gs.getGrid(new File(params.biasFile).getName());
-						proj.needLayers = allLayers;
-						proj.doProject(lambdafile, projectPrefix[i], ff.getPath(), runner.is("writeClampGrid") ? ffclamp.getPath() : (String) null);
-						if (Utils.interrupt) return;
-						projectedGrids.add("<a href = \"" + ff.getName() + "\">The model applied to the environmental layers in " + projectPrefix[i] + "</a>");
-						if (runner.is("pictures") && !isFile) {
-							runner.makePicture(ff.getPath(), ss, X.testSamples, projectPrefix[i]);
-							runner.makeExplain(explain, ff, lambdafile, theSpecies + "_" + prefix + "_explain.bat", new File(projectPrefix[i]).getAbsolutePath());
-							if (runner.is("writeClampGrid"))
-								runner.makePicture(ffclamp.getPath(), new Sample[0], new Sample[0], projectPrefix[i], true);
-							runner.makeNovel(baseFeaturesNoBias, projectPrefix[i], new File(runner.outDir(), theSpecies+"_"+prefix+"_novel"+suffix).getPath());
-						}
-						if (applyThresholdValue != -1 && !isFile)
-							new Threshold().applyThreshold(ff.getPath(), applyThresholdValue);
-					} catch (IOException e) {
-						runner.popupError("Error projecting", e);
-						return;
-					}
-				}
-			if (Utils.interrupt) return;
-			try {
-				runner.writeSampleAverages(baseFeaturesWithSamples, ss);
-			} catch (IOException e) {
-				runner.popupError("Error writing file", e);
-				return;
-			}
-			if (runner.is("responsecurves")) {
-				try {
-					runner.createProfiles(baseFeaturesWithSamples, lambdafile, ss);
-				}
-				catch (IOException e) {
-					runner.popupError("Error writing response curves for " + theSpecies, e);
-					return;
-				}
-			}
-
-			if (Utils.interrupt) return;
-			double[] permcontribs=null;
-			try {
-				permcontribs = new PermutationImportance().go(baseFeatures, ss, lambdafile);
-			} catch (IOException e) {
-				runner.popupError("Error computing permutation importance for " + theSpecies, e);
-				return;
-			}
-			runner.writeContributions(new double[][] { contributions, permcontribs }, "");
-			double[][] jackknifeGain = (runner.is("jackknife")  && (baseFeaturesNoBias.length > 1)) ?
-					runner.jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
-					null;
-			//System.out.println(Arrays.deepToString(jackknifeGain));
-			//double[][] fvsGain = (runner.is("fvs")  && (baseFeaturesNoBias.length > 1)) ?
-			//		runner.forwardVariableSelection(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
-			//		null;
-			//System.out.println(Arrays.deepToString(fvsGain));
-
-
-			//runner.writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
-			//writeSummary(res, testGain, auc, aucSD, trainauc, results, baseFeaturesNoBias, fvsGain, entropy, prevalence, permcontribs);
-
-			//runner.writeHtmlDetails(res, testGain, auc, aucSD, trainauc);
-			runner.htmlout.close();
-			// if gsfromfile, we'll need to do something different,
-			// using (GridSetFromFile) gs instead of params.environmentallayers.
-			runner.maybeReplicateHtml(theSpecies, baseFeaturesNoBias);
-		//}
-		if (runner.threads()>1)
-			runner.parallelRunner.close();
-
-
-/** end runner.start function**/
-
-	}
-
 
 
 
@@ -2274,7 +1856,7 @@ public class Runner {
 			final int me2 = allComb[i][0];
 			final int me1 = allComb[i][1];
 			final int me = i;
-			String myname = "Forward FVariable Selection: using only " + features[me1].name + " & " + features[me2].name;
+			String myname = "Forward Variable Selection: using only " + features[me1].name + " & " + features[me2].name;
 			Utils.echoln(myname);
 			Runnable task = new Runnable() {
 				public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
@@ -2333,15 +1915,15 @@ public class Runner {
 				Utils.echoln(myname);
 
 				System.out.println("Forward Variable Selection: using " + tempSelectedVars);
-				/*
+/*
 				Runnable task = new Runnable() {
 					public void run() {
-						runner.addSelectedFeaturesRun(baseFeatures, ssFVS, testSamples, me,  testGainTmp, tempSelectedVars);
+						addSelectedFeaturesRun(baseFeatures, ss, testSamples, me,  testGainTmp, tempSelectedVars);
 					}
 				};
 
 
-				 */
+*/
 
 
 				//void addSelectedFeaturesRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me,ArrayList<Double> testGainTmp, ArrayList<String> tempSelectedVars) {
@@ -2349,7 +1931,7 @@ public class Runner {
 				Feature[] featuresFVS = makeFeatures(variableNoOfFeatures(baseFeatures, tempSelectedVars));
 				if (features==null) return;
 				if (Utils.interrupt) return;
-				Utils.reportDoing(theSpecies + " " + tempSelectedVars + ": ");
+				Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + tempSelectedVars + ": ");
 
 				final MaxentRunResults res4 = maxentRun(featuresFVS, ss, testSamples);
 				if (res4==null) return;
@@ -2363,6 +1945,8 @@ public class Runner {
 						res4.X.setDensityNormalizer(backgroundIterator2);
 					testGainTmp.add(me, getTestGain(res4.X));
 				}
+
+
 				tempSelectedVars.clear();
 
 			} // end for loop
