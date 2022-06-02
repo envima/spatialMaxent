@@ -23,7 +23,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package density;
 
 import javax.swing.*;
-import java.io.*;
 import java.util.*;
 
 public class MaxEnt {
@@ -46,6 +45,7 @@ public class MaxEnt {
 
         params.readFromArgs(args);
         Utils.applyStaticParams(params);  // also in runner
+
         if (params.getboolean("visible")) {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
@@ -58,9 +58,46 @@ public class MaxEnt {
             checkVersion();
             params.setSelections();
             Runner runner = new Runner(params);
-            runner.start();
-            runner.end();
+            if(runner.is("fvs")){
+
+                /**
+                 * - return all possible variable combinations as arraylist
+                 * - let startFvs return average test gain just define ArrayList before
+                 * - create new forwardvariableselection function that calls
+                 *      start function instead of maxentRun()
+                 *      - integratethis forwardVariableSelection into a
+                 *      start function to get neccessary features (!)
+                 *      - nicht optimal, da alles zweimal geladen wird...
+                 *    **/
+
+                //ArrayList with all variables
+                ArrayList<String> varNamesAL = new ArrayList<>();
+                varNamesAL.addAll(List.of(params.layers));
+
+                // ArrayList with best variable combination
+                ArrayList<String> bestVariables = new ArrayList<>();
+                /** pass best Variables ArrayList to function to save output **/
+                runner.forwardVariableSelectionNew(varNamesAL ,bestVariables);
+
+
+
+
+
+                /** get best variable combination
+                 * final run with variable combination**/
+
+                ArrayList<Double> testGain = new ArrayList<>();
+                runner.startFvs(bestVariables, testGain);
+                runner.end();
+            } else {
+                runner.start();
+                runner.end();
+            }
+
+
         }
+
+
 
     }
 

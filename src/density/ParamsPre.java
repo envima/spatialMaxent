@@ -30,7 +30,7 @@ import java.io.*;
 
 public class ParamsPre extends Parameters {
 
-    String[] species=null, layers=null, layerTypes=null, unusedLayers=null;
+    String[] species=null, speciesCV=null, layers=null, layerTypes=null, unusedLayers=null;
     ArrayList toggleType = new ArrayList();
     ArrayList toggleSelectedSamples = new ArrayList();
     ArrayList toggleSelectedLayers = new ArrayList();

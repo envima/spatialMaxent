@@ -31,6 +31,7 @@ import java.text.NumberFormat;
 
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 public class GUI {
     FileSelect samplesSelect;
@@ -339,7 +340,45 @@ public class GUI {
 		    public Object construct() { 
 			runner = new Runner(params); 
 			try {
-			    runner.start(); 
+			    if(runner.is("fvs")){
+
+					/**
+					 * - return all possible variable combinations as arraylist
+					 * - let startFvs return average test gain just define ArrayList before
+					 * - create new forwardvariableselection function that calls
+					 *      start function instead of maxentRun()
+					 *      - integratethis forwardVariableSelection into a
+					 *      start function to get neccessary features (!)
+					 *      - nicht optimal, da alles zweimal geladen wird...
+					 *    **/
+
+					//ArrayList with all variables
+					ArrayList<String> varNamesAL = new ArrayList<>();
+					varNamesAL.addAll(List.of(params.layers));
+
+					// ArrayList with best variable combination
+					ArrayList<String> bestVariables = new ArrayList<>();
+					/** pass best Variables ArrayList to function to save output **/
+					runner.forwardVariableSelectionNew(varNamesAL ,bestVariables);
+
+
+
+
+
+					/** get best variable combination
+					 * final run with variable combination**/
+
+					ArrayList<Double> testGain = new ArrayList<>();
+					runner.startFvs(bestVariables, testGain);
+
+				} else {
+					runner.start();
+
+				}
+
+
+
+
 			} catch (OutOfMemoryError e) {
 			    Utils.fatalException("Please refer to help button", e);
 			} catch (Exception e) {

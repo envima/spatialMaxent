@@ -22,6 +22,8 @@ package density;
  * The <code>params.setSelections()</code> method is needed only if one or more of the toggle parameters have been used (toggle species selected, toggle layer type, toggle layer selected).
  */
 public class Params extends ParamsPre {
+
+
     /**
      * Get the type of a parameter, or <code>null</code> if the parameter doesn't exist
      * @param param the parameter
