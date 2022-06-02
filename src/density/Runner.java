@@ -1410,8 +1410,10 @@ public class Runner {
 			}
 
 			// get best model
+			System.out.println("Test gain Temp ArrayList:"+testGainTmp);
 
 			double bestTestGain  = Collections.max(testGainTmp);
+			System.out.println(bestTestGain);
 			// get var combination of best model
 			int index = testGainTmp.indexOf(bestTestGain);
 
@@ -1443,6 +1445,7 @@ public class Runner {
 			int noPredictors = varNames.size();
 
 			for (int i=0; i <noPredictors; i++){
+				System.out.println(testGainTmp);
 				for(int k=0; k<varNames.size(); k++){
 
 
@@ -1460,18 +1463,9 @@ public class Runner {
 					Utils.echoln(myname);
 
 					System.out.println("Forward Variable Selection: using " + tempSelectedVars);
-
-
-
 					Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + tempSelectedVars + ": ");
 
-
-
-
-
 					testGainOneModel.clear();
-
-
 					// get path to output directory
 					String outDirOrg = params.getOutputdirectory();
 
@@ -1498,6 +1492,8 @@ public class Runner {
 					System.out.println("Test gain average is: "+ testGainAverage);
 
 					testGainTmp.add(testGainAverage);
+					//System.out.println("Test gain Temp ArrayList: "+testGainTmp);
+
 					testGainOneModel.clear();
 					//
 					tempSelectedVars.clear();
@@ -1506,7 +1502,7 @@ public class Runner {
 				//	if (runner.threads()<=1) task.run();
 				//	else runner.parallelRunner.add(task, myname);
 
-				System.out.println(testGainTmp);
+				System.out.println("Test gain temp ArrayList: "+testGainTmp);
 				//}
 
 				//Best Model:
@@ -1526,7 +1522,7 @@ public class Runner {
 					System.out.println(FvsVariables);
 					break;
 				}
-
+testGainTmp.clear();
 			} // end for-loop
 			//System.out.println(bestTestGain);
 			/**get best testgain for 1 round an index of variable in selectedVars ArrayList
@@ -3492,7 +3488,7 @@ public class Runner {
 				System.out.println(FvsVariables);
 				break;
 			}
-
+			testGainTmp.clear();
 		} // end for-loop
 		//System.out.println(bestTestGain);
 		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
