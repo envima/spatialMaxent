@@ -87,7 +87,8 @@ public class MaxEnt {
                  * final run with variable combination**/
 
                 ArrayList<Double> testGain = new ArrayList<>();
-                runner.startFvs(bestVariables, testGain);
+                ArrayList<Double> testAuc = new ArrayList<>();
+                runner.startFvs(bestVariables, testGain, testAuc);
                 runner.end();
             } else {
                 runner.start();

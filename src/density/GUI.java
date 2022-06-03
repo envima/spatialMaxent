@@ -369,7 +369,8 @@ public class GUI {
 					 * final run with variable combination**/
 
 					ArrayList<Double> testGain = new ArrayList<>();
-					runner.startFvs(bestVariables, testGain);
+					ArrayList<Double> testAuc = new ArrayList<>();
+					runner.startFvs(bestVariables, testGain, testAuc);
 
 				} else {
 					runner.start();

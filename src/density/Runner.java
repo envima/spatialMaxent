@@ -252,7 +252,7 @@ public class Runner {
 
 
 
-	public void startFvs(ArrayList<String> FvsVariablesTemp, ArrayList<Double> testGainOneModel) {
+	public void startFvs(ArrayList<String> FvsVariablesTemp, ArrayList<Double> testGainOneModel, ArrayList<Double> testAucTmp) {
 		int j;
 
 		Utils.applyStaticParams(params);
@@ -521,6 +521,7 @@ public class Runner {
 		    };
 	    */
 			double auc = X.getAUC(backgroundIterator, X.testSamples);
+			testAucTmp.add(auc);
 			double aucSD = X.aucSD;
 			double trainauc = X.getAUC(backgroundIterator, X.samples);
 			aucmax = X.aucmax;
@@ -1304,261 +1305,6 @@ public class Runner {
 		return sum/num;
 	}
 
-
-	public static void main (String[] args){
-		final Params params = new Params();
-		params.setOutputdirectory("D:\\maxent\\outputs");
-		params.setEnvironmentallayers("D:\\maxent\\layers");
-		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
-		//params.setReplicatetype("Spatial Crossvalidate");
-		params.setReplicates(5);
-		params.setFvs(true);
-		params.setSelections();
-		Runner runner = new Runner(params);
-
-		ArrayList<String> varNames = new ArrayList<>();
-		varNames.addAll(List.of(params.layers));
-		ArrayList<String> FvsVariables = new ArrayList<>();
-		/** needs to return: ArrayList of selected Variables*/
-		//void forwardVariableSelectionNew(ArrayList<String> varNames, ArrayList<String> FvsVariables) {
-			/** start forward variable selection here:
-			 * umbenannte variablen= auc = aucFVS
-			 * features = featuresFVS
-			 * final Sample[] ssFVS = ss;
-			 * **/
-
-			int num = varNames.size();
-
-			// range Integer predictor number
-			List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
-					.boxed().collect(Collectors.toList());
-
-			// create guava Sets with all possible combinations of var Integer
-			Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
-
-			// create empty array
-			Integer[][] allComb = new Integer[comb.size()][2];
-
-			//add values from Set<Set<Integer>> to Array
-			for (int i=0;i<comb.size();i++) {
-				//get one set
-				Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
-				// get each element of set
-				allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
-				allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
-			}
-
-
-			ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
-			ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
-
-
-			//final boolean hastest = testSamples!=null && testSamples.length>0;
-			//if (threads()>1)
-			//	parallelRunner.clear();
-
-
-			for (int i=0; i<comb.size(); i++) {
-				//if (Utils.interrupt) return null; include again in function!!!!!
-				final int me2 = allComb[i][0];
-				final int me1 = allComb[i][1];
-				final int me = i;
-				String myname = "Forward Variable Selection: using only " + varNames.get(me1) + " & " + varNames.get(me2);
-				Utils.echoln(myname);
-				//Runnable task = new Runnable() {
-				//	public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
-				//		onlyTwoRun(baseFeatures, ss, testSamples, me, gain, testgain, aucFVS, features[me1], features[me2], allComb.length);
-				//	}
-				//};
-				ArrayList<String> twoVarComb = new ArrayList<>();
-				twoVarComb.add(varNames.get(me1));
-				twoVarComb.add(varNames.get(me2));
-
-
-
-				// get path to output directory
-				String outDirOrg = params.getOutputdirectory();
-
-				// create path to subfolders
-				String outDirName = "\\2varCombinations\\"+ varNames.get(me1) + "___" + varNames.get(me2);
-				String outdir = new File(runner.outDir(), outDirName).getPath();
-				//create new directory
-				new File(outdir).mkdirs();
-
-
-
-				params.setOutputdirectory(outdir);
-				runner.startFvs(twoVarComb, testGainOneModel);
-				runner.end();
-				params.setOutputdirectory(outDirOrg);
-				/**
-				 * - get average of test gain
-				 * - add to test gain temp ArrayList
-				 * **/
-
-				double sum = 0;
-				for(double d : testGainOneModel) {
-					sum += d;
-				}
-				Double testGainAverage = (sum / testGainOneModel.size());
-				System.out.println("Test gain average is: "+ testGainAverage);
-
-				testGainTmp.add(testGainAverage);
-				testGainOneModel.clear();
-				twoVarComb.clear();
-
-			}
-
-			// get best model
-			System.out.println("Test gain Temp ArrayList:"+testGainTmp);
-
-			double bestTestGain  = Collections.max(testGainTmp);
-			System.out.println(bestTestGain);
-			// get var combination of best model
-			int index = testGainTmp.indexOf(bestTestGain);
-
-			/** empty testGainTmp ArrayList after each two var combination is defined**/
-			testGainTmp.clear();
-			//get position of two best variables:
-			int var2 = allComb[index][0];
-			int var1 = allComb[index][1];
-
-			//Utils.echoln("Forward Variable Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
-
-			// Needed Variables:
-			ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
-
-			//double currentTestGain; // store the best TestGain of the current Models inside
-
-			//add selected vars to selectedVars ArrayList
-			selectedVars.add(varNames.get(var1));
-			selectedVars.add(varNames.get(var2));
-
-			// remove selected vars from varNames
-			varNames.remove(var1);
-			varNames.remove(var2);
-
-			/**
-			 * run MaxEnt while adding on variable each time:
-			 * **/
-			ArrayList<String> tempSelectedVars = new ArrayList<>();
-			int noPredictors = varNames.size();
-
-			for (int i=0; i <noPredictors; i++){
-				System.out.println(testGainTmp);
-				for(int k=0; k<varNames.size(); k++){
-
-
-					//if (runner.threads()>1)
-					//	runner.parallelRunner.clear();
-
-					tempSelectedVars.addAll(selectedVars);
-					tempSelectedVars.add(varNames.get(k));
-
-
-					//if (Utils.interrupt) return null; include again in function!!!!!
-
-					int me = k;
-					String myname = "Forward Variable Selection: using " + tempSelectedVars;
-					Utils.echoln(myname);
-
-					System.out.println("Forward Variable Selection: using " + tempSelectedVars);
-					Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + tempSelectedVars + ": ");
-
-					testGainOneModel.clear();
-					// get path to output directory
-					String outDirOrg = params.getOutputdirectory();
-
-					// create path to subfolders
-					String outDirName = i+"\\add__"+ tempSelectedVars.get(tempSelectedVars.size()-1);
-					String outdir = new File(runner.outDir(), outDirName).getPath();
-					//create new directory
-					new File(outdir).mkdirs();
-
-
-					// set directories
-					params.setOutputdirectory(outdir);
-
-
-					runner.startFvs(tempSelectedVars, testGainOneModel);
-					runner.end();
-					params.setOutputdirectory(outDirOrg);
-					//calculate testgain Average
-					double sum = 0;
-					for(double d : testGainOneModel) {
-						sum += d;
-					}
-					Double testGainAverage = (sum / testGainOneModel.size());
-					System.out.println("Test gain average is: "+ testGainAverage);
-
-					testGainTmp.add(testGainAverage);
-					//System.out.println("Test gain Temp ArrayList: "+testGainTmp);
-
-					testGainOneModel.clear();
-					//
-					tempSelectedVars.clear();
-
-				} // end for loop
-				//	if (runner.threads()<=1) task.run();
-				//	else runner.parallelRunner.add(task, myname);
-
-				System.out.println("Test gain temp ArrayList: "+testGainTmp);
-				//}
-
-				//Best Model:
-				double currentTestGain = Collections.max(testGainTmp);
-				//System.out.println(currentTestGain);
-				// get var combination of best model
-				int indexTemp = testGainTmp.indexOf(currentTestGain);
-				if(currentTestGain > bestTestGain) {
-					bestTestGain = currentTestGain;
-					selectedVars.add(varNames.get(indexTemp));
-					varNames.remove(indexTemp);
-				} else {
-					/** return what ?
-					 * needs to return: ArrayList FvsVariables
-					 * **/
-					FvsVariables.addAll(selectedVars);
-					System.out.println(FvsVariables);
-					break;
-				}
-testGainTmp.clear();
-			} // end for-loop
-			//System.out.println(bestTestGain);
-			/**get best testgain for 1 round an index of variable in selectedVars ArrayList
-			 * - compare to previous best testGain
-			 * - if (better)
-			 * 	- get index of Variable Name
-			 * 	- remove variable from varNames
-			 * 	- add variable to selected vars
-			 * 	rerun...**/
-
-
-
-
-
-			// array with all variable names (e.g. 14 ) delete the ones used here already
-
-
-		/*if (threads()>1)
-			parallelRunner.runall("fvs", is("verbose"));
-		if (is("plots"))
-			makeJackknifePlots(htmlout, theSpecies, gain, testgain, aucFVS, features, allGain, allTestGain, allauc, hastest, "");
-			 */
-
-
-			//if (!hastest) return new double[][] { gain };
-			//return new double[][] { gain, testgain, aucFVS };
-
-
-
-
-			/** end forward variable selection here:
-			 *
-			 * **/
-	//	}
-
-	}
 
 
 
@@ -3313,7 +3059,8 @@ testGainTmp.clear();
 
 		ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
 		ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
-
+		ArrayList<Double> testAucTmp = new ArrayList<>();
+		ArrayList<Double> testAucOneModel = new ArrayList<>();
 
 		//final boolean hastest = testSamples!=null && testSamples.length>0;
 		//if (threads()>1)
@@ -3350,7 +3097,7 @@ testGainTmp.clear();
 
 
 			params.setOutputdirectory(outdir);
-			startFvs(twoVarComb, testGainOneModel);
+			startFvs(twoVarComb, testGainOneModel, testAucOneModel);
 			end();
 			params.setOutputdirectory(outDirOrg);
 			/**
@@ -3367,6 +3114,21 @@ testGainTmp.clear();
 
 			testGainTmp.add(testGainAverage);
 			testGainOneModel.clear();
+
+			// test auc
+			double sumAuc = 0;
+			for(double d : testAucOneModel) {
+				sumAuc += d;
+			}
+			Double testAucAverage = (sumAuc / testAucOneModel.size());
+			System.out.println("Test auc average is: "+ testAucAverage);
+
+			testAucTmp.add(testAucAverage);
+			testAucOneModel.clear();
+
+			// end test auc
+
+
 			twoVarComb.clear();
 
 		}
@@ -3379,6 +3141,7 @@ testGainTmp.clear();
 
 		/** empty testGainTmp ArrayList after each two var combination is defined**/
 		testGainTmp.clear();
+		testAucTmp.clear();
 		//get position of two best variables:
 		int var2 = allComb[index][0];
 		int var1 = allComb[index][1];
@@ -3432,6 +3195,7 @@ testGainTmp.clear();
 
 
 				testGainOneModel.clear();
+				testAucOneModel.clear();
 
 
 				// get path to output directory
@@ -3448,7 +3212,7 @@ testGainTmp.clear();
 				params.setOutputdirectory(outdir);
 
 
-				startFvs(tempSelectedVars, testGainOneModel);
+				startFvs(tempSelectedVars, testGainOneModel, testAucOneModel);
 				end();
 				params.setOutputdirectory(outDirOrg);
 				//calculate testgain Average
@@ -3462,6 +3226,21 @@ testGainTmp.clear();
 				testGainTmp.add(testGainAverage);
 				testGainOneModel.clear();
 				//
+
+				// test auc
+				double sumAuc = 0;
+				for(double d : testAucOneModel) {
+					sumAuc += d;
+				}
+				Double testAucAverage = (sumAuc / testAucOneModel.size());
+				System.out.println("Test auc average is: "+ testAucAverage);
+
+				testAucTmp.add(testAucAverage);
+				testAucOneModel.clear();
+
+				// end test auc
+
+
 				tempSelectedVars.clear();
 
 			} // end for loop
@@ -3469,6 +3248,7 @@ testGainTmp.clear();
 			//	else runner.parallelRunner.add(task, myname);
 
 			System.out.println(testGainTmp);
+			System.out.println(testAucTmp);
 			//}
 
 			//Best Model:
@@ -3489,6 +3269,7 @@ testGainTmp.clear();
 				break;
 			}
 			testGainTmp.clear();
+			testAucTmp.clear();
 		} // end for-loop
 		//System.out.println(bestTestGain);
 		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
@@ -3523,6 +3304,9 @@ testGainTmp.clear();
 		 *
 		 * **/
 	}
+
+
+
 
 
 
