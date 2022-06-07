@@ -80,16 +80,30 @@ public class MaxEnt {
                 runner.forwardVariableSelectionNew(varNamesAL ,bestVariables);
 
 
+                if(runner.is("ffs")){
+                    /**
+                     * -> create start function for ffs **/
+
+                    ArrayList<Integer> bestBetaMultiplier = new ArrayList<>();
+                    ArrayList<String> bestFeatures = new ArrayList<>();
+                    runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+
+
+                    runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
+                    runner.end();
+                } else {
+                    /** get best variable combination
+                     * final run with variable combination**/
+
+                    ArrayList<Double> testGain = new ArrayList<>();
+                    ArrayList<Double> testAuc = new ArrayList<>();
+                    runner.startFvs(bestVariables, testGain, testAuc);
+                    runner.end();
+                }
 
 
 
-                /** get best variable combination
-                 * final run with variable combination**/
 
-                ArrayList<Double> testGain = new ArrayList<>();
-                ArrayList<Double> testAuc = new ArrayList<>();
-                runner.startFvs(bestVariables, testGain, testAuc);
-                runner.end();
             } else {
                 runner.start();
                 runner.end();
