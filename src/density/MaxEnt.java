@@ -84,7 +84,7 @@ public class MaxEnt {
                     /**
                      * -> create start function for ffs **/
 
-                    ArrayList<Integer> bestBetaMultiplier = new ArrayList<>();
+                    double bestBetaMultiplier = 0;
                     ArrayList<String> bestFeatures = new ArrayList<>();
                     runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
 
