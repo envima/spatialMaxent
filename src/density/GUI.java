@@ -340,7 +340,7 @@ public class GUI {
 		    public Object construct() { 
 			runner = new Runner(params); 
 			try {
-			    if(runner.is("fvs")){
+				if(runner.is("fvs")){
 
 					/**
 					 * - return all possible variable combinations as arraylist
@@ -362,20 +362,51 @@ public class GUI {
 					runner.forwardVariableSelectionNew(varNamesAL ,bestVariables);
 
 
+					if(runner.is("ffs")){
+						/**
+						 * -> create start function for ffs **/
+
+						double bestBetaMultiplier = 0;
+						ArrayList<String> bestFeatures = new ArrayList<>();
+						runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+
+						// final run with best parameters
+						runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
+						runner.end();
+					} else {
+						/** get best variable combination
+						 * final run with variable combination**/
+
+						ArrayList<Double> testGain = new ArrayList<>();
+						ArrayList<Double> testAuc = new ArrayList<>();
+						runner.startFvs(bestVariables, testGain, testAuc);
+						runner.end();
+					}
 
 
 
-					/** get best variable combination
-					 * final run with variable combination**/
-
-					ArrayList<Double> testGain = new ArrayList<>();
-					ArrayList<Double> testAuc = new ArrayList<>();
-					runner.startFvs(bestVariables, testGain, testAuc);
 
 				} else {
-					runner.start();
+					if(runner.is("ffs")){
+						double bestBetaMultiplier = 0;
+						ArrayList<String> bestFeatures = new ArrayList<>();
+						ArrayList<String> bestVariables = new ArrayList<>();
+						bestVariables.addAll(List.of(params.layers));
+						runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+
+						// final run with best parameters
+						runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
+						runner.end();
+					} else{
+						runner.start();
+						runner.end();}
 
 				}
+
+
+
+
+
 
 
 

@@ -84,11 +84,11 @@ public class MaxEnt {
                     /**
                      * -> create start function for ffs **/
 
-                    double bestBetaMultiplier = 0;
+                    Double bestBetaMultiplier = Double.valueOf(0);
                     ArrayList<String> bestFeatures = new ArrayList<>();
                     runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
 
-
+                    // final run with best parameters
                     runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
                     runner.end();
                 } else {
@@ -105,8 +105,20 @@ public class MaxEnt {
 
 
             } else {
-                runner.start();
-                runner.end();
+                if(runner.is("ffs")){
+                    Double bestBetaMultiplier = Double.valueOf(0);
+                    ArrayList<String> bestFeatures = new ArrayList<>();
+                    ArrayList<String> bestVariables = new ArrayList<>();
+                    bestVariables.addAll(List.of(params.layers));
+                    runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+
+                    // final run with best parameters
+                    runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
+                    runner.end();
+                } else{
+                    runner.start();
+                    runner.end();}
+
             }
 
 
