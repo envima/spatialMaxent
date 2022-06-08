@@ -1292,7 +1292,7 @@ public class Runner {
 				if (s.matches(".*_[0-9]+$"))
 					torun.add(s);
 
-			params.species = torun.toArray(new String[0]);
+			params.speciesCV = torun.toArray(new String[0]);
 		}
 
 
@@ -1317,8 +1317,8 @@ public class Runner {
 		}
 
 
-		for (int sample=0; sample<params.species.length; sample++) {
-			theSpecies = params.species[sample];
+		for (int sample=0; sample<params.speciesCV.length; sample++) {
+			theSpecies = params.speciesCV[sample];
 			if (Utils.interrupt) return;
 			if (is("perSpeciesResults")) {
 				try { results = new CsvWriter(new File(outDir(),theSpecies + "Results.csv")); }
@@ -1596,6 +1596,8 @@ public class Runner {
 		}
 		if (threads()>1)
 			parallelRunner.close();
+
+		params.speciesCV = null;
 	}
 
 	void makeNovel(Feature[] basefeatures, String projdir, String outfile) throws IOException {
@@ -3495,6 +3497,9 @@ public class Runner {
 		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
 		//params.setReplicatetype("Spatial Crossvalidate");
 		params.setReplicates(2);
+		params.setBetamultiplier(15);
+		params.setBetaEnd(4);
+		params.setBetaStart(3);
 		params.setSelections();
 		Runner runner = new Runner(params);
 
@@ -3503,95 +3508,18 @@ public class Runner {
 		ArrayList<String> FfsFeatures = new ArrayList<>();
 		bestVariables.addAll(List.of(params.layers));
 		FfsFeatures.add("linear");
-		double bestBetaValue = -1;
 
-		//void tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, double bestBetaValue) {
-			/** test beta values **/
-			ArrayList<Double> testGainOneModel = new ArrayList<>();
-			ArrayList<Double> testAucOneModel = new ArrayList<>();
-			ArrayList<Double> testGainTmp = new ArrayList<>();
-
-			//get all beta Multipliers
-			double bStart = params.getBetaStart();
-			System.out.println(bStart);
-			double bEnd = params.getBetaEnd();
-			System.out.println(bEnd);
-			double bStep = params.getBetaStep();
-			System.out.println(bStep);
-
-		DoubleStream betaMultiplier = DoubleStream.iterate(bStart, d -> d + bStep)
-				.limit((int) (1 + (bEnd - bStart) / bStep));
-
-		double[] b = betaMultiplier.toArray();
-		//System.out.println(Arrays.toString(b));
-			//double[] betaMultiplier = {0.0,1.5};
-
-			for(int beta=0;beta <b.length ; beta++) {
-				//int beta =0;
-				// get path to output directory
-				String outDirOrg = params.getOutputdirectory();
-
-				// create path to subfolders
-
-				String outDirName = "\\beta\\"+beta+"\\"+ "_betaMultiplier_"+b[beta];
-				String outdir = new File(runner.outDir(), outDirName).getPath();
-				//create new directory
-				new File(outdir).mkdirs();
-
-
-				// set directories
-				params.setOutputdirectory(outdir);
-
-				// set beta multiplier
-				params.setBetamultiplier(b[beta]);
-				System.out.println("beta multiplier: "+runner.betaMultiplier());
-
-				runner.startFvs(bestVariables, testGainOneModel, testAucOneModel);
-				runner.end();
-				params.setOutputdirectory(outDirOrg);
-
-
-				//calculate testgain Average
-				double sum = 0;
-				for(double d : testGainOneModel) {
-					sum += d;
-				}
-				Double testGainAverageBeta = (sum / testGainOneModel.size());
-				System.out.println("Test gain average is: "+ testGainAverageBeta);
-
-				//add average testgain of one model to testGainAverageBeta to choose best beta model
-				testGainTmp.add(testGainAverageBeta);
-				testGainOneModel.clear();
-
-
-			} // end beta loop
-
-			/**
-			 * get best model and return beta multiplier **/
-
-
-
-		//Best Model:
-		double currentTestGain = Collections.max(testGainTmp);
-		//System.out.println(currentTestGain);
-		// get var combination of best model
-		int indexTemp = testGainTmp.indexOf(currentTestGain);
-
-		bestBetaValue = b[indexTemp];
-		System.out.println(bestBetaValue);
-
-		testGainTmp.clear();
-		//testAucTmp.clear();
-
-
-
-
-		//}
-
+		double b = runner.tuneBetaMultiplier(bestVariables, FfsFeatures);
+		//double b = 5.5;
+		System.out.println("test beta multiplier:");
+		System.out.println(b);
+		System.out.println(params.getBetamultiplier());
+		params.setBetamultiplier(b);
+		System.out.println(params.getBetamultiplier());
 
 	}
 
-	void tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, double bestBetaValue) {
+	public double tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures) {
 	/** test beta values **/
 	ArrayList<Double> testGainOneModel = new ArrayList<>();
 	ArrayList<Double> testAucOneModel = new ArrayList<>();
@@ -3616,7 +3544,7 @@ public class Runner {
 
 		// create path to subfolders
 
-		String outDirName = "\\beta\\"+beta+"\\"+ "_betaMultiplier_"+b[beta];
+		String outDirName = "\\beta\\"+ "betaMultiplier_"+b[beta];
 		String outdir = new File(outDir(), outDirName).getPath();
 		//create new directory
 		new File(outdir).mkdirs();
@@ -3677,13 +3605,13 @@ public class Runner {
 	// get var combination of best model
 	int indexTemp = testGainTmp.indexOf(currentTestGain);
 
-	bestBetaValue = b[indexTemp];
+	double bestBetaValue = b[indexTemp];
 		System.out.println(bestBetaValue);
 
 		testGainTmp.clear();
 	//testAucTmp.clear();
-
-
+	params.setBetamultiplier(bestBetaValue);
+	return bestBetaValue;
 
 
 	}

@@ -91,9 +91,11 @@ public class MaxEnt {
 
                     if(runner.is("tuneBeta")){
 
-                        double bestBetaMultiplier = -999;
-                        runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
 
+                        double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
+                        params.setBetamultiplier(bestBetaMultiplier);
+                        runner.startFfs(bestVariables, bestFeatures, testGain);
+                        runner.end();
                     } else {
                         // final run with best parameters
                         runner.startFfs(bestVariables, bestFeatures, testGain);
@@ -103,9 +105,14 @@ public class MaxEnt {
                     /** get best variable combination
                      * final run with variable combination**/
                     if(runner.is("tuneBeta")){
-                        double bestBetaMultiplier = -999;
+
                         ArrayList<String> bestFeatures = new ArrayList<>();
-                        runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+                        double bestBetaMultiplier =  runner.tuneBetaMultiplier(bestVariables, bestFeatures);
+
+                        params.setBetamultiplier(bestBetaMultiplier);
+                        ArrayList<Double> testAuc = new ArrayList<>();
+                        runner.startFvs(bestVariables, testGain, testAuc);
+                        runner.end();
                     }  else {
 
                         //ArrayList<Double> testGain = new ArrayList<>();
@@ -123,12 +130,17 @@ public class MaxEnt {
                 bestVariables.addAll(List.of(params.layers));
                 if(runner.is("ffs")){
 
-                    ArrayList<String> bestFeatures = new ArrayList<>();
+                   ArrayList<String> bestFeatures = new ArrayList<>();
                    runner.forwardFeatureSelection(bestVariables, bestFeatures);
 
                     if (runner.is("tuneBeta")) {
-                        double bestBetaMultiplier = -999;
-                        runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+
+                        double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
+                        params.setBetamultiplier(bestBetaMultiplier);
+                        // final run with best parameters
+                        runner.startFfs(bestVariables, bestFeatures, testGain);
+                        runner.end();
+
                     } else {
 
                         // final run with best parameters
@@ -138,9 +150,13 @@ public class MaxEnt {
                 } else {
 
                     if (runner.is("tuneBeta")) {
-                        double bestBetaMultiplier = -999;
+
                         ArrayList<String> bestFeatures = new ArrayList<>();
-                        runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+                        double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
+
+                        params.setBetamultiplier(bestBetaMultiplier);
+                        runner.start(testGain);
+                        runner.end();
                     } else {
 
                         runner.start(testGain);
