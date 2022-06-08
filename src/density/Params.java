@@ -34,7 +34,7 @@ public class Params extends ParamsPre {
      * Get a list of all Maxent parameters
      * @return The list of parameters
      */
-    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "fvs", "ffs" , "tuneBeta","outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
+    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "fvs", "ffs" , "betaStep","betaEnd","betaStart",  "tuneBeta","outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
     /**
      * Set value of <i>responsecurves</i> parameter: Create graphs showing how predicted relative probability of occurrence depends on the value of each environmental variable
      * <p>
@@ -80,6 +80,8 @@ public class Params extends ParamsPre {
 
     public void setTuneBeta(boolean value) { setValue("tuneBeta", value); }
     public boolean isTuneBeta() { return getboolean("tuneBeta"); }
+
+
 
     /**
      * Set value of <i>outputformat</i> parameter: Representation of probabilities used in writing output grids.  See Help for details
@@ -277,6 +279,37 @@ public class Params extends ParamsPre {
      * @return The value <i>betamultiplier</i> parameter
      */
     public double getBetamultiplier() { return getdouble("betamultiplier"); }
+
+
+    public void setBetaStart(double value) { setValue("betaStart", value); }
+    /**
+     * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
+     * @return The value <i>betamultiplier</i> parameter
+     */
+    public double getBetaStart() { return getdouble("betaStart"); }
+
+
+    public void setBetaEnd(double value) { setValue("betaEnd", value); }
+    /**
+     * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
+     * @return The value <i>betamultiplier</i> parameter
+     */
+    public double getBetaEnd() { return getdouble("betaEnd"); }
+
+    public void setBetaStep(double value) { setValue("betaStep", value); }
+    /**
+     * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
+     * @return The value <i>betamultiplier</i> parameter
+     */
+    public double getBetaStep() { return getdouble("betaStep"); }
+
+
+
+
+
+
+
+
     /**
      * Set value of <i>maximumbackground</i> parameter: If the number of background points / grid cells is larger than this number, then this number of cells is chosen randomly for background points
      * <p>

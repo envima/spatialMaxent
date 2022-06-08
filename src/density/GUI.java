@@ -340,6 +340,7 @@ public class GUI {
 		    public Object construct() { 
 			runner = new Runner(params); 
 			try {
+				ArrayList<Double> testGain = new ArrayList<>();
 				if(runner.is("fvs")){
 
 					/**
@@ -370,38 +371,69 @@ public class GUI {
 						ArrayList<String> bestFeatures = new ArrayList<>();
 						runner.forwardFeatureSelection(bestVariables, bestFeatures);
 
-						// final run with best parameters
-						runner.startFfs(bestVariables, bestFeatures);
-						runner.end();
+						if(runner.is("tuneBeta")){
+
+							double bestBetaMultiplier = -999;
+							runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+
+						} else {
+							// final run with best parameters
+							runner.startFfs(bestVariables, bestFeatures, testGain);
+							runner.end();
+						}
 					} else {
 						/** get best variable combination
 						 * final run with variable combination**/
+						if(runner.is("tuneBeta")){
+							double bestBetaMultiplier = -999;
+							ArrayList<String> bestFeatures = new ArrayList<>();
+							runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+						}  else {
 
-						ArrayList<Double> testGain = new ArrayList<>();
-						ArrayList<Double> testAuc = new ArrayList<>();
-						runner.startFvs(bestVariables, testGain, testAuc);
-						runner.end();
+							//ArrayList<Double> testGain = new ArrayList<>();
+							ArrayList<Double> testAuc = new ArrayList<>();
+							runner.startFvs(bestVariables, testGain, testAuc);
+							runner.end();
+						}
 					}
 
 
 
 
 				} else {
+					ArrayList<String> bestVariables = new ArrayList<>();
+					bestVariables.addAll(List.of(params.layers));
 					if(runner.is("ffs")){
 
 						ArrayList<String> bestFeatures = new ArrayList<>();
-						ArrayList<String> bestVariables = new ArrayList<>();
-						bestVariables.addAll(List.of(params.layers));
 						runner.forwardFeatureSelection(bestVariables, bestFeatures);
 
-						// final run with best parameters
-						runner.startFfs(bestVariables, bestFeatures);
-						runner.end();
-					} else{
-						runner.start();
-						runner.end();}
+						if (runner.is("tuneBeta")) {
+							double bestBetaMultiplier = -999;
+							runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+						} else {
+
+							// final run with best parameters
+							runner.startFfs(bestVariables, bestFeatures, testGain);
+							runner.end();
+						}
+					} else {
+
+						if (runner.is("tuneBeta")) {
+							double bestBetaMultiplier = -999;
+							ArrayList<String> bestFeatures = new ArrayList<>();
+							runner.tuneBetaMultiplier(bestVariables, bestFeatures, bestBetaMultiplier);
+						} else {
+
+							runner.start(testGain);
+							runner.end();
+						}
+					}
 
 				}
+
+
+
 
 
 
