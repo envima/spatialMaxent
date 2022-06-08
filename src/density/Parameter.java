@@ -26,7 +26,7 @@ package density;
 import java.io.File;
 
 class Parameter {
-    public static enum Level { SPECIAL, CORE, BASIC, ADVANCED, EXPERIMENTAL, HIDDEN, STARTUP }
+    public static enum Level { SPECIAL, CORE, BASIC, ADVANCED, EXPERIMENTAL, SPATIAL, HIDDEN, STARTUP }
     public static enum Type { BOOLEAN, INTEGER, DOUBLE, FILE, FILEDIRECTORY, DIRECTORY, STRING, HIDDEN }
 
     String name, displaytext, abbreviations="", tooltip="", filetype=null;

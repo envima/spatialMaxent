@@ -94,10 +94,13 @@ public class MaxEnt {
 
                         double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
                         params.setBetamultiplier(bestBetaMultiplier);
+                        //final Model
+                        params.setAllModels(true);
                         runner.startFfs(bestVariables, bestFeatures, testGain);
                         runner.end();
                     } else {
                         // final run with best parameters
+                        params.setAllModels(true);
                         runner.startFfs(bestVariables, bestFeatures, testGain);
                         runner.end();
                     }
@@ -111,12 +114,14 @@ public class MaxEnt {
 
                         params.setBetamultiplier(bestBetaMultiplier);
                         ArrayList<Double> testAuc = new ArrayList<>();
+                        params.setAllModels(true);
                         runner.startFvs(bestVariables, testGain, testAuc);
                         runner.end();
                     }  else {
 
                         //ArrayList<Double> testGain = new ArrayList<>();
                         ArrayList<Double> testAuc = new ArrayList<>();
+                        params.setAllModels(true);
                         runner.startFvs(bestVariables, testGain, testAuc);
                         runner.end();
                     }
@@ -138,12 +143,14 @@ public class MaxEnt {
                         double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
                         params.setBetamultiplier(bestBetaMultiplier);
                         // final run with best parameters
+                        params.setAllModels(true);
                         runner.startFfs(bestVariables, bestFeatures, testGain);
                         runner.end();
 
                     } else {
 
                         // final run with best parameters
+                        params.setAllModels(true);
                         runner.startFfs(bestVariables, bestFeatures, testGain);
                         runner.end();
                     }
@@ -155,10 +162,11 @@ public class MaxEnt {
                         double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
 
                         params.setBetamultiplier(bestBetaMultiplier);
+                        params.setAllModels(true);
                         runner.start(testGain);
                         runner.end();
                     } else {
-
+                        params.setAllModels(true);
                         runner.start(testGain);
                         runner.end();
                     }

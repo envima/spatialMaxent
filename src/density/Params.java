@@ -34,7 +34,7 @@ public class Params extends ParamsPre {
      * Get a list of all Maxent parameters
      * @return The list of parameters
      */
-    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "fvs", "ffs" , "betaStep","betaEnd","betaStart",  "tuneBeta","outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
+    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "decisionParameter","fvs","allModels", "ffs" , "betaStep","betaEnd","betaStart",  "tuneBeta","outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
     /**
      * Set value of <i>responsecurves</i> parameter: Create graphs showing how predicted relative probability of occurrence depends on the value of each environmental variable
      * <p>
@@ -75,13 +75,14 @@ public class Params extends ParamsPre {
     public void setFvs(boolean value) { setValue("fvs", value); }
     public boolean isFvs() { return getboolean("fvs"); }
 
-    public void setFfs(boolean value) { setValue("ffs", value); }
-    public boolean isFfs() { return getboolean("ffs"); }
+    public void setAllModels(boolean value) { setValue("allModels", value); }
+    public boolean isAllModels() { return getboolean("allModels"); }
 
     public void setTuneBeta(boolean value) { setValue("tuneBeta", value); }
     public boolean isTuneBeta() { return getboolean("tuneBeta"); }
 
-
+    public void setFfs(boolean value) { setValue("ffs", value); }
+    public boolean isFfs() { return getboolean("ffs"); }
 
     /**
      * Set value of <i>outputformat</i> parameter: Representation of probabilities used in writing output grids.  See Help for details
@@ -360,6 +361,16 @@ public class Params extends ParamsPre {
      * Default value is crossvalidate.
      * @param value the new value
      */
+
+    public void setDecisionParameter(String value) { setValue("decisionParameter", value); }
+    /**
+     * Get value of <i>replicatetype</i> parameter: If replicates is greater than 1, do multiple runs of this type:<br>Crossvalidate: samples divided into <i>replicates</i> folds; each fold in turn used for test data.<br>Bootstrap: replicate sample sets chosen by sampling with replacement.<br>Subsample: replicate sample sets chosen by removing <i>random test percentage</i> without replacement to be used for evaluation.
+     * @return The value <i>replicatetype</i> parameter
+     */
+    public String getDecisionParameter() { return getString("decisionParameter"); }
+    /**
+
+
     public void setReplicatetype(String value) { setValue("replicatetype", value); }
     /**
      * Get value of <i>replicatetype</i> parameter: If replicates is greater than 1, do multiple runs of this type:<br>Crossvalidate: samples divided into <i>replicates</i> folds; each fold in turn used for test data.<br>Bootstrap: replicate sample sets chosen by sampling with replacement.<br>Subsample: replicate sample sets chosen by removing <i>random test percentage</i> without replacement to be used for evaluation.

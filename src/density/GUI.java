@@ -212,7 +212,7 @@ public class GUI {
 	paramsFrame = new JFrame("Maximum Entropy Parameters");
 	JTabbedPane tabs = new JTabbedPane();
 	paramsFrame.setContentPane(tabs);
-	for (Parameter.Level level: new Parameter.Level[] { Parameter.Level.BASIC, Parameter.Level.ADVANCED, Parameter.Level.EXPERIMENTAL, Parameter.Level.CORE }) {  // core must come last
+	for (Parameter.Level level: new Parameter.Level[] { Parameter.Level.BASIC, Parameter.Level.ADVANCED, Parameter.Level.EXPERIMENTAL, Parameter.Level.SPATIAL, Parameter.Level.CORE }) {  // core must come last
 	    JPanel checks = new JPanel(new GridLayout(0,1));
 	    JPanel labels = new JPanel(new GridLayout(0,1));
 	    JPanel entries = new JPanel(new GridLayout(0,1));
@@ -376,10 +376,13 @@ public class GUI {
 
 							double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
 							params.setBetamultiplier(bestBetaMultiplier);
+							//final Model
+							params.setAllModels(true);
 							runner.startFfs(bestVariables, bestFeatures, testGain);
 							runner.end();
 						} else {
 							// final run with best parameters
+							params.setAllModels(true);
 							runner.startFfs(bestVariables, bestFeatures, testGain);
 							runner.end();
 						}
@@ -389,16 +392,18 @@ public class GUI {
 						if(runner.is("tuneBeta")){
 
 							ArrayList<String> bestFeatures = new ArrayList<>();
-							double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
+							double bestBetaMultiplier =  runner.tuneBetaMultiplier(bestVariables, bestFeatures);
 
 							params.setBetamultiplier(bestBetaMultiplier);
 							ArrayList<Double> testAuc = new ArrayList<>();
+							params.setAllModels(true);
 							runner.startFvs(bestVariables, testGain, testAuc);
 							runner.end();
 						}  else {
 
 							//ArrayList<Double> testGain = new ArrayList<>();
 							ArrayList<Double> testAuc = new ArrayList<>();
+							params.setAllModels(true);
 							runner.startFvs(bestVariables, testGain, testAuc);
 							runner.end();
 						}
@@ -420,12 +425,14 @@ public class GUI {
 							double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
 							params.setBetamultiplier(bestBetaMultiplier);
 							// final run with best parameters
+							params.setAllModels(true);
 							runner.startFfs(bestVariables, bestFeatures, testGain);
 							runner.end();
 
 						} else {
 
 							// final run with best parameters
+							params.setAllModels(true);
 							runner.startFfs(bestVariables, bestFeatures, testGain);
 							runner.end();
 						}
@@ -435,18 +442,23 @@ public class GUI {
 
 							ArrayList<String> bestFeatures = new ArrayList<>();
 							double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures);
-							System.out.println("Best beta multiplier is: "+bestBetaMultiplier);
+
 							params.setBetamultiplier(bestBetaMultiplier);
+							params.setAllModels(true);
 							runner.start(testGain);
 							runner.end();
 						} else {
-
+							params.setAllModels(true);
 							runner.start(testGain);
 							runner.end();
 						}
 					}
 
 				}
+
+
+
+
 
 
 
