@@ -366,12 +366,12 @@ public class GUI {
 						/**
 						 * -> create start function for ffs **/
 
-						double bestBetaMultiplier = 0;
+
 						ArrayList<String> bestFeatures = new ArrayList<>();
-						runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+						runner.forwardFeatureSelection(bestVariables, bestFeatures);
 
 						// final run with best parameters
-						runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
+						runner.startFfs(bestVariables, bestFeatures);
 						runner.end();
 					} else {
 						/** get best variable combination
@@ -388,14 +388,14 @@ public class GUI {
 
 				} else {
 					if(runner.is("ffs")){
-						double bestBetaMultiplier = 0;
+
 						ArrayList<String> bestFeatures = new ArrayList<>();
 						ArrayList<String> bestVariables = new ArrayList<>();
 						bestVariables.addAll(List.of(params.layers));
-						runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+						runner.forwardFeatureSelection(bestVariables, bestFeatures);
 
 						// final run with best parameters
-						runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
+						runner.startFfs(bestVariables, bestFeatures);
 						runner.end();
 					} else{
 						runner.start();

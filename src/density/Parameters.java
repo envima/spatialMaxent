@@ -79,6 +79,12 @@ public class Parameters {
     boolean getboolean(String p) { return getBoolean(p).booleanValue(); }
     Double getDouble(String p) { return (Double) (getValue(p)); }
     double getdouble(String p) { return getDouble(p).doubleValue(); }
+
+    /** get double Array
+     * -> like this double[] b = {0.1, 0.5,1,1.5,};
+     * ????????????? **/
+    double[] getdoubleArray(String p){return new double[]{getDouble(p).doubleValue()};}
+
     Integer getInteger(String p) { return (Integer) (getValue(p)); }
     int getint(String p) { return getInteger(p).intValue(); }
     boolean changed(String p) { return getParameter(p).changed(); }

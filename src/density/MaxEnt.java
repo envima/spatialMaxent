@@ -84,21 +84,29 @@ public class MaxEnt {
                     /**
                      * -> create start function for ffs **/
 
-                    Double bestBetaMultiplier = Double.valueOf(0);
-                    ArrayList<String> bestFeatures = new ArrayList<>();
-                    runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
 
-                    // final run with best parameters
-                    runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
-                    runner.end();
+                    ArrayList<String> bestFeatures = new ArrayList<>();
+                    runner.forwardFeatureSelection(bestVariables, bestFeatures);
+
+                    if(runner.is("tuneBeta")){
+
+                    } else {
+                        // final run with best parameters
+                        runner.startFfs(bestVariables, bestFeatures);
+                        runner.end();
+                    }
                 } else {
                     /** get best variable combination
                      * final run with variable combination**/
+                    if(runner.is("tuneBeta")){
 
-                    ArrayList<Double> testGain = new ArrayList<>();
-                    ArrayList<Double> testAuc = new ArrayList<>();
-                    runner.startFvs(bestVariables, testGain, testAuc);
-                    runner.end();
+                    }  else {
+
+                        ArrayList<Double> testGain = new ArrayList<>();
+                        ArrayList<Double> testAuc = new ArrayList<>();
+                        runner.startFvs(bestVariables, testGain, testAuc);
+                        runner.end();
+                    }
                 }
 
 
@@ -106,18 +114,30 @@ public class MaxEnt {
 
             } else {
                 if(runner.is("ffs")){
-                    Double bestBetaMultiplier = Double.valueOf(0);
+
                     ArrayList<String> bestFeatures = new ArrayList<>();
                     ArrayList<String> bestVariables = new ArrayList<>();
                     bestVariables.addAll(List.of(params.layers));
-                    runner.forwardFeatureSelection(bestVariables, bestFeatures, bestBetaMultiplier);
+                    runner.forwardFeatureSelection(bestVariables, bestFeatures);
 
-                    // final run with best parameters
-                    runner.startFfs(bestVariables, bestFeatures, bestBetaMultiplier);
-                    runner.end();
-                } else{
-                    runner.start();
-                    runner.end();}
+                    if (runner.is("tuneBeta")) {
+
+                    } else {
+
+                        // final run with best parameters
+                        runner.startFfs(bestVariables, bestFeatures);
+                        runner.end();
+                    }
+                } else {
+
+                    if (runner.is("tuneBeta")) {
+
+                    } else {
+
+                        runner.start();
+                        runner.end();
+                    }
+                }
 
             }
 

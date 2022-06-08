@@ -254,11 +254,10 @@ public class Runner {
 	 * set: 1) best features
 	 * 		2) best betamultiplier
 	 * **/
-	public void startFfs(ArrayList<String> bestVariables, ArrayList<String> bestFeatures, Double bestBetaMultiplier) {
+	public void startFfs(ArrayList<String> bestVariables, ArrayList<String> bestFeatures) {
 		int j;
 
-		// set beta multiplier
-		params.setBetamultiplier(bestBetaMultiplier);
+
 		// set the selected features:
 		params.setHinge(false);
 		params.setLinear(false);
@@ -272,8 +271,6 @@ public class Runner {
 				params.setLinear(true);
 			} else if (bestFeatures.get(x) == "hinge") {
 				params.setHinge(true);
-			} else if (bestFeatures.get(x) == "threshold") {
-				params.setThreshold(true);
 			} else if (bestFeatures.get(x) == "threshold") {
 				params.setThreshold(true);
 			} else if (bestFeatures.get(x) == "quadratic") {
@@ -713,6 +710,7 @@ public class Runner {
 
 	public void startFvs(ArrayList<String> FvsVariablesTemp, ArrayList<Double> testGainOneModel, ArrayList<Double> testAucTmp) {
 		int j;
+
 
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
@@ -3492,265 +3490,138 @@ public class Runner {
 		params.setEnvironmentallayers("D:\\maxent\\layers");
 		params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
 		//params.setReplicatetype("Spatial Crossvalidate");
-		params.setReplicates(5);
+		params.setReplicates(2);
 		params.setSelections();
 		Runner runner = new Runner(params);
 
-		/*
+
 		System.out.println(runner.is("linear")); // true
 		System.out.println(runner.is("hinge")); // true
 		System.out.println(runner.is("quadratic")); // true
 		System.out.println(runner.is("product")); // true
 		System.out.println(runner.is("threshold")); // false
-*/
-
-		String[] strs = {"quadratic" ,"product", "threshold", "hinge", "linear"};
-		//String[] strs = { "hinge"};
-
-		ArrayList<String> featureNames = new ArrayList<>();
-		featureNames.addAll(List.of(strs));
-		System.out.println(featureNames);
 
 		ArrayList<String> bestVariables = new ArrayList<>();
 		bestVariables.addAll(List.of(params.layers));
-		System.out.println(bestVariables);
-		ArrayList<Double> testGainOneModel = new ArrayList<>();
-		ArrayList<Double> testGainTmp = new ArrayList<>();
-		ArrayList<Double> testAucOneModel = new ArrayList<>();
-		ArrayList<Double> betaFeatureValues = new ArrayList<>();
-		ArrayList<Double> testGainBetaTmp = new ArrayList<>();
-		ArrayList<String> selectedFeatures = new ArrayList<>();
-		ArrayList<String> FfsFeatures = new ArrayList<>();
-		ArrayList<Double> testGainBetaTmpBest = new ArrayList<>();
-		ArrayList<Double> betaFeatureValuesFinal = new ArrayList<>();
-		Double bestTestGain = 0.0;
-		params.setAutofeature(false);
+		ArrayList<String> bestFeatures = new ArrayList<>();
+		System.out.println(bestFeatures);
+		bestFeatures.add("linear");
+		bestFeatures.add("hinge");
+		bestFeatures.add("threshold");
+		//runner.forwardFeatureSelection(bestVariables, bestFeatures);
+		System.out.println(bestFeatures);
 
+		// set the selected features:
+		params.setHinge(false);
+		params.setLinear(false);
+		params.setProduct(false);
+		params.setThreshold(false);
+		params.setQuadratic(false);
 
-		/**  start ffs here!
-		 *  **/
+		System.out.println(runner.is("linear")); // true
+		System.out.println(runner.is("hinge")); // true
+		System.out.println(runner.is("quadratic")); // true
+		System.out.println(runner.is("product")); // true
+		System.out.println(runner.is("threshold")); // false
 
-		ArrayList<String> tempSelectedFeatures = new ArrayList<>();
-		int noPredictors = featureNames.size(); // 5
-
-
-
-
-		for (int i=0; i <noPredictors; i++){
-			//int i = 0;
-			for(int k=0; k< featureNames.size(); k++){
-				//int k =0;
-
-
-				//if (runner.threads()>1)
-				//	runner.parallelRunner.clear();
-
-				tempSelectedFeatures.addAll(selectedFeatures);
-				tempSelectedFeatures.add(featureNames.get(k));
-				System.out.println("Selected features: "+ tempSelectedFeatures);
-
-
-				//if (Utils.interrupt) return null; include again in function!!!!!
-
-				int me = k;
-				String myname = "Forward Feature Selection: using " + tempSelectedFeatures;
-				Utils.echoln(myname);
-
-				System.out.println("Forward Feature Selection: using " + tempSelectedFeatures);
-
-
-
-				Utils.reportDoing(theSpecies + ": Forward Feature Selection: " + tempSelectedFeatures + ": ");
-
-
-				/////////////////////////////
-				// set the features here
-				// add all Variables in ArrayList selectedVars
-				// loop over feature names?
-				params.setHinge(false);
-				params.setLinear(false);
-				params.setProduct(false);
-				params.setThreshold(false);
-				params.setQuadratic(false);
-
-
-				for(int x=0;x<tempSelectedFeatures.size(); x++){
-					if (tempSelectedFeatures.get(x) == "linear") {
-						params.setLinear(true);
-					} else if (tempSelectedFeatures.get(x) == "hinge") {
-						params.setHinge(true);
-					} else if (tempSelectedFeatures.get(x) == "threshold") {
-						params.setThreshold(true);
-					} else if (tempSelectedFeatures.get(x) == "threshold") {
-						params.setThreshold(true);
-					} else if (tempSelectedFeatures.get(x) == "quadratic") {
-						params.setQuadratic(true);
-					} else if (tempSelectedFeatures.get(x) == "product") {
-						params.setProduct(true);
-					}
-				}
-
-
-				/////////////////////////////
-
-
-
-				testGainOneModel.clear();
-				testAucOneModel.clear();
-
-/////////////////////////////////////////////////////////
-				/** test beta values **/
-
-				double[] b = {0.1, 0.5,1,1.5,};
-
-
-				for(int beta=0;beta <b.length ; beta++) {
-					//int beta =0;
-					// get path to output directory
-					String outDirOrg = params.getOutputdirectory();
-
-					// create path to subfolders
-					System.out.println(tempSelectedFeatures);
-					String outDirName = "\\ffs\\"+i+"\\"+ tempSelectedFeatures+ "_betaMultiplier_"+b[beta];
-					String outdir = new File(runner.outDir(), outDirName).getPath();
-					//create new directory
-					new File(outdir).mkdirs();
-
-
-					// set directories
-					params.setOutputdirectory(outdir);
-
-					// set beta multiplier
-					params.setBetamultiplier(b[beta]);
-					System.out.println("beta multiplier: "+runner.betaMultiplier());
-
-					runner.startFvs(bestVariables, testGainOneModel, testAucOneModel);
-					runner.end();
-					params.setOutputdirectory(outDirOrg);
-
-
-					//calculate testgain Average
-					double sumB = 0;
-					for(double d : testGainOneModel) {
-						sumB += d;
-					}
-					Double testGainAverageBeta = (sumB / testGainOneModel.size());
-					System.out.println("Test gain average is: "+ testGainAverageBeta);
-
-					//add average testgain of one model to testGainAverageBeta to choose best beta model
-					testGainBetaTmp.add(testGainAverageBeta);
-					testGainOneModel.clear();
-
-
-				} // end beta loop
-
-
-
-				//Best Model:
-
-
-				double bestBetaTestGain = Collections.max(testGainBetaTmp);
-				//System.out.println("best beta test gain for ONE feature: "+bestBetaTestGain);
-				//System.out.println(currentTestGain);
-				// get var combination of best model
-				int indexBeta = testGainBetaTmp.indexOf(bestBetaTestGain);
-
-				//System.out.println("Best beta value for ONE feature: " +b[indexBeta]);
-				/**
-				 * -> get best beta model testgain and beta**/
-
-				// beinhaltet testGain der besten modelle jedes features
-				testGainBetaTmpBest.add(bestBetaTestGain);
-
-				/**
-				 * -> funktioniert so nicht!
-				 * -> hier fehlt ein Array mit allen möglichen kombinationen**/
-				// beinhaltet den besten beta multiplier für jedes feature
-				betaFeatureValues.add(b[indexBeta]);
-				tempSelectedFeatures.clear();
-				testGainBetaTmp.clear();
-
-
-				/**
-				 * -> add best test gain to testgaintemp
-				 * -> add beta to beta array clear testGainBetaTemp
-				 * **/
-
-			} // end for loop
-			//	if (runner.threads()<=1) task.run();
-			//	else runner.parallelRunner.add(task, myname);
-
-			// get best test gain
-			System.out.println("Best test gain für jedes feature: "+testGainBetaTmpBest);
-			double betaTG = Collections.max(testGainBetaTmpBest);
-			testGainTmp.add(betaTG);
-
-			int indexBestBeta = testGainBetaTmpBest.indexOf(betaTG);
-
-			// get den beta multiplier für besten test gain
-			betaFeatureValuesFinal.add(betaFeatureValues.get(indexBestBeta));
-			System.out.println("bester beta wert für jedes hinzugefügte feature: "+betaFeatureValuesFinal);
-			betaFeatureValues.clear();
-
-
-			System.out.println(testGainTmp);
-			//System.out.println(testAucTmp);
-			//}
-
-			//Best Model:
-			double currentTestGain = Collections.max(testGainTmp);
-			//System.out.println(currentTestGain);
-			// get var combination of best model
-			int indexTemp = testGainBetaTmpBest.indexOf(currentTestGain);
-			testGainBetaTmpBest.clear();
-			if(currentTestGain > bestTestGain) {
-				bestTestGain = currentTestGain;
-				selectedFeatures.add(featureNames.get(indexTemp));
-				featureNames.remove(indexTemp);
-			} else {
-				/** return what ?
-				 * needs to return: ArrayList FvsVariables
-				 * **/
-
-				FfsFeatures.addAll(selectedFeatures);
-				System.out.println(FfsFeatures);
-				System.out.println(betaFeatureValues);
-				break;
+		for(int x=0;x<bestFeatures.size(); x++){
+			if (bestFeatures.get(x) == "linear") {
+				params.setLinear(true);
+			} else if (bestFeatures.get(x) == "hinge") {
+				params.setHinge(true);
+			} else if (bestFeatures.get(x) == "threshold") {
+				params.setThreshold(true);
+			} else if (bestFeatures.get(x) == "threshold") {
+				params.setThreshold(true);
+			} else if (bestFeatures.get(x) == "quadratic") {
+				params.setQuadratic(true);
+			} else if (bestFeatures.get(x) == "product") {
+				params.setProduct(true);
 			}
-			testGainTmp.clear();
-			//testAucTmp.clear();
-		} // end for-loop
-		System.out.println(FfsFeatures);
-		System.out.println(betaFeatureValues);
+		}
+		System.out.println(runner.is("linear")); // true
+		System.out.println(runner.is("hinge")); // true
+		System.out.println(runner.is("quadratic")); // true
+		System.out.println(runner.is("product")); // true
+		System.out.println(runner.is("threshold")); // false
+
+		runner.startFfs(bestVariables, bestFeatures);
+		runner.end();
 
 	}
 
+	void tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, double[] betaMultiplier) {
+		/** test beta values **/
+		ArrayList<Double> testGainOneModel = new ArrayList<>();
+		ArrayList<Double> testAucOneModel = new ArrayList<>();
+		ArrayList<Double> testGainTmp = new ArrayList<>();
+
+		for(int beta=0;beta <betaMultiplier.length ; beta++) {
+			//int beta =0;
+			// get path to output directory
+			String outDirOrg = params.getOutputdirectory();
+
+			// create path to subfolders
+
+			String outDirName = "\\beta\\"+beta+"\\"+ "_betaMultiplier_"+betaMultiplier[beta];
+			String outdir = new File(outDir(), outDirName).getPath();
+			//create new directory
+			new File(outdir).mkdirs();
+
+
+			// set directories
+			params.setOutputdirectory(outdir);
+
+			// set beta multiplier
+			params.setBetamultiplier(betaMultiplier[beta]);
+			System.out.println("beta multiplier: "+betaMultiplier());
+
+			startFvs(bestVariables, testGainOneModel, testAucOneModel);
+			end();
+			params.setOutputdirectory(outDirOrg);
+
+
+			//calculate testgain Average
+			double sum = 0;
+			for(double d : testGainOneModel) {
+				sum += d;
+			}
+			Double testGainAverageBeta = (sum / testGainOneModel.size());
+			System.out.println("Test gain average is: "+ testGainAverageBeta);
+
+			//add average testgain of one model to testGainAverageBeta to choose best beta model
+			testGainTmp.add(testGainAverageBeta);
+			testGainOneModel.clear();
+
+
+		} // end beta loop
+
+		/**
+		 * get best model and return beta multiplier **/
+	}
 
 
 	/**
 	 * ForwardFeatureSelection für Hing, linear... etc
 	 * für jede mögliche Kombination der features -> alle beta multiplier durchtesten 0-7 in 0,5 Schritten
 	 * bestes beta Model wählen -> dann weiter in FFS**/
-	void forwardFeatureSelection(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, Double bestBetaMultiplier) {
+	void forwardFeatureSelection(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures) {
 
 		// input variables
 		String[] strs = {"quadratic" ,"product", "threshold", "hinge", "linear"};
-		double[] b = {0.1, 0.5,1,1.5,};
+
 
 		ArrayList<String> featureNames = new ArrayList<>();
 		featureNames.addAll(List.of(strs));
-		System.out.println(featureNames);
 
-
+		// ArrayLists for results
 		ArrayList<Double> testGainOneModel = new ArrayList<>();
 		ArrayList<Double> testGainTmp = new ArrayList<>();
 		ArrayList<Double> testAucOneModel = new ArrayList<>();
-		ArrayList<Double> betaFeatureValues = new ArrayList<>();
-		ArrayList<Double> testGainBetaTmp = new ArrayList<>();
+		double bestTestGain = 0.0;
+
+
 		ArrayList<String> selectedFeatures = new ArrayList<>();
-		ArrayList<Double> testGainBetaTmpBest = new ArrayList<>();
-		ArrayList<Double> betaFeatureValuesFinal = new ArrayList<>();
-		Double bestTestGain = 0.0;
 		params.setAutofeature(false);
 
 
@@ -3771,7 +3642,6 @@ public class Runner {
 
 				//if (runner.threads()>1)
 				//	runner.parallelRunner.clear();
-
 				tempSelectedFeatures.addAll(selectedFeatures);
 				tempSelectedFeatures.add(featureNames.get(k));
 				System.out.println("Selected features: "+ tempSelectedFeatures);
@@ -3808,8 +3678,6 @@ public class Runner {
 						params.setHinge(true);
 					} else if (tempSelectedFeatures.get(x) == "threshold") {
 						params.setThreshold(true);
-					} else if (tempSelectedFeatures.get(x) == "threshold") {
-						params.setThreshold(true);
 					} else if (tempSelectedFeatures.get(x) == "quadratic") {
 						params.setQuadratic(true);
 					} else if (tempSelectedFeatures.get(x) == "product") {
@@ -3817,165 +3685,75 @@ public class Runner {
 					}
 				}
 
-
-				/////////////////////////////
-
-
-
+				// clean temporary ArrayLists
 				testGainOneModel.clear();
 				testAucOneModel.clear();
+				/////////////////////////////
+				// get path to output directory
+				String outDirOrg = params.getOutputdirectory();
 
-/////////////////////////////////////////////////////////
-				/** test beta values **/
-
-
-
-
-				for(int beta=0;beta <b.length ; beta++) {
-					//int beta =0;
-					// get path to output directory
-					String outDirOrg = params.getOutputdirectory();
-
-					// create path to subfolders
-					System.out.println(tempSelectedFeatures);
-					String outDirName = "\\ffs\\"+i+"\\"+ tempSelectedFeatures+ "_betaMultiplier_"+b[beta];
-					String outdir = new File(outDir(), outDirName).getPath();
-					//create new directory
-					new File(outdir).mkdirs();
+				// create path to subfolders
+				System.out.println(tempSelectedFeatures);
+				String outDirName = "\\ffs\\"+i+"\\"+ tempSelectedFeatures;
+				String outdir = new File(outDir(), outDirName).getPath();
+				//create new directory
+				new File(outdir).mkdirs();
 
 
-					// set directories
-					params.setOutputdirectory(outdir);
-
-					// set beta multiplier
-					params.setBetamultiplier(b[beta]);
-					System.out.println("beta multiplier: "+betaMultiplier());
-
-					startFvs(bestVariables, testGainOneModel, testAucOneModel);
-					end();
-					params.setOutputdirectory(outDirOrg);
+				// set directories
+				params.setOutputdirectory(outdir);
 
 
-					//calculate testgain Average
-					double sumB = 0;
-					for(double d : testGainOneModel) {
-						sumB += d;
-					}
-					Double testGainAverageBeta = (sumB / testGainOneModel.size());
-					System.out.println("Test gain average is: "+ testGainAverageBeta);
-
-					//add average testgain of one model to testGainAverageBeta to choose best beta model
-					testGainBetaTmp.add(testGainAverageBeta);
-					testGainOneModel.clear();
+				startFvs(bestVariables, testGainOneModel, testAucOneModel);
+				end();
+				params.setOutputdirectory(outDirOrg);
 
 
-				} // end beta loop
+				//calculate testgain Average
+				double sum = 0;
+				for(double d : testGainOneModel) {
+					sum += d;
+				}
+				Double testGainAverage = (sum / testGainOneModel.size());
+				System.out.println("Test gain average is: "+ testGainAverage);
+
+				//add average testgain of one model to testGainAverageBeta to choose best beta model
+				testGainTmp.add(testGainAverage);
+				testGainOneModel.clear();
 
 
-
-				//Best Model:
-
-
-				double bestBetaTestGain = Collections.max(testGainBetaTmp);
-				//System.out.println("best beta test gain for ONE feature: "+bestBetaTestGain);
-				//System.out.println(currentTestGain);
-				// get var combination of best model
-				int indexBeta = testGainBetaTmp.indexOf(bestBetaTestGain);
-
-				//System.out.println("Best beta value for ONE feature: " +b[indexBeta]);
-				/**
-				 * -> get best beta model testgain and beta**/
-
-				// beinhaltet testGain der besten modelle jedes features
-				testGainBetaTmpBest.add(bestBetaTestGain);
-
-				/**
-				 * -> funktioniert so nicht!
-				 * -> hier fehlt ein Array mit allen möglichen kombinationen**/
-				// beinhaltet den besten beta multiplier für jedes feature
-				betaFeatureValues.add(b[indexBeta]);
 				tempSelectedFeatures.clear();
-				testGainBetaTmp.clear();
-
-
-				/**
-				 * -> add best test gain to testgaintemp
-				 * -> add beta to beta array clear testGainBetaTemp
-				 * **/
 
 			} // end for loop
 			//	if (runner.threads()<=1) task.run();
 			//	else runner.parallelRunner.add(task, myname);
-
-			// get best test gain
-			System.out.println("Best test gain für jedes feature: "+testGainBetaTmpBest);
-			double betaTG = Collections.max(testGainBetaTmpBest);
-			testGainTmp.add(betaTG);
-
-			int indexBestBeta = testGainBetaTmpBest.indexOf(betaTG);
-
-
-
-
-			System.out.println(testGainTmp);
-			//System.out.println(testAucTmp);
-			//}
-
-
 
 
 			//Best Model:
 			double currentTestGain = Collections.max(testGainTmp);
 			//System.out.println(currentTestGain);
 			// get var combination of best model
-			int indexTemp = testGainBetaTmpBest.indexOf(currentTestGain);
-			testGainBetaTmpBest.clear();
+			int indexTemp = testGainTmp.indexOf(currentTestGain);
+
+
 			if(currentTestGain > bestTestGain) {
 				bestTestGain = currentTestGain;
 				selectedFeatures.add(featureNames.get(indexTemp));
 				featureNames.remove(indexTemp);
-
-				// get den beta multiplier für besten test gain
-				betaFeatureValuesFinal.add(betaFeatureValues.get(indexBestBeta));
-				System.out.println("bester beta wert für jedes hinzugefügte feature: "+betaFeatureValuesFinal);
 			} else {
 				/** return what ?
 				 * needs to return: ArrayList FvsVariables
 				 * **/
 
 				FfsFeatures.addAll(selectedFeatures);
-				bestBetaMultiplier = betaFeatureValuesFinal.get(betaFeatureValuesFinal.size()-1);
 				System.out.println(FfsFeatures);
-				System.out.println("best beta: "+ bestBetaMultiplier);
-				System.out.println(betaFeatureValuesFinal);
 				break;
 			}
 			testGainTmp.clear();
-			betaFeatureValues.clear();
+
 			//testAucTmp.clear();
 		} // end for-loop
 		System.out.println(FfsFeatures);
-		System.out.println(betaFeatureValues);
-
-
-
-
-
-		/**
-		 * -> select all 5(?) features by default
-		 * -> OR do FFS with whatever features get selected?
-		 * **/
-
-		/**
-		 *
-		 * 1) get an ArrayList with booleans for features (save as String?)
-		 * 2) do all possible combinations
-		 * 3) do beta multiplier for each combination
-		 * 4) save each feature with beta multiplier somewhere as variable
-		 *
-		 * **/
-
-
 
 
 
