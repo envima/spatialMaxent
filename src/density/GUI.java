@@ -448,5 +448,6 @@ public class GUI {
 	}
     }
 
+
     void popupError(String s, Throwable e) { Utils.popupError(s, e); }
 }

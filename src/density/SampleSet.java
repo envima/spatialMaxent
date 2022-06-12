@@ -210,24 +210,22 @@ public class SampleSet {
 
 
 
-
 /*
+
 public static void main (String[] args){
 
 	final Params params = new Params();
-	params.setOutputdirectory("D:\\maxent\\outputs");
-	params.setEnvironmentallayers("D:\\maxent\\layers");
-	params.setSamplesfile("D:\\maxent\\samples\\bradypus_spatial_int.csv");
-	//params.setReplicatetype("spatial crossvalidate");
+	params.setOutputdirectory("D:\\maxent\\tutorial-data\\outputs");
+	params.setEnvironmentallayers("D:\\maxent\\tutorial-data\\layers");
+	params.setSamplesfile("D:\\maxent\\tutorial-data\\samples\\bradypus_spatialCV.csv");
+	params.setReplicatetype("spatial crossvalidate");
 	params.setSelections();
 
 	Runner runner = new Runner(params);
-	runner.start();
-
-
+	runner.runSpatial();
 	// create sample Set with parameters from Params
 	SampleSet sampleSet = runner.sampleSet;
-	String[] names = sampleSet.getNames();
+	/*String[] names = sampleSet.getNames();
 	//SampleSet test1 = sampleSet.splitForCV(3);
 	SampleSet test2 = sampleSet.splitForSpatialCV();
 	//System.out.println(test1.speciesMap);
@@ -244,6 +242,66 @@ public static void main (String[] args){
 	List<Integer> locArr = new ArrayList<Integer>(locHset);
 	System.out.println(Collections.unmodifiableList(locArr));
 	ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[0]); //org hashmap with values
+*/
+
+	/**
+	 *  start splitspatial cv
+	 * **/
+
+
+/*
+
+//	SampleSet sampleSet = runner.sampleSet;
+	//SampleSet splitForSpatialCV() {  // returns sampleset of test data //n = number locations
+		String[] names = sampleSet.getNames();
+		System.out.println(names);
+		/*
+		SampleSet testss = new SampleSet();
+
+		//for (int i=0; i<names.length; i++) { // ist 1
+	int i = 1;
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			System.out.println(locations);
+			ArrayList<Integer> order = (ArrayList<Integer>) locations;
+			System.out.println(order);
+			/*
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+
+
+			int num = Math.min(old.size(), locArr.size()); //minimum ist 3
+			ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
+			ArrayList[] test = new ArrayList[num];
+			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
+				train[j] = new ArrayList();
+				test[j] = new ArrayList();
+			} // here data gets split in cv Folds!
+
+			for (int k=0; k<old.size(); k++) {
+				int fold = order.get(k); // number 0:9
+				test[fold].add(old.get(k)); // add ONE set to test
+				for (int j=0; j<num; j++)
+					if (j!=fold) train[j].add(old.get(k));
+			}
+
+			for (int j=0; j<num; j++) { //3
+				sampleSet.speciesMap.put(names[i]+"_"+j, train[j]);
+				testss.speciesMap.put(names[i]+"_"+j, test[j]);
+			}
+		}
+		//return testss;
+//	}
+
+*/
+
+
+	/** end split spatial cv**/
+
+
 
 
 
@@ -321,15 +379,15 @@ public static void main (String[] args){
 		}
 		//printWriter.print("Length " + data.get(j). + "\n");
 	}
-	
+*/
 	//int num = old.size() < 10 ? old.size() : 10;
 	//System.out.println(num);
 	//int[] order = sampleSet.randomPermutation(old.size());
 	//System.out.println(Arrays.toString(order));
 	//int fold = order[0] % num;
 	//System.out.println(fold);
-}
-*/
+//}
+
 
         SampleSet splitForSpatialCV() {  // returns sampleset of test data //n = number locations
             String[] names = getNames();
@@ -338,12 +396,16 @@ public static void main (String[] args){
 			for (int i=0; i<names.length; i++) { // ist 1
 				List<Sample> species = (List<Sample>) speciesMap.get(names[i]);
 				List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
-				ArrayList<Integer> order = (ArrayList<Integer>) locations;
+				ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
 				//field1List.forEach(System.out::println);
 				HashSet<Integer> locHset = new HashSet<Integer>(locations);
 				// Converting HashSet to ArrayList
 				List<Integer> locArr = new ArrayList<Integer>(locHset);
 				ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+				ArrayList<Integer> positions = new ArrayList<>();
+				for(int p =0; p<locArr.size(); p++){
+					positions.add(p);
+				}
 
 
 				int num = Math.min(old.size(), locArr.size()); //minimum ist 3
@@ -354,8 +416,14 @@ public static void main (String[] args){
 					test[j] = new ArrayList();
 				} // here data gets split in cv Folds!
 
+				// number of all points (114)
 				for (int k=0; k<old.size(); k++) {
-					int fold = order.get(k); // number 0:9
+
+					int value = locationsArrList.get(k);
+					int index = locArr.indexOf(value);
+					int fold = positions.get(index); // number 0:9
+
+
 					test[fold].add(old.get(k)); // add ONE set to test
 					for (int j=0; j<num; j++)
 						if (j!=fold) train[j].add(old.get(k));

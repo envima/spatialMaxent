@@ -368,7 +368,7 @@ public class Params extends ParamsPre {
      * @return The value <i>replicatetype</i> parameter
      */
     public String getDecisionParameter() { return getString("decisionParameter"); }
-    /**
+
 
 
     public void setReplicatetype(String value) { setValue("replicatetype", value); }
