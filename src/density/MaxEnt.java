@@ -27,6 +27,7 @@ import java.util.*;
 
 public class MaxEnt {
 
+    /*
     static void checkVersion() {
         String version = System.getProperties().getProperty("java.version");
         double v = Double.parseDouble(version);
@@ -38,7 +39,7 @@ public class MaxEnt {
         }
 
     }
-
+*/
 
     public static void main(String args[]) {
         final Params params = new Params();
@@ -49,13 +50,13 @@ public class MaxEnt {
         if (params.getboolean("visible")) {
             javax.swing.SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    checkVersion();
+                   // checkVersion();
                     createAndShowGUI(params);
                 }
             });
         }
         else {
-            checkVersion();
+          //  checkVersion();
             params.setSelections();
             Runner runner = new Runner(params);
 

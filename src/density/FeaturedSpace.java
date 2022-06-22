@@ -46,6 +46,8 @@ public class FeaturedSpace {
     double[] linearPredictor;
     Feature[] features;
     int numFeatures;
+
+
     FeatureGenerator[] featureGenerators;
     int numFeatureGenerators;
     double linearPredictorNormalizer=0.0;   // used to ensure that max e^.. <=1
@@ -318,11 +320,13 @@ public class FeaturedSpace {
 		    featuresList.add(f[i]); break;
 		}
 
+
 	features = (Feature[]) featuresList.toArray(new Feature[0]);
 	numFeatures = features.length;
 
 	featureGenerators = (FeatureGenerator[]) featureGeneratorsList.toArray(new FeatureGenerator[0]);
 	numFeatureGenerators = featureGenerators.length;
+
 
 	setBiasDiv(biasDiv);   // also sets sample expectations
 
@@ -746,6 +750,34 @@ public class FeaturedSpace {
 	writeWeights(new PrintWriter(out));
 	return out.toString();
     }
+
+	int countParameters() {
+		boolean written=false;  // want at least one feature, even if 0
+		int numParams =0;
+		for (int i=0; i<numFeatures; i++) {
+			if (features[i].lambda==0
+					&& (written || i<numFeatures-1)
+					&& (!(features[i].type()==Feature.LINEAR))
+					&& (!(features[i].type()==Feature.BINARY) ||
+					!((BinaryFeature)features[i]).isFirstCategory))
+				continue; // need linear features for base feature clamping
+			// and need first binary category so that masks work if they
+			// are given as categorical
+			written=true;
+			if (features[i] instanceof ScaledFeature)
+				numParams=numParams+1;
+			else if (features[i] instanceof HingeFeature) {
+				if (features[i].name.endsWith("__rev"))
+					numParams=numParams+1;
+				else
+					numParams=numParams+1;
+			}
+			else
+				numParams=numParams+1;
+		}
+		return numParams;
+	}
+
 
     void writeWeights(PrintWriter out) throws IOException {
 	boolean written=false;  // want at least one feature, even if 0
