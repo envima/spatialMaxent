@@ -30,15 +30,10 @@ The spatial validation can be chosen in the basic tab as `Replicated run type`. 
 
 ___
 
-For all the tuning procedures the settings have a new tab called `spatial`. 
+All the tuning procedures can be found in the GUI in a new tab of the settings called `spatial`. Each of the steps variable selection, feature selection and beta multiplier tuning can be omitted but we highly recommend to do all of them.
 
-
-![alt text](https://github.com/Baldl/spatialMaxent/blob/main/images/settings2.png)
-
-Each of the tuning steps can be omitted but we highly recommend to do each one of them.
-
-command line parameters:
-|Name|type|default|
+If you are working on the command line these are the parameters to use:
+|**Name**|**Type|**Default**|
 | --------- |:--------:| -----:|
 |fvs| boolean| true|
 |ffs| boolean| true|
@@ -52,16 +47,28 @@ command line parameters:
 
 #### Forward Variable Selection (FVS)
 
-* parameter: fvs=true/false 
-
+#### Forward Feature Selection (FFS)
 The FFS (parameter: ffs=true/false) trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features ar . Note that the setting of features in the main maxent tab ("Auto features", "Hinge features", etc.) will be ignored by spatialMaxent as all features are tested one after another.
 
-
+#### Beta multiplier tuning
 The beta multiplier tuning has three input parameters: The lowest beat multiplier to be tuned (beta start) the highest beta multiplier to be tuned and the steps in which the beta multiplier is increased from betastart to betaend. e.g.(1,5,0.5 will try the following beta multipliers: 1 1.5 2 2.5 3 3.5 4 4.5 5)
 
-Which model is the best can be either determined based on the test gain or the test auc value (decision parameter).
+Which model is the best can be either determined based on the `test gain` or the `test auc` value (`decision parameter`).
+
+![alt text](https://github.com/Baldl/spatialMaxent/blob/main/images/settings2.png)
+
+#### The `allModels` setting
+
+
+
+#### general notes
+* processing time
 ___
 
-## References
+### References
 
 Valavi, R., Elith, J., Lahoz‐Monfort, J. J., & Guillera‐Arroita, G. (2019). block CV: An r package for generating spatially or environmentally separated folds for k ‐fold cross‐validation of species distribution models. Methods in Ecology and Evolution, 10(2), 225–232. https://doi.org/10.1111/2041-210X.13107
+
+### spatialMaxent was created using:
+
+
