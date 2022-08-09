@@ -12,7 +12,7 @@ ___
 
 ### How to structure your data?
 
-The data structure that needs to be supplied to maxent changes insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial fold. If the SWD data format is choosen also the environmental layers .csv file needs to have an additional column for the folds, but no values are required here. 
+The data structure that needs to be supplied to maxent changes insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial fold as integer value. If the SWD data format is choosen also the environmental layers .csv file needs to have an additional column for the folds, but no values are required here.
 
 Example of a samples file created to work with spatialMaxent on the [maxent tutorial data](https://biodiversityinformatics.amnh.org/open_source/maxent/):
 
@@ -33,7 +33,7 @@ ___
 All the tuning procedures can be found in the GUI in a new tab of the settings called `spatial`. Each of the steps variable selection, feature selection and beta multiplier tuning can be omitted but we highly recommend to do all of them.
 
 If you are working on the command line these are the parameters to use:
-|**Name**|**Type|**Default**|
+|**Name**|**Type**|**Default**|
 | --------- |:--------:| -----:|
 |fvs| boolean| true|
 |ffs| boolean| true|
@@ -58,11 +58,11 @@ Which model is the best can be either determined based on the `test gain` or the
 ![alt text](https://github.com/Baldl/spatialMaxent/blob/main/images/settings2.png)
 
 #### The `allModels` setting
-
+You can set the `allModels`setting to true if you want to generate output not only for the last model with the selected variables, features and beta multiplier but for each step of the FFS, FVS and beta multiplier tuning. **Be very careful with this setting!** If it is set to true depending on your input data huge amounts of data will be generated and the processing time will increase considerably. It is not recommended for large rasters and high amount of variables.
 
 
 #### general notes
-* processing time
+The FFS, FVS and beta multiplier tuning all have large processing times. Especially if the FVS is done and there are lots of input variables 
 ___
 
 ### References
