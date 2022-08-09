@@ -77,10 +77,11 @@ Valavi, R., Elith, J., Lahoz‐Monfort, J. J., & Guillera‐Arroita, G. (2019). 
 
 ### spatialMaxent was created using:
 
-maxent version 3.4.4 Copyright (c) 2016 Steven Phillips, Miro Dudik and Rob Schapire
+maxent version 3.4.4 Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire
 
 OpenJDK JDK18
 
-IntelliJ IDEA Community Edition 2021.3.3
+IntelliJ IDEA Community Edition 2021.3.3 Copyright 2000-2021 JetBrains s.r.o.
+
 
 Google Core Libraries for Java: Guava 31.1
