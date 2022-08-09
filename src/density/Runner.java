@@ -47,11 +47,11 @@ import java.util.stream.IntStream;
 public class Runner {
 	static GridSet gs;
 	static SampleSet sampleSet;
-	static SampleSet testSampleSet=null;
+	static SampleSet testSampleSet = null;
 	static String[] projectPrefix = null;
 	Params params;
 	static CsvWriter results;
-	GUI gui=null;
+	GUI gui = null;
 	static String theSpecies;
 	NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 	static ArrayList projectedGrids;
@@ -59,37 +59,94 @@ public class Runner {
 	static double aucmax;
 	static double applyThresholdValue;
 	boolean samplesAddedToFeatures;
-	static String raw2cumfile=null;
+	static String raw2cumfile = null;
 	static ParallelRun parallelRunner;
 	static double[][] coords;
-	static HashMap<String,Integer> speciesCount;
+	static HashMap<String, Integer> speciesCount;
 
 	// common parameters
-	boolean is(String s) { return params.getboolean(s); }
-	boolean occurrenceProbability() { return params.occurrenceProbability(); }
-	boolean cumulative() { return params.cumulative(); }
-	int replicates() { return params.getint("replicates"); }
+	boolean is(String s) {
+		return params.getboolean(s);
+	}
+
+	boolean occurrenceProbability() {
+		return params.occurrenceProbability();
+	}
+
+	boolean cumulative() {
+		return params.cumulative();
+	}
+
+	int replicates() {
+		return params.getint("replicates");
+	}
+
 	int replicates(String species) {
-		if (speciesCount==null || !cv() || !spatialCV() || speciesCount.get(species)==null || speciesCount.get(species) > replicates())
+		if (speciesCount == null || !cv() || !spatialCV() || speciesCount.get(species) == null || speciesCount.get(species) > replicates())
 			return replicates();
 		return speciesCount.get(species);
 	}
 
 
-	int threads() { return params.getint("threads"); }
-	String outDir() { return params.getString("outputdirectory"); }
-	String biasFile() { return params.getString("biasFile"); }
-	String testSamplesFile() { return params.getString("testSamplesFile"); }
-	String environmentalLayers() { return params.getString("environmentalLayers"); }
-	String projectionLayers() { return params.getString("projectionLayers"); }
-	double betaMultiplier() { return params.getdouble("betaMultiplier"); }
-	String outputFileType() { return "."+params.getString("outputFileType"); }
-	boolean cv() { return params.getString("replicatetype").equals("crossvalidate"); }
-	boolean spatialCV() { return params.getString("replicatetype").equals("spatial crossvalidate"); }
-	boolean bootstrap() { return params.getString("replicatetype").equals("bootstrap"); }
-	boolean subsample() { return params.getString("replicatetype").equals("subsample"); }
-	boolean decideOnTestGain() { return params.getString("decisionParameter").equals("test gain"); }
-	boolean decideOnTestAuc() { return params.getString("decisionParameter").equals("test auc"); }
+	int threads() {
+		return params.getint("threads");
+	}
+
+	String outDir() {
+		return params.getString("outputdirectory");
+	}
+
+	String biasFile() {
+		return params.getString("biasFile");
+	}
+
+	String testSamplesFile() {
+		return params.getString("testSamplesFile");
+	}
+
+	String environmentalLayers() {
+		return params.getString("environmentalLayers");
+	}
+
+	String projectionLayers() {
+		return params.getString("projectionLayers");
+	}
+
+	double betaMultiplier() {
+		return params.getdouble("betaMultiplier");
+	}
+
+	String outputFileType() {
+		return "." + params.getString("outputFileType");
+	}
+
+	boolean cv() {
+		return params.getString("replicatetype").equals("crossvalidate");
+	}
+
+	boolean spatialCV() {
+		return params.getString("replicatetype").equals("spatial crossvalidate");
+	}
+
+	boolean bootstrap() {
+		return params.getString("replicatetype").equals("bootstrap");
+	}
+
+	boolean subsample() {
+		return params.getString("replicatetype").equals("subsample");
+	}
+
+	boolean decideOnTestGain() {
+		return params.getString("decisionParameter").equals("test gain");
+	}
+
+	boolean decideOnTestAuc() {
+		return params.getString("decisionParameter").equals("test auc");
+	}
+
+	boolean decideOnAICC() {
+		return params.getString("decisionParameter").equals("aicc");
+	}
 
 
 	static String raw2cumfile(String lambdafile) {
@@ -102,12 +159,18 @@ public class Runner {
 		int iterations;
 		FeaturedSpace X;
 		String[] featureTypes;
+
 		void removeBiasDistribution() {
 			if (X.biasDist != null)
 				X.setBiasDist(null);
 		}
+
 		MaxentRunResults(double gain, int iter, FeaturedSpace X, double time, String[] types) {
-			this.gain=gain; this.iterations=iter; this.X=X; this.time=time; featureTypes=types;
+			this.gain = gain;
+			this.iterations = iter;
+			this.X = X;
+			this.time = time;
+			featureTypes = types;
 		}
 	}
 
@@ -118,36 +181,38 @@ public class Runner {
 		nf.setMaximumFractionDigits(3);
 	}
 
-	void popupError(String s, Throwable e) { Utils.popupError(s, e); }
+	void popupError(String s, Throwable e) {
+		Utils.popupError(s, e);
+	}
 
 	void stop() {
 		Utils.echoln("Interrupted");
 		Utils.interrupt = true;
 	}
 
-	static Layer[] allLayers=null;
+	static Layer[] allLayers = null;
 
 	Layer[] trueFeatureLayers() {
 		ArrayList result = new ArrayList();
-		for (int i=0; i<allLayers.length; i++) {
-			int type=allLayers[i].getType();
-			if (type==Layer.CONT || type==Layer.CAT)
+		for (int i = 0; i < allLayers.length; i++) {
+			int type = allLayers[i].getType();
+			if (type == Layer.CONT || type == Layer.CAT)
 				result.add(allLayers[i]);
 		}
 		return (Layer[]) result.toArray(new Layer[0]);
 	}
 
 	boolean isTrueBaseFeature(Feature f) {
-		int type=f.type();
-		return type==Feature.L_CONT || type==Feature.L_CAT;
+		int type = f.type();
+		return type == Feature.L_CONT || type == Feature.L_CAT;
 	}
 
 	Feature[] getTrueBaseFeatures(Feature[] f) {
-		ArrayList result=new ArrayList();
-		for (int i=0; i<f.length; i++)
+		ArrayList result = new ArrayList();
+		for (int i = 0; i < f.length; i++)
 			if (isTrueBaseFeature(f[i]))
 				result.add(f[i]);
-		return (Feature []) result.toArray(new Feature[0]);
+		return (Feature[]) result.toArray(new Feature[0]);
 	}
 
 	boolean gridsFromFile() {
@@ -155,23 +220,23 @@ public class Runner {
 	}
 
 	GridSet initializeGrids() {
-		String dir=environmentalLayers();
+		String dir = environmentalLayers();
 		boolean isFile = gridsFromFile();
-		String[] layers=params.layers;
-		String[] layerTypes=params.layerTypes;
-		GridSet result=null;
+		String[] layers = params.layers;
+		String[] layerTypes = params.layerTypes;
+		GridSet result = null;
 		ArrayList allLayersList = new ArrayList();
 
-		for (int i=0; i<layers.length; i++) {
-			Layer layer = new Layer(layers[i],layerTypes[i]);
+		for (int i = 0; i < layers.length; i++) {
+			Layer layer = new Layer(layers[i], layerTypes[i]);
 			allLayersList.add(layer);
 		}
 		try {
 			ArrayList full = new ArrayList();
 			ArrayList fileLayersList = new ArrayList();
 
-			for (int i=0; i<layers.length; i++) {
-				Layer layer = new Layer(layers[i],layerTypes[i]);
+			for (int i = 0; i < layers.length; i++) {
+				Layer layer = new Layer(layers[i], layerTypes[i]);
 				// 10/17/2006: commented out next line as only makes dupes
 				// allLayersList.add(layer);
 				fileLayersList.add(layer);
@@ -182,12 +247,11 @@ public class Runner {
 			if (!biasFile().equals("")) {
 				File f = new File(biasFile());
 				if (f.exists()) {
-					Layer layer = new Layer(f,params.getint("biasType"));
+					Layer layer = new Layer(f, params.getint("biasType"));
 					allLayersList.add(layer);
 					full.add(f.getAbsolutePath());
 					fileLayersList.add(layer);
-				}
-				else {
+				} else {
 					popupError("Error opening bias file " + biasFile(), null);
 					return null;
 				}
@@ -204,7 +268,7 @@ public class Runner {
 				if (!params.getString("samplesFile").equals("")) {
 					result.train = new SampleSet2(params.getString("samplesFile"), fileLayers, null, params);
 					if (!result.train.samplesHaveData) {
-						popupError("Samples need to be in SWD format when background data is in SWD format",null);
+						popupError("Samples need to be in SWD format when background data is in SWD format", null);
 						return null;
 					}
 					result.train.params = params;
@@ -214,26 +278,24 @@ public class Runner {
 				if (!testSamplesFile().equals("")) {
 					result.test = new SampleSet2(testSamplesFile(), fileLayers, null, params);
 					if (!result.test.samplesHaveData) {
-						popupError("Test samples need to be in SWD format when background data is in SWD format",null);
+						popupError("Test samples need to be in SWD format when background data is in SWD format", null);
 						return null;
 					}
 					result.test.params = params;
 					// if replicates, test samples may end in _0, _1 etc
-					result.test.read(replicates()==0?selectSpecies:null);
+					result.test.read(replicates() == 0 ? selectSpecies : null);
 					//		    System.out.println("tt");
 					result.test.createMaps();
 				}
-			}
-			else {
-				if (fileNames.length==0) return null;
+			} else {
+				if (fileNames.length == 0) return null;
 				result = new Extractor();
 				((Extractor) result).params = params;
 				((Extractor) result).extractSamples(fileNames, params.getint("maximumBackground"), params.getString("samplesFile"), testSamplesFile(), fileLayers, selectSpecies);
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			String msg = "Error reading files";
-			if (Extractor.readingFile!=null)
+			if (Extractor.readingFile != null)
 				msg = "Error reading file " + Extractor.readingFile;
 			popupError(msg, e);
 			Utils.interrupt = true;
@@ -247,110 +309,64 @@ public class Runner {
 	 */
 	public void end() {
 		Utils.echoln("Ending");
-		if (results!=null) { results.close(); results=null; }
-		if (htmlout!=null) { htmlout.close(); htmlout=null; }
+		if (results != null) {
+			results.close();
+			results = null;
+		}
+		if (htmlout != null) {
+			htmlout.close();
+			htmlout = null;
+		}
 		Utils.closeLog();
 		Utils.disposeProgressMonitor();
 	}
 
 
-	public static void main (String[] args){
+	public static void main(String[] args) {
 
 		final Params params = new Params();
-		params.setOutputdirectory("D:\\maxent\\bradypus\\test");
-		params.setEnvironmentallayers("D:\\maxent\\bradypus\\layers");
+		params.setOutputdirectory("D:\\maxent\\bradypus\\test\\");
+		params.setEnvironmentallayers("D:\\maxent\\tutorial-data\\layers\\");
 		params.setSamplesfile("D:\\maxent\\bradypus\\samples\\bradypus_spatial_int.csv");
 		//params.setReplicatetype("Spatial Crossvalidate");
-		params.setReplicates(2);
-		params.setBetamultiplier(15);
-		params.setBetaEnd(4);
-		params.setBetaStart(3);
+		params.setReplicates(1);
 		params.setSelections();
+		//params.setBetamultiplier(15);
+		//params.setBetaEnd(4);
+		//params.setBetaStart(3);
+		//params.setSelections();
 		Runner runner = new Runner(params);
 
 
-		// number parameters?
-		//System.out.println(X.numFeatures);
 
-
-		Utils.applyStaticParams(params);
-		if (params.layers==null)
-			params.setSelections();
-		if (runner.cv() || runner.spatialCV() && runner.replicates()>1 && params.getRandomtestpoints() != 0) {
-			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
-			params.setRandomtestpoints(0);
-		}
-
-
-		if (runner.subsample() && runner.replicates()>1 && params.getint("randomTestPoints") <= 0 && !runner.is("manualReplicates")) {
-			runner.popupError("Subsampled replicates require nonzero random test percentage", null);
-			return;
-		}
-
-		if (!runner.spatialCV()) {
-			if (!runner.cv() && runner.replicates()>1 && !params.getboolean("randomseed") && !runner.is("manualReplicates")) {
-				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
-				params.setValue("randomseed", true);
-			}
-		}
-
-		if (runner.outDir()==null || runner.outDir().trim().equals("")) {
-			runner.popupError("An output directory is needed", null);
-			return;
-		}
-		if (runner.is("allModels")) {
-			if (!(new File(runner.outDir()).exists())) {
-				runner.popupError("Output directory does not exist", null);
-				return;
-			}
-		}
-		if (!runner.biasFile().equals("") && runner.gridsFromFile()) {
-			runner.popupError("Bias grid cannot be used with SWD-format background", null);
-			return;
-		}
-		if (runner.is("perSpeciesResults") && runner.replicates()>1) {
-			Utils.warn2("PerSpeciesResults is not supported with replicates>1, setting perSpeciesResults to false", "unsettingPerSpeciesResults");
-			params.setValue("perSpeciesResults", false);
-		}
-		if(runner.is("allModels")) {
-			// other parameter consistency checks?
-			if (runner.is("allModels")) {
-				try {
-					Utils.openLog(runner.outDir(), params.getString("logFile"));
-				} catch (IOException e) {
-					runner.popupError("Error opening log file", e);
-					return;
-				}
-			}
-		}
 		Utils.startTimer();
 		Utils.echoln(new Date().toString());
-		Utils.echoln("MaxEnt version "+Utils.version);
+		Utils.echoln("MaxEnt version " + Utils.version);
 		Utils.interrupt = false;
-		if (runner.threads()>1)
+		if (runner.threads() > 1)
 			parallelRunner = new ParallelRun(runner.threads());
-		Thread.currentThread().setPriority(Thread.NORM_PRIORITY-1);
-		if (params.layers == null || params.layers.length==0) {
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 1);
+		if (params.layers == null || params.layers.length == 0) {
 			runner.popupError("No environmental layers selected", null);
 			return;
 		}
-		if (params.species.length==0) {
+		if (params.species.length == 0) {
 			runner.popupError("No species selected", null);
 			return;
 		}
-		if (Utils.progressMonitor!=null)
+		if (Utils.progressMonitor != null)
 			Utils.progressMonitor.setMaximum(100);
 
 		Utils.generator = new Random(!params.isRandomseed() ? 0 : System.currentTimeMillis());
 		gs = runner.initializeGrids();
-		if (Utils.interrupt || gs==null) return;
+		if (Utils.interrupt || gs == null) return;
 
 		SampleSet2 sampleSet2 = gs.train;
 
-		if (runner.projectionLayers().length()>0) {
+		if (runner.projectionLayers().length() > 0) {
 			String[] dirs = runner.projectionLayers().trim().split(",");
 			projectPrefix = new String[dirs.length];
-			for (int i=0; i<projectPrefix.length; i++)
+			for (int i = 0; i < projectPrefix.length; i++)
 				projectPrefix[i] = (new File(dirs[i].trim())).getPath();
 		}
 
@@ -363,12 +379,45 @@ public class Runner {
 			sampleSet2.removeDuplicates(runner.gridsFromFile() ? null : gs.getDimension());
 
 		Feature[] baseFeatures;
-		baseFeatures = (gs==null) ? null : gs.toFeatures();
+		baseFeatures = (gs == null) ? null : gs.toFeatures();
+
+
+
+
+
 		coords = gs.getDimension().coords;
-		if (baseFeatures==null || baseFeatures.length==0 || baseFeatures[0].n==0) {
+		if (baseFeatures == null || baseFeatures.length == 0 || baseFeatures[0].n == 0) {
 			runner.popupError("No background points with data in all layers", null);
 			return;
 		}
+
+		/**
+		 *
+		 * create sampleset with background points for AICC
+		 *
+		 * **/
+
+		//SampleSet backgroundPoints = null;
+		ArrayList<Sample> bgpArrayList = new ArrayList<>();
+
+		for (int no=0;no<baseFeatures[0].n; no++) {
+			HashMap featureMap = new HashMap();
+			for (int i = 0; i < baseFeatures.length; i++) {
+				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
+			}
+			Sample bgp = new Sample(no, featureMap);
+			bgpArrayList.add( no, bgp);
+		}
+
+		SampleSet backgroundPoints = new SampleSet();
+		backgroundPoints.speciesMap.put("backgroundpoints", bgpArrayList);
+
+		/**
+		 *
+		 * end create sampleset with background points for AICC
+		 *
+		 * **/
+
 
 		// note.
 		boolean addSamplesToFeatures = runner.samplesAddedToFeatures =
@@ -379,19 +428,33 @@ public class Runner {
 		if (addSamplesToFeatures)
 			Utils.echoln("Adding samples to background in feature space");
 
-		Feature[] features=null;
+		Feature[] features = null;
 
 		if (!addSamplesToFeatures) {
 			features = runner.makeFeatures(baseFeatures);
 			if (Utils.interrupt) return;
 		}
 
-		sampleSet=sampleSet2;
+		sampleSet = sampleSet2;
 		speciesCount = new HashMap();
+/*
+		System.out.println(sampleSet.speciesMap);
+		System.out.println(gs.layers);
+		// number background points:
+		System.out.println("Number background points: "+gs.getNumPoints());
+		//System.out.println(gs.numPoints); // is 0
+		System.out.println(gs.layers);
+		System.out.println(gs.features);
+		System.out.println(sampleSet2.n);
+		System.out.println(sampleSet2.sampleFile);
+		System.out.println(sampleSet2.header);
+		System.out.println(Arrays.toString(sampleSet.getNames()));
+		System.out.println();
+*/
 
 		// set replicates for spatial cv
 		// get number of distinct locations
-		if(runner.spatialCV()) {
+		if (runner.spatialCV()) {
 			String[] names = sampleSet.getNames();
 			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
 			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
@@ -406,14 +469,14 @@ public class Runner {
 			params.setReplicates(num);
 		}
 
-		if (runner.replicates()>1 && !runner.is("manualReplicates")) {
+		if (runner.replicates() > 1 && !runner.is("manualReplicates")) {
 
 			if (runner.cv()) {
-				for (String s: sampleSet.getNames())
+				for (String s : sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
 				testSampleSet = sampleSet.splitForCV(runner.replicates());
-			} else if (runner.spatialCV()){
-				for (String s: sampleSet.getNames())
+			} else if (runner.spatialCV()) {
+				for (String s : sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
 				testSampleSet = sampleSet.splitForSpatialCV();
 
@@ -421,7 +484,7 @@ public class Runner {
 			} else
 				sampleSet.replicate(runner.replicates(), runner.bootstrap());
 			ArrayList<String> torun = new ArrayList();
-			for (String s: sampleSet.getNames())
+			for (String s : sampleSet.getNames())
 				if (s.matches(".*_[0-9]+$"))
 					torun.add(s);
 
@@ -429,419 +492,221 @@ public class Runner {
 		}
 
 
-
-
-
-		if (runner.testSamplesFile().equals("") && params.getint("randomTestPoints")!=0) {
-			SampleSet train=null;
-			if (!runner.is("randomseed")) Utils.generator = new Random(11111);
-			testSampleSet =
-					sampleSet.randomSample(params.getint("randomTestPoints"));
+		int sample=0;
+		theSpecies = params.species[sample];
+		if (Utils.interrupt) return;
+		if (runner.is("perSpeciesResults")) {
+			try {
+				results = new CsvWriter(new File(runner.outDir(), theSpecies + "Results.csv"));
+			} catch (IOException e) {
+				runner.popupError("Problem opening " + theSpecies + " results file", e);
+				return;
+			}
 		}
+		String suffix = runner.outputFileType();
+		File f = new File(runner.outDir(), theSpecies + suffix);
+		File lf = new File(runner.outDir(), theSpecies + ".lambdas");
+		String lambdafile = lf.getAbsolutePath();
+
+		Sample[] sss = sampleSet.getSamples(theSpecies);
+		if (!params.allowpartialdata())
+			sss = runner.withAllData(baseFeatures, sss);
+
+
+
+
+		final Sample[] ss = sss;
+
+
+		if (ss.length == 0) {
+			Utils.warn2("Skipping " + theSpecies + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
+
+		}
+		if (testSampleSet != null) {
+			int len = testSampleSet.getSamples(theSpecies).length;
+			if (len == 0) {
+				//		    if (MaxEnt.bootstrapBetaResults!=null)
+				//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
+				Utils.warn2("Skipping " + theSpecies + " because it has 0 test samples", "skippingBecauseNoTestSamples");
+
+			}
+		}
+
+
+
+
+		Feature[] baseFeaturesWithSamples = baseFeatures;
+		if (addSamplesToFeatures) {
+			features = null;  // free up memory before makeFeatures
+			baseFeaturesWithSamples = runner.featuresWithSamples(baseFeatures, ss);
+			if (baseFeaturesWithSamples == null) ;
+			features = runner.makeFeatures(baseFeaturesWithSamples);
+		}
+		Feature[] baseFeaturesNoBias = runner.getTrueBaseFeatures(baseFeaturesWithSamples);
 		if (Utils.interrupt) return;
 
-		ArrayList<Double> testGainOneModel = new ArrayList<>();
-		ArrayList<String> bestVariables = new ArrayList<>();
-		bestVariables.addAll(List.of(params.layers));
-		ArrayList<String> bestFeatures = new ArrayList<>();
+		Utils.reportDoing(theSpecies + ": ");
 
-		//public void startNew(ArrayList<String> bestVariables,ArrayList<String> bestFeatures, ArrayList<Double> testGainOneModel,
-		//		Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features) {
+		contributions = null;
 
 
+		MaxentRunResults res = runner.maxentRun(features, ss,
+				testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+		if (res == null) return;
+		Utils.echoln("Resulting gain: " + res.gain);
+		final FeaturedSpace X = res.X;
+		System.out.println(X.numPoints); //10112
+		System.out.println(X.numSamples);
+		System.out.println(X.samples[0].featureMap.values());
 
-			if(runner.is("allModels")) {
-				runner.writeLog();
-				if (!runner.is("perSpeciesResults")) {
-					try {
-						results = new CsvWriter(new File(runner.outDir(), "maxentResults.csv"), runner.is("appendtoresultsfile"));
-					} catch (IOException e) {
-						runner.popupError("Problem opening results file", e);
-						return;
-					}
-				}
-			}
+		//System.out.println(X.densityNormalizer); //159
+		/** feature map for background data needed !!!!**/
+		//System.out.println(X.features[0].getClass()); //10112
+		//System.out.println(X.features.length);
+		System.out.println("base features length: "+baseFeatures.length);
+		System.out.println("basefeatures: "+baseFeatures[0].name);
+		System.out.println("basefeatures: "+baseFeatures[0].n);
+		System.out.println("basefeatures: "+Arrays.toString(baseFeatures[0].distinctVals()));
+		System.out.println("basefeatures: "+baseFeatures[0].distinctVals().length);
 
-			//for (int sample=0; sample<params.speciesCV.length; sample++) {
-		int sample = 1;
-				theSpecies = params.speciesCV[sample];
-				if (Utils.interrupt) return;
-				if (runner.is("perSpeciesResults")) {
-					try {
-						results = new CsvWriter(new File(runner.outDir(), theSpecies + "Results.csv"));
-					} catch (IOException e) {
-						runner.popupError("Problem opening " + theSpecies + " results file", e);
-						return;
-					}
-				}
-				String suffix = runner.outputFileType();
-				File f = new File(runner.outDir(), theSpecies + suffix);
-				File lf = new File(runner.outDir(), theSpecies + ".lambdas");
-				String lambdafile = lf.getAbsolutePath();
-
-				Sample[] sss = sampleSet.getSamples(theSpecies);
-				if (!params.allowpartialdata())
-					sss = runner.withAllData(baseFeatures, sss);
-				final Sample[] ss = sss;
-				if (ss.length == 0) {
-					Utils.warn2("Skipping " + theSpecies + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
-					//continue;
-				}
-				if (testSampleSet != null) {
-					int len = testSampleSet.getSamples(theSpecies).length;
-					if (len == 0) {
-						//		    if (MaxEnt.bootstrapBetaResults!=null)
-						//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
-						Utils.warn2("Skipping " + theSpecies + " because it has 0 test samples", "skippingBecauseNoTestSamples");
-						//continue;
-					}
-				}
-				Utils.reportMemory("getSamples");
-				if(runner.is("allModels")) {
-					if (lf.exists()) {
-						if (runner.is("skipIfExists")) {
-							if (runner.is("appendtoresultsfile"))
-								runner.maybeReplicateHtml(theSpecies, runner.getTrueBaseFeatures(baseFeatures));
-							//continue;
-						}
-						if (runner.is("askoverwrite") && Utils.topLevelFrame != null) {
-							Object[] options = {"Skip", "Skip all", "Redo", "Redo all"};
-							int val = JOptionPane.showOptionDialog(Utils.topLevelFrame, "Output file exists for " + theSpecies, "File already exists", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-							switch (val) {
-								case 1:
-									params.setValue("skipIfExists", true);
-								case 0:
-									if (runner.is("appendtoresultsfile"))
-										runner.maybeReplicateHtml(theSpecies, runner.getTrueBaseFeatures(baseFeatures));
-								//	continue;
-								case 3:
-									params.setValue("askoverwrite", false);
-								case 2:
-									break;
-							}
-						}
-					}
-				}
-				Feature[] baseFeaturesWithSamples = baseFeatures;
-				if (addSamplesToFeatures) {
-					features = null;  // free up memory before makeFeatures
-					baseFeaturesWithSamples = runner.featuresWithSamples(baseFeatures, ss);
-					if (baseFeaturesWithSamples == null); //continue;
-					features = runner.makeFeatures(baseFeaturesWithSamples);
-				}
-				Feature[] baseFeaturesNoBias = runner.getTrueBaseFeatures(baseFeaturesWithSamples);
-				if (Utils.interrupt) return;
-
-				Utils.reportDoing(theSpecies + ": ");
-
-				contributions = null;
+		System.out.println(X.samples[0].getClass());
+		System.out.println(X.samples[0].featureMap);
+		//Sample bgp = null;
 
 
 
-				if(bestVariables.size()>0){
-					//just use selected features
-					features = runner.makeFeatures(runner.variableNoOfFeatures(baseFeatures, bestVariables));
-				} else {}
 
-				MaxentRunResults res = runner.maxentRun(features, ss,
-						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-				if (res == null) return;
-				Utils.echoln("Resulting gain: " + res.gain);
-				final FeaturedSpace X = res.X;
 
-				//	    if (X.biasDist != null)
-				//		X.setBiasDist(null); // remove biasDist
-				res.removeBiasDistribution();
 
-				boolean gsfromfile = (gs instanceof GridSetFromFile);
-				boolean writeRaw2cumfile = true;
 
-				//	    boolean saveInterpolate = Grid.interpolateSamples;
-				//	    Grid.interpolateSamples = false;
-				DoubleIterator backgroundIterator = null;
+
+
+
+
+		//	    if (X.biasDist != null)
+		//		X.setBiasDist(null); // remove biasDist
+		res.removeBiasDistribution();
+
+		boolean gsfromfile = (gs instanceof GridSetFromFile);
+		boolean writeRaw2cumfile = true;
+
+		//	    boolean saveInterpolate = Grid.interpolateSamples;
+		//	    Grid.interpolateSamples = false;
+		DoubleIterator backgroundIterator = null;
 	    /*
 	    if (addSamplesToFeatures)
 		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
 			double getNext() { return X.newDensity(i++); }
 		    };
 	    */
-				double auc = X.getAUC(backgroundIterator, X.testSamples);
-				double aucSD = X.aucSD;
-				double trainauc = X.getAUC(backgroundIterator, X.samples);
-				aucmax = X.aucmax;
-				double nParams = X.numFeatures;
-				//	    Grid.interpolateSamples = saveInterpolate;
-				if (backgroundIterator != null)
-					X.setDensityNormalizer(backgroundIterator);
-
-				double entropy = X.getEntropy(); // needs to be after setDensityNormalizer
-				double prevalence = X.getPrevalence(params);
-				if(runner.is("allModels")) {
-					try {
-						X.writeFeatureWeights(lambdafile);
-					} catch (IOException e) {
-						runner.popupError("Error writing feature weights file", e);
-						return;
-					}
-				}
-				double testGain = (testSampleSet == null) ? 0 : runner.getTestGain(X);
-				if (runner.decideOnTestGain()) {
-					testGainOneModel.add(testGain);
-				}
-				if (runner.decideOnTestAuc()) {
-					testGainOneModel.add(auc);
-				}
-
-				if (runner.is("allModels")) {
-					runner.startHtmlPage();
-					if (writeRaw2cumfile) {
-						raw2cumfile = raw2cumfile(lambdafile);
-						try {
-							double[] weights = (backgroundIterator == null) ? X.getWeights() :
-									backgroundIterator.getvals(X.densityNormalizer);
-							runner.writeCumulativeIndex(weights, raw2cumfile, X, auc, trainauc, baseFeaturesNoBias, entropy);
-						} catch (IOException e) {
-							runner.popupError("Error writing raw-to-cumulative index file", e);
-							return;
-						}
-					}
-
-					writtenGrid = null;
-					if (Utils.interrupt) return;
-
-					boolean explain = true;
-					for (String s : res.featureTypes)
-						if (s.equals("product"))
-							explain = false;
-					startedPictureHtmlSection = false;
-					if (runner.is("outputGrids")) {
-						String filename = gsfromfile ?
-								new File(runner.outDir(), theSpecies + ".csv").getPath() :
-								f.getPath();
-						try {
-							Project proj = new Project(params);
-							//	if (params.biasIsBayesianPrior) {
-							//	  String name = new File(params.biasFile).getName();
-							//	  for (int i=0; i<Utils.inputFileTypes.length; i++)
-							//	     name = name.replaceAll(Utils.inputFileTypes[i]+"$", "");
-							//	  proj.priorDistribution = gs.getGrid(name);
-							//  }
-							proj.entropy = entropy;
-							if (gsfromfile)
-								proj.doProject(lambdafile, (GridSetFromFile) gs, filename);
-							else
-								proj.doProject(lambdafile, runner.environmentalLayers(), filename, null);
-							proj.entropy = -1.0;
-							if (Utils.interrupt) return;
-							writtenGrid = filename;
-							if (runner.is("pictures") && !gsfromfile)
-								runner.makePicture(f.getPath(), ss, X.testSamples, null);
-							runner.makeExplain(explain, f, lambdafile, theSpecies + "_explain.bat", new File(runner.environmentalLayers()).getAbsolutePath());
-							if (applyThresholdValue != -1 && !gsfromfile)
-								new Threshold().applyThreshold(f.getPath(), applyThresholdValue);
-						} catch (IOException e) {
-							runner.popupError("Error writing output file " + new File(filename).getName(), e);
-							return;
-						}
-					}
-
-					if (Utils.interrupt) return;
-					projectedGrids = new ArrayList();
-					if (projectPrefix != null && runner.is("outputGrids"))
-						for (int i = 0; i < projectPrefix.length; i++) {
-							if (Utils.interrupt) return;
-							String prefix = new File(projectPrefix[i]).getName();
-							if (prefix.endsWith(".csv"))
-								prefix = prefix.substring(0, prefix.length() - 4);
-							boolean isFile = (new File(projectPrefix[i]).isFile());
-							File ff = new File(runner.outDir(), theSpecies + "_" + prefix + (isFile ? ".csv" : suffix));
-							File ffclamp = new File(runner.outDir(), theSpecies + "_" + prefix + "_clamping" + (isFile ? ".csv" : suffix));
-							try {
-								Project proj = new Project(params);
-								//			if (params.biasIsBayesianPrior)
-								//			    proj.priorDistribution = gs.getGrid(new File(params.biasFile).getName());
-								proj.needLayers = allLayers;
-								proj.doProject(lambdafile, projectPrefix[i], ff.getPath(), runner.is("writeClampGrid") ? ffclamp.getPath() : (String) null);
-								if (Utils.interrupt) return;
-								projectedGrids.add("<a href = \"" + ff.getName() + "\">The model applied to the environmental layers in " + projectPrefix[i] + "</a>");
-								if (runner.is("pictures") && !isFile) {
-									runner.makePicture(ff.getPath(), ss, X.testSamples, projectPrefix[i]);
-									runner.makeExplain(explain, ff, lambdafile, theSpecies + "_" + prefix + "_explain.bat", new File(projectPrefix[i]).getAbsolutePath());
-									if (runner.is("writeClampGrid"))
-										runner.makePicture(ffclamp.getPath(), new Sample[0], new Sample[0], projectPrefix[i], true);
-									runner.makeNovel(baseFeaturesNoBias, projectPrefix[i], new File(runner.outDir(), theSpecies + "_" + prefix + "_novel" + suffix).getPath());
-								}
-								if (applyThresholdValue != -1 && !isFile)
-									new Threshold().applyThreshold(ff.getPath(), applyThresholdValue);
-							} catch (IOException e) {
-								runner.popupError("Error projecting", e);
-								return;
-							}
-						}
-					if (Utils.interrupt) return;
-					try {
-						runner.writeSampleAverages(baseFeaturesWithSamples, ss);
-					} catch (IOException e) {
-						runner.popupError("Error writing file", e);
-						return;
-					}
-					if (runner.is("responsecurves")) {
-						try {
-							runner.createProfiles(baseFeaturesWithSamples, lambdafile, ss);
-						} catch (IOException e) {
-							runner.popupError("Error writing response curves for " + theSpecies, e);
-							return;
-						}
-					}
-
-					if (Utils.interrupt) return;
-					double[] permcontribs = null;
-					try {
-						permcontribs = new PermutationImportance().go(baseFeatures, ss, lambdafile);
-					} catch (IOException e) {
-						runner.popupError("Error computing permutation importance for " + theSpecies, e);
-						return;
-					}
-					runner.writeContributions(new double[][]{contributions, permcontribs}, "");
-					double[][] jackknifeGain = (runner.is("jackknife") && (baseFeaturesNoBias.length > 1)) ?
-							runner.jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
-							null;
-					System.out.println(jackknifeGain);
+		double auc = X.getAUC(backgroundIterator, X.testSamples);
+		double aucSD = X.aucSD;
+		double trainauc = X.getAUC(backgroundIterator, X.samples);
+		aucmax = X.aucmax;
+		// stuff for AICC:
+		double nParams = X.countParameters();
 
 
-					runner.writeSummary(res, testGain, auc, aucSD, trainauc, nParams, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
+		/**
+		 * calculate AICC
+		 * **/
 
-					runner.writeHtmlDetails(res, testGain, auc, aucSD, trainauc, bestVariables);
-					runner.htmlout.close();
-
-					// if gsfromfile, we'll need to do something different,
-					// using (GridSetFromFile) gs instead of params.environmentallayers.
-					//runner.maybeReplicateHtml(theSpecies, baseFeaturesNoBias);
-					/// start maybe replicate html
-
-				//	void maybeReplicateHtml(String theSpecies, Feature[] baseFeatures) {
-						String species = theSpecies.replaceAll("_[0-9]+$","");
-
-						if (runner.replicates()>1 && theSpecies.endsWith("_" + (runner.replicates(species)-1))) {
-							try {
-								//runner.replicateHtmlPage(species, baseFeatures);
-								////7 start replicatehtml page
-
-							//	void replicateHtmlPage(String species, Feature[] baseFeatures) throws IOException {
-									if (Utils.interrupt) return;
-									results.print("Species", species + " (average)");
-									runner.htmlout = Utils.writer(runner.outDir(), species + ".html");
-									runner.htmlout.println("<title>Replicated maxent model for " + species + "</title>");
-									runner.htmlout.println("<CENTER><H1>Replicated maxent model for " + species + "</H1></CENTER>");
-									runner.htmlout.print("<br> This page summarizes the results of " + runner.replicates(species));
-									if (runner.cv())
-										runner.htmlout.print("-fold cross-validation");
-									else if (runner.spatialCV())
-										runner.htmlout.print("-fold spatial cross-validation");
-									else if (runner.bootstrap())
-										runner.htmlout.print(" bootstrap models");
-									else runner.htmlout.print(" split-sample models");
-									runner.htmlout.print(" for " + species + ", created " + new Date().toString() + " using Maxent version " + Utils.version + ".  The individual models are here:");
-									for (int i=0; i<runner.replicates(species); i++)
-										runner.htmlout.print(" <a href = \"" + species+"_"+i+".html\">["+i+"]</a>");
-									runner.htmlout.println("<br>");
-									if (runner.is("plots"))
-										runner.replicatedROCplot(species);
-									if (runner.is("pictures"))
-										runner.htmlout.println("<br><HR><H2>Pictures of the model</H2>");
-									runner.makeReplicateGridsAndPics(species, null, runner.environmentalLayers());
-									////start makereplicatedgridsandpics
-
-								//void makeReplicateGridsAndPics(final String species, final String project, String projdir) throws IOException {
-								String projdir = runner.environmentalLayers();
-								final String project = null;
-								final String[] suffix2 = new String[] {"avg", "stddev", "min", "max", "median", "lowerci"};
-									final String[] link = new String[suffix2.length];
-									final String outprefix = species+(project==null?"":"_"+project);
-									AvgStderr avgstderr = new AvgStderr(params, allLayers);
-									avgstderr.process(runner.outDir(), species, runner.replicates(species), projdir, outprefix, new File(projdir).isFile()?".csv":runner.outputFileType());
-									System.out.println(avgstderr.gridMap.values());
+		double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
 
 
+		ArrayList<Double> vals1 = new ArrayList<>();
 
-									if (!runner.is("pictures") || Utils.interrupt || new File(projdir).isFile()) return;
-									if (runner.threads()>1)
-										parallelRunner.clear();
-									for (int i=0; i<suffix2.length; i++) {
-										final int me = i;
-										final String fn = new File(runner.outDir(), outprefix+"_"+suffix2[me]+runner.outputFileType()).getPath();
-										Runnable task = new Runnable() {
-											public void run() {
-												try {
-													link[me] = runner.makePNG(fn, (me<2) ? null : suffix2[me]);
-												} catch (IOException e) {
-													runner.popupError("Error writing file " + fn, e);
-												}
-											}
-										};
-										if (runner.threads()<=1) task.run();
-										else parallelRunner.add(task, "Make PNG for " + fn);
-									}
-									if (runner.threads()>1)
-										parallelRunner.runall("Replicate summary pictures", runner.is("verbose"));
-									runner.htmlout.println("The following two pictures show the point-wise mean and standard deviation of the " + runner.replicates(species) + (project==null?" output grids" : " models applied to the environmental layers in " + project) + ".  Other available summary grids are " + link[2] + ", " + link[3] + (link[5]==null?" and ":", ") + link[4] + (!avgstderr.wroteLowerci()?"":" and 95% confidence level ("+link[5]+")") + ".<br><br>");
-									runner.htmlout.println(link[0]);
-									runner.htmlout.println(link[1]);
-									runner.htmlout.println("<br>");
-								//}
-
-
-								///end makereplicatedgridsandpics
-									if (Utils.interrupt) { runner.htmlout.close(); return; }
-									if (projectPrefix!=null)
-										for (int i=0; i<projectPrefix.length; i++) {
-											String prefix = new File(projectPrefix[i]).getName();
-											runner.makeReplicateGridsAndPics(species, prefix, projectPrefix[i]);
-										}
-									if (runner.is("responsecurves"))
-										runner.replicatedProfiles(species, baseFeatures);
-									runner.writeContributions(runner.replicatedContributions(species), "  Values shown are averages over replicate runs.");
-									if (runner.is("jackknife"))
-										runner.replicatedJackknife(runner.htmlout, species, baseFeatures);
-									runner.htmlputs("<br><HR><br>Command line to repeat this species model: " + params.commandLine(species));
-									runner.htmlout.close();
-									String[] fields = results.getColumnNames();
-									for (int i=0; i<fields.length; i++) {
-										try {
-											double val = runner.getJackMean(results.filename(), fields[i], species);
-											results.print(fields[i], val);
-										} catch (Exception e) {};
-									}
-									results.println();
-								//}
-
-
-								////////// end replicatehtmlpage
-							}
-							catch (IOException e) {
-								Utils.warn2("Error making replicate summary for " + species + ": check maxent.log file for details", "replicateError");
-								//		popupError("Error processing replicated species outputs", e);
-								Utils.logError("Error processing replicated species outputs", e);
-								return;
-							}
-						}
-					//}
-
-					System.out.println(species);
-					/// end maybe replicatehtml
-				}
-
-		//	}//end for loop
-			if (runner.threads()>1)
-				runner.parallelRunner.close();
-			//params.speciesCV = null;
-
+		for (int i=0; i<X.samples.length;i++) {
+			double raw = X.getDensity(X.samples[i]) / X.densityNormalizer;
+			vals1.add(i, raw);
 		}
+		//System.out.println("raw prediction values samples: "+vals1);
+
+		ArrayList<Double> vals = new ArrayList<>();
+		for (int i=0; i<baseFeatures[0].n;i++) {
+			double raw = X.getDensity(bgpArrayList.get(i)) / X.densityNormalizer;
+			vals.add(i, raw);
+		}
+		//System.out.println("raw prediction values samples: "+vals);
+		vals.addAll(vals1);
+		System.out.println(vals.size());
+
+		ArrayList<Double> valsLog = new ArrayList<>();
+		for (int i=0; i<vals.size(); i++){
+			double logValue = Math.log(vals.get(i));
+			valsLog.add(logValue);
+		}
+
+		double logLikelihood = 0;
+		for(int i = 0; i < valsLog.size(); i++)
+			logLikelihood += valsLog.get(i);
+		System.out.println(logLikelihood);
+
+		double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
+		System.out.println("AICC: "+AICC);
+
+		/*
+		double test = 0;
+		for(int i = 0; i < vals.size(); i++)
+			test += vals.get(i);
+		System.out.println("equal to 1? "+test);
+*/
+
+		/**
+		 *
+		 * (1) n/numberOccuenceLocalities is the number of occurrence localities (presence and background)
+		 * int numberOccuenceLocalities = presence + background;
+		 * (2) loglikelihood = sum(log(vals))
+		 * (3) vals: is a vector of Maxent raw/exponential values at occurrence localities and the sum of these values across the study extent is equal to 1
+		 *
+		 * -> AICC = (2∗nParams−2∗logLikelihood)+(2∗nParams)∗(nParams+1)/(numberOccuenceLocalities−nParams−1)
+		 * **/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////
+
+/*
+// write the sample predictions file.  Use the cumulative index, as background does too
+		File file = new File(runner.outDir(), theSpecies + "_samplePredictions.csv");
+		try {
+			double[][] raw2cum = Project.readCumulativeIndex(raw2cumfile);
+			PrintWriter sout= Utils.writer(file);
+			sout.println("X,Y,Test or train,Raw prediction,Cumulative prediction,"+params.occurrenceProbabilityTransform()+" prediction");
+			for (int i=0; i<X.numSamples; i++) {
+				if (!runner.hasAllData(X.samples[i], baseFeatures)) continue;
+				// can't use trainvals[i] as array is sorted
+				double raw = X.getDensity(X.samples[i]) / X.densityNormalizer;
+
+				sout.println(X.samples[i].lon + "," + X.samples[i].lat + ",train," + raw + "," + Project.interpolateCumulative(raw2cum, raw) + "," + proj.occurrenceProbability(raw, entropy));
+			}
+			for (int i=0; i<testvals.length; i++)
+				sout.println(X.testSamples[i].lon + "," + X.testSamples[i].lat + ",test," + testvals[i] + "," + Project.interpolateCumulative(raw2cum, testvals[i]) + "," + proj.occurrenceProbability(testvals[i], entropy));
+			sout.close();
+		} catch (IOException e) {
+			runner.popupError("Error writing sample predictions file", e);
+		}
+
+ */
+	}
 
 
 
 	/**
-	 * start maxent with spatial functionallities : beta tuning, forward feature selection, forward variable selection and spatial validation
+	 * start maxent with spatial functionalities : beta tuning, forward feature selection, forward variable selection and spatial validation
 	 */
 	public void runSpatial() {
 		Utils.applyStaticParams(params);
@@ -941,6 +806,32 @@ public class Runner {
 			return;
 		}
 
+
+		/**
+		 *
+		 * create sampleset with background points for AICC
+		 *
+		 * **/
+
+		//SampleSet backgroundPoints = null;
+		ArrayList<Sample> bgpArrayList = new ArrayList<>();
+
+		for (int no=0;no<baseFeatures[0].n; no++) {
+			HashMap featureMap = new HashMap();
+			for (int i = 0; i < baseFeatures.length; i++) {
+				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
+			}
+			Sample bgp = new Sample(no, featureMap);
+			bgpArrayList.add( no, bgp);
+		}
+
+
+		/**
+		 *
+		 * end create sampleset with background points for AICC
+		 *
+		 * **/
+
 		// note.
 		boolean addSamplesToFeatures = samplesAddedToFeatures =
 				is("addSamplesToBackground") &&
@@ -1020,68 +911,76 @@ public class Runner {
 			varNamesAL.addAll(List.of(params.layers));
 
 			/** pass best Variables ArrayList to function to save output **/
-			forwardVariableSelectionNew(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+			forwardVariableSelectionNew(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 
 			if(is("ffs")){
-				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 
 				if(is("tuneBeta")){
 
-					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					//final Model
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				} else {
 					// final run with best parameters
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				}
 			} else {
 				if(is("tuneBeta")){
-					double bestBetaMultiplier =  tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+					double bestBetaMultiplier =  tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				}  else {
 					//ArrayList<Double> testGain = new ArrayList<>();
 					ArrayList<Double> testAuc = new ArrayList<>();
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				}
 			}
 		} else {
 			bestVariables.addAll(List.of(params.layers));
 			if(is("ffs")){
-				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 				if (is("tuneBeta")) {
-					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					// final run with best parameters
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				} else {
 					// final run with best parameters
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				}
 			} else {
 
 				if (is("tuneBeta")) {
-					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features);
+					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				} else {
 					params.setAllModels(true);
-					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				}
 			}
@@ -1089,16 +988,18 @@ public class Runner {
 	}
 
 	public void startNew(ArrayList<String> bestVariables,ArrayList<String> bestFeatures, ArrayList<Double> testGainOneModel,
-						 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features) {
+						 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 
 		/** if bestFeatures ist gegeben? **/
 		if (bestFeatures.size() > 0){
 			// set the selected features:
+			params.setAutofeature(false);
 			params.setHinge(false);
 			params.setLinear(false);
 			params.setProduct(false);
 			params.setThreshold(false);
 			params.setQuadratic(false);
+
 
 
 			for(int x=0;x<bestFeatures.size(); x++){
@@ -1234,7 +1135,606 @@ public class Runner {
 			double aucSD = X.aucSD;
 			double trainauc = X.getAUC(backgroundIterator, X.samples);
 			aucmax = X.aucmax;
+			// stuff for AICC:
 			double nParams = X.countParameters();
+
+/**
+ * calculate AICC
+ * **/
+
+			double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
+
+
+			ArrayList<Double> vals1 = new ArrayList<>();
+
+			for (int i=0; i<X.samples.length;i++) {
+				double raw = X.getDensity(X.samples[i]) / X.densityNormalizer;
+				vals1.add(i, raw);
+			}
+			//System.out.println("raw prediction values samples: "+vals1);
+
+			ArrayList<Double> vals = new ArrayList<>();
+			for (int i=0; i<baseFeatures[0].n;i++) {
+				double raw = X.getDensity(bgpArrayList.get(i)) / X.densityNormalizer;
+				vals.add(i, raw);
+			}
+			//System.out.println("raw prediction values samples: "+vals);
+			vals.addAll(vals1);
+			//System.out.println(vals.size());
+
+			ArrayList<Double> valsLog = new ArrayList<>();
+			for (int i=0; i<vals.size(); i++){
+				double logValue = Math.log(vals.get(i));
+				valsLog.add(logValue);
+			}
+
+			double logLikelihood = 0;
+			for(int i = 0; i < valsLog.size(); i++)
+				logLikelihood += valsLog.get(i);
+			//System.out.println(logLikelihood);
+
+			double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
+			//System.out.println("AICC: "+AICC);
+
+		/*
+		double test = 0;
+		for(int i = 0; i < vals.size(); i++)
+			test += vals.get(i);
+		System.out.println("equal to 1? "+test);
+*/
+
+			/**
+			 *
+			 * (1) n/numberOccuenceLocalities is the number of occurrence localities (presence and background)
+			 * int numberOccuenceLocalities = presence + background;
+			 * (2) loglikelihood = sum(log(vals))
+			 * (3) vals: is a vector of Maxent raw/exponential values at occurrence localities and the sum of these values across the study extent is equal to 1
+			 *
+			 * -> AICC = (2∗nParams−2∗logLikelihood)+(2∗nParams)∗(nParams+1)/(numberOccuenceLocalities−nParams−1)
+			 * **/
+
+
+
+			//	    Grid.interpolateSamples = saveInterpolate;
+			if (backgroundIterator != null)
+				X.setDensityNormalizer(backgroundIterator);
+
+			double entropy = X.getEntropy(); // needs to be after setDensityNormalizer
+			double prevalence = X.getPrevalence(params);
+			if(is("allModels")) {
+				try {
+					X.writeFeatureWeights(lambdafile);
+				} catch (IOException e) {
+					popupError("Error writing feature weights file", e);
+					return;
+				}
+			}
+			double testGain = (testSampleSet == null) ? 0 : getTestGain(X);
+			//System.out.println(decideOnTestGain());
+			if (decideOnTestGain()) {
+				testGainOneModel.add(testGain);
+			}
+			//System.out.println(decideOnTestAuc());
+			if (decideOnTestAuc()) {
+				testGainOneModel.add(auc);
+			}
+			//System.out.println(decideOnAICC());
+			if (decideOnAICC()){
+				testGainOneModel.add(AICC);
+			}
+
+			if (is("allModels")) {
+				startHtmlPage();
+				if (writeRaw2cumfile) {
+					raw2cumfile = raw2cumfile(lambdafile);
+					try {
+						double[] weights = (backgroundIterator == null) ? X.getWeights() :
+								backgroundIterator.getvals(X.densityNormalizer);
+						writeCumulativeIndex(weights, raw2cumfile, X, auc, trainauc, baseFeaturesNoBias, entropy);
+					} catch (IOException e) {
+						popupError("Error writing raw-to-cumulative index file", e);
+						return;
+					}
+				}
+
+				writtenGrid = null;
+				if (Utils.interrupt) return;
+
+				boolean explain = true;
+				for (String s : res.featureTypes)
+					if (s.equals("product"))
+						explain = false;
+				startedPictureHtmlSection = false;
+
+				if (is("outputGrids")) {
+					String filename = gsfromfile ?
+							new File(outDir(), theSpecies + ".csv").getPath() :
+							f.getPath();
+					try {
+						Project proj = new Project(params);
+						//	if (params.biasIsBayesianPrior) {
+						//	  String name = new File(params.biasFile).getName();
+						//	  for (int i=0; i<Utils.inputFileTypes.length; i++)
+						//	     name = name.replaceAll(Utils.inputFileTypes[i]+"$", "");
+						//	  proj.priorDistribution = gs.getGrid(name);
+						//  }
+						proj.entropy = entropy;
+						if (gsfromfile)
+							proj.doProject(lambdafile, (GridSetFromFile) gs, filename);
+						else
+							proj.doProject(lambdafile, environmentalLayers(), filename, null);
+						proj.entropy = -1.0;
+						if (Utils.interrupt) return;
+						writtenGrid = filename;
+						if (is("pictures") && !gsfromfile)
+							makePicture(f.getPath(), ss, X.testSamples, null);
+						makeExplain(explain, f, lambdafile, theSpecies + "_explain.bat", new File(environmentalLayers()).getAbsolutePath());
+						if (applyThresholdValue != -1 && !gsfromfile)
+							new Threshold().applyThreshold(f.getPath(), applyThresholdValue);
+					} catch (IOException e) {
+						popupError("Error writing output file " + new File(filename).getName(), e);
+						return;
+					}
+				}
+
+				if (Utils.interrupt) return;
+				projectedGrids = new ArrayList();
+
+				if (projectPrefix != null && is("outputGrids"))
+					for (int i = 0; i < projectPrefix.length; i++) {
+						if (Utils.interrupt) return;
+						String prefix = new File(projectPrefix[i]).getName();
+						if (prefix.endsWith(".csv"))
+							prefix = prefix.substring(0, prefix.length() - 4);
+						boolean isFile = (new File(projectPrefix[i]).isFile());
+						File ff = new File(outDir(), theSpecies + "_" + prefix + (isFile ? ".csv" : suffix));
+						File ffclamp = new File(outDir(), theSpecies + "_" + prefix + "_clamping" + (isFile ? ".csv" : suffix));
+						try {
+							Project proj = new Project(params);
+							//			if (params.biasIsBayesianPrior)
+							//			    proj.priorDistribution = gs.getGrid(new File(params.biasFile).getName());
+							proj.needLayers = allLayers;
+							proj.doProject(lambdafile, projectPrefix[i], ff.getPath(), is("writeClampGrid") ? ffclamp.getPath() : (String) null);
+							if (Utils.interrupt) return;
+							projectedGrids.add("<a href = \"" + ff.getName() + "\">The model applied to the environmental layers in " + projectPrefix[i] + "</a>");
+							if (is("pictures") && !isFile) {
+								makePicture(ff.getPath(), ss, X.testSamples, projectPrefix[i]);
+								makeExplain(explain, ff, lambdafile, theSpecies + "_" + prefix + "_explain.bat", new File(projectPrefix[i]).getAbsolutePath());
+								if (is("writeClampGrid"))
+									makePicture(ffclamp.getPath(), new Sample[0], new Sample[0], projectPrefix[i], true);
+								makeNovel(baseFeaturesNoBias, projectPrefix[i], new File(outDir(), theSpecies + "_" + prefix + "_novel" + suffix).getPath());
+							}
+							if (applyThresholdValue != -1 && !isFile)
+								new Threshold().applyThreshold(ff.getPath(), applyThresholdValue);
+						} catch (IOException e) {
+							popupError("Error projecting", e);
+							return;
+						}
+					}
+
+
+				if (Utils.interrupt) return;
+				try {
+					writeSampleAverages(baseFeaturesWithSamples, ss);
+				} catch (IOException e) {
+					popupError("Error writing file", e);
+					return;
+				}
+				if (is("responsecurves")) {
+					try {
+						createProfiles(baseFeaturesWithSamples, lambdafile, ss);
+					} catch (IOException e) {
+						popupError("Error writing response curves for " + theSpecies, e);
+						return;
+					}
+				}
+
+				if (Utils.interrupt) return;
+				double[] permcontribs = null;
+				try {
+					permcontribs = new PermutationImportance().go(baseFeatures, ss, lambdafile);
+				} catch (IOException e) {
+					popupError("Error computing permutation importance for " + theSpecies, e);
+					return;
+				}
+				writeContributions(new double[][]{contributions, permcontribs}, "");
+				double[][] jackknifeGain = (is("jackknife") && (baseFeaturesNoBias.length > 1)) ?
+						jackknifeGain(baseFeaturesWithSamples, ss, X.testSamples, res.gain, testGain, auc) :
+						null;
+				System.out.println(jackknifeGain);
+
+
+				writeSummary(res, testGain, auc, aucSD, trainauc, nParams, AICC,results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
+
+				writeHtmlDetails(res, testGain, auc, aucSD, trainauc, bestVariables);
+				htmlout.close();
+
+				// if gsfromfile, we'll need to do something different,
+				// using (GridSetFromFile) gs instead of params.environmentallayers.
+				//maybeReplicateHtml(theSpecies, baseFeaturesNoBias);
+			}
+		}
+		if (threads()>1)
+			parallelRunner.close();
+		//params.speciesCV = null;
+	}
+
+
+	/** calculate final model without cross validation **/
+
+	public void startFinalModel(ArrayList<String> bestVariables,ArrayList<String> bestFeatures, ArrayList<Double> testGainOneModel) {
+
+		params.setOutputgrids(true);
+		params.setReplicatetype("crossvalidate");
+		params.setReplicates(1);
+		testSampleSet=null;
+
+
+		/** if bestFeatures ist gegeben? **/
+		if (bestFeatures.size() > 0){
+			// set the selected features:
+			params.setAutofeature(false);
+			params.setHinge(false);
+			params.setLinear(false);
+			params.setProduct(false);
+			params.setThreshold(false);
+			params.setQuadratic(false);
+
+
+			for(int x=0;x<bestFeatures.size(); x++){
+				if (bestFeatures.get(x) == "linear") {
+					params.setLinear(true);
+				} else if (bestFeatures.get(x) == "hinge") {
+					params.setHinge(true);
+				} else if (bestFeatures.get(x) == "threshold") {
+					params.setThreshold(true);
+				} else if (bestFeatures.get(x) == "quadratic") {
+					params.setQuadratic(true);
+				} else if (bestFeatures.get(x) == "product") {
+					params.setProduct(true);
+				}
+			}
+
+		}
+		Utils.startTimer();
+		Utils.echoln(new Date().toString());
+		Utils.echoln("MaxEnt version "+Utils.version);
+		Utils.interrupt = false;
+		if (threads()>1)
+			parallelRunner = new ParallelRun(threads());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY-1);
+		if (params.layers == null || params.layers.length==0) {
+			popupError("No environmental layers selected", null);
+			return;
+		}
+		if (params.species.length==0) {
+			popupError("No species selected", null);
+			return;
+		}
+		if (Utils.progressMonitor!=null)
+			Utils.progressMonitor.setMaximum(100);
+
+		Utils.generator = new Random(!params.isRandomseed() ? 0 : System.currentTimeMillis());
+		gs = initializeGrids();
+		if (Utils.interrupt || gs==null) return;
+
+		SampleSet2 sampleSet2 = gs.train;
+
+		if (projectionLayers().length()>0) {
+			String[] dirs = projectionLayers().trim().split(",");
+			projectPrefix = new String[dirs.length];
+			for (int i=0; i<projectPrefix.length; i++)
+				projectPrefix[i] = (new File(dirs[i].trim())).getPath();
+		}
+
+		if (!testSamplesFile().equals("")) {
+			testSampleSet = gs.test;
+		}
+
+		if (Utils.interrupt) return;
+		if (is("removeDuplicates"))
+			sampleSet2.removeDuplicates(gridsFromFile() ? null : gs.getDimension());
+
+		Feature[] baseFeatures;
+		baseFeatures = (gs==null) ? null : gs.toFeatures();
+		coords = gs.getDimension().coords;
+		if (baseFeatures==null || baseFeatures.length==0 || baseFeatures[0].n==0) {
+			popupError("No background points with data in all layers", null);
+			return;
+		}
+
+
+		/**
+		 *
+		 * create sampleset with background points for AICC
+		 *
+		 * **/
+
+		//SampleSet backgroundPoints = null;
+		ArrayList<Sample> bgpArrayList = new ArrayList<>();
+
+		for (int no=0;no<baseFeatures[0].n; no++) {
+			HashMap featureMap = new HashMap();
+			for (int i = 0; i < baseFeatures.length; i++) {
+				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
+			}
+			Sample bgp = new Sample(no, featureMap);
+			bgpArrayList.add( no, bgp);
+		}
+
+
+		/**
+		 *
+		 * end create sampleset with background points for AICC
+		 *
+		 * **/
+
+
+
+		// note.
+		boolean addSamplesToFeatures = samplesAddedToFeatures =
+				is("addSamplesToBackground") &&
+						(sampleSet2.samplesHaveData || (gs instanceof Extractor));
+
+
+		if (addSamplesToFeatures)
+			Utils.echoln("Adding samples to background in feature space");
+
+		Feature[] features=null;
+
+		if (!addSamplesToFeatures) {
+			features = makeFeatures(baseFeatures);
+			if (Utils.interrupt) return;
+		}
+
+		sampleSet=sampleSet2;
+		speciesCount = new HashMap();
+
+		// set replicates for spatial cv
+		// get number of distinct locations
+		if(spatialCV()) {
+			String[] names = sampleSet.getNames();
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			int num = locArr.size(); //minimum ist 3
+
+			// reset replicates
+			Utils.warn2("Resetting replicates to number of distinct locations (replicates: " + num + ") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setReplicates(num);
+		}
+
+		if (replicates()>1 && !is("manualReplicates")) {
+
+			if (cv()) {
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitForCV(replicates());
+			} else if (spatialCV()){
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitForSpatialCV();
+
+
+			} else
+				sampleSet.replicate(replicates(), bootstrap());
+			ArrayList<String> torun = new ArrayList();
+			for (String s: sampleSet.getNames())
+				if (s.matches(".*_[0-9]+$"))
+					torun.add(s);
+
+			params.speciesCV = torun.toArray(new String[0]);
+		}
+
+
+
+
+
+		if (testSamplesFile().equals("") && params.getint("randomTestPoints")!=0) {
+			SampleSet train=null;
+			if (!is("randomseed")) Utils.generator = new Random(11111);
+			testSampleSet =
+					sampleSet.randomSample(params.getint("randomTestPoints"));
+		}
+		if (Utils.interrupt) return;
+
+
+		String outDirName = "/final/";
+		String outdirFinal = new File(outDir(), outDirName).getPath();
+		params.setOutputdirectory(outdirFinal);
+		new File(outdirFinal).mkdirs();
+		if(is("allModels")) {
+			writeLog();
+			if (!is("perSpeciesResults")) {
+				try {
+					results = new CsvWriter(new File(outDir(), "maxentResults.csv"), is("appendtoresultsfile"));
+				} catch (IOException e) {
+					popupError("Problem opening results file", e);
+					return;
+				}
+			}
+		}
+		for (int sample=0; sample<params.species.length; sample++) {
+			theSpecies = params.species[sample];
+			if (Utils.interrupt) return;
+			if (is("perSpeciesResults")) {
+				try {
+					results = new CsvWriter(new File(outDir(), theSpecies + "Results.csv"));
+				} catch (IOException e) {
+					popupError("Problem opening " + theSpecies + " results file", e);
+					return;
+				}
+			}
+			String suffix = outputFileType();
+			File f = new File(outDir(), theSpecies + suffix);
+			File lf = new File(outDir(), theSpecies + ".lambdas");
+			String lambdafile = lf.getAbsolutePath();
+
+			Sample[] sss = sampleSet.getSamples(theSpecies);
+			if (!params.allowpartialdata())
+				sss = withAllData(baseFeatures, sss);
+			final Sample[] ss = sss;
+			if (ss.length == 0) {
+				Utils.warn2("Skipping " + theSpecies + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
+				continue;
+			}
+			if (testSampleSet != null) {
+				int len = testSampleSet.getSamples(theSpecies).length;
+				if (len == 0) {
+					//		    if (MaxEnt.bootstrapBetaResults!=null)
+					//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
+					Utils.warn2("Skipping " + theSpecies + " because it has 0 test samples", "skippingBecauseNoTestSamples");
+					continue;
+				}
+			}
+			Utils.reportMemory("getSamples");
+			if(is("allModels")) {
+				if (lf.exists()) {
+					if (is("skipIfExists")) {
+						if (is("appendtoresultsfile"))
+							maybeReplicateHtml(theSpecies, getTrueBaseFeatures(baseFeatures));
+						continue;
+					}
+					if (is("askoverwrite") && Utils.topLevelFrame != null) {
+						Object[] options = {"Skip", "Skip all", "Redo", "Redo all"};
+						int val = JOptionPane.showOptionDialog(Utils.topLevelFrame, "Output file exists for " + theSpecies, "File already exists", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+						switch (val) {
+							case 1:
+								params.setValue("skipIfExists", true);
+							case 0:
+								if (is("appendtoresultsfile"))
+									maybeReplicateHtml(theSpecies, getTrueBaseFeatures(baseFeatures));
+								continue;
+							case 3:
+								params.setValue("askoverwrite", false);
+							case 2:
+								break;
+						}
+					}
+				}
+			}
+			Feature[] baseFeaturesWithSamples = baseFeatures;
+			if (addSamplesToFeatures) {
+				features = null;  // free up memory before makeFeatures
+				baseFeaturesWithSamples = featuresWithSamples(baseFeatures, ss);
+				if (baseFeaturesWithSamples == null) continue;
+				features = makeFeatures(baseFeaturesWithSamples);
+			}
+			Feature[] baseFeaturesNoBias = getTrueBaseFeatures(baseFeaturesWithSamples);
+			if (Utils.interrupt) return;
+
+			Utils.reportDoing(theSpecies + ": ");
+
+			contributions = null;
+
+
+
+			if(bestVariables.size()>0){
+				//just use selected features
+				features = makeFeatures(variableNoOfFeatures(baseFeatures, bestVariables));
+			} else {}
+
+			MaxentRunResults res = maxentRun(features, ss,
+					testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
+			if (res == null) return;
+			Utils.echoln("Resulting gain: " + res.gain);
+			final FeaturedSpace X = res.X;
+
+			//	    if (X.biasDist != null)
+			//		X.setBiasDist(null); // remove biasDist
+			res.removeBiasDistribution();
+
+			boolean gsfromfile = (gs instanceof GridSetFromFile);
+			boolean writeRaw2cumfile = true;
+
+			//	    boolean saveInterpolate = Grid.interpolateSamples;
+			//	    Grid.interpolateSamples = false;
+			DoubleIterator backgroundIterator = null;
+	    /*
+	    if (addSamplesToFeatures)
+		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
+			double getNext() { return X.newDensity(i++); }
+		    };
+	    */
+			double auc = X.getAUC(backgroundIterator, X.testSamples);
+			double aucSD = X.aucSD;
+			double trainauc = X.getAUC(backgroundIterator, X.samples);
+			aucmax = X.aucmax;
+			double nParams = X.countParameters();
+
+
+
+
+/**
+ * calculate AICC
+ * **/
+
+			double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
+
+
+			ArrayList<Double> vals1 = new ArrayList<>();
+
+			for (int i=0; i<X.samples.length;i++) {
+				double raw = X.getDensity(X.samples[i]) / X.densityNormalizer;
+				vals1.add(i, raw);
+			}
+			//System.out.println("raw prediction values samples: "+vals1);
+
+			ArrayList<Double> vals = new ArrayList<>();
+			for (int i=0; i<baseFeatures[0].n;i++) {
+				double raw = X.getDensity(bgpArrayList.get(i)) / X.densityNormalizer;
+				vals.add(i, raw);
+			}
+			//System.out.println("raw prediction values samples: "+vals);
+			vals.addAll(vals1);
+			System.out.println(vals.size());
+
+			ArrayList<Double> valsLog = new ArrayList<>();
+			for (int i=0; i<vals.size(); i++){
+				double logValue = Math.log(vals.get(i));
+				valsLog.add(logValue);
+			}
+
+			double logLikelihood = 0;
+			for(int i = 0; i < valsLog.size(); i++)
+				logLikelihood += valsLog.get(i);
+			System.out.println(logLikelihood);
+
+			double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
+			//System.out.println("AICC: "+AICC);
+
+		/*
+		double test = 0;
+		for(int i = 0; i < vals.size(); i++)
+			test += vals.get(i);
+		System.out.println("equal to 1? "+test);
+*/
+
+			/**
+			 *
+			 * (1) n/numberOccuenceLocalities is the number of occurrence localities (presence and background)
+			 * int numberOccuenceLocalities = presence + background;
+			 * (2) loglikelihood = sum(log(vals))
+			 * (3) vals: is a vector of Maxent raw/exponential values at occurrence localities and the sum of these values across the study extent is equal to 1
+			 *
+			 * -> AICC = (2∗nParams−2∗logLikelihood)+(2∗nParams)∗(nParams+1)/(numberOccuenceLocalities−nParams−1)
+			 * **/
+
+
+
+
+
+
+
+
+
+
+
+
+
 			//	    Grid.interpolateSamples = saveInterpolate;
 			if (backgroundIterator != null)
 				X.setDensityNormalizer(backgroundIterator);
@@ -1255,6 +1755,9 @@ public class Runner {
 			}
 			if (decideOnTestAuc()) {
 				testGainOneModel.add(auc);
+			}
+			if (decideOnAICC()){
+				testGainOneModel.add(AICC);
 			}
 
 			if (is("allModels")) {
@@ -1374,7 +1877,7 @@ public class Runner {
 				System.out.println(jackknifeGain);
 
 
-				writeSummary(res, testGain, auc, aucSD, trainauc, nParams, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
+				writeSummary(res, testGain, auc, aucSD, trainauc, nParams,AICC, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 
 				writeHtmlDetails(res, testGain, auc, aucSD, trainauc, bestVariables);
 				htmlout.close();
@@ -1388,6 +1891,16 @@ public class Runner {
 			parallelRunner.close();
 		//params.speciesCV = null;
 	}
+
+
+
+
+
+
+
+
+
+
 
 	/**
 	 * Start a run, as if the "Run" button was pressed
@@ -1489,6 +2002,34 @@ public class Runner {
 			popupError("No background points with data in all layers", null);
 			return;
 		}
+
+		/**
+		 *
+		 * create sampleset with background points for AICC
+		 *
+		 * **/
+
+		//SampleSet backgroundPoints = null;
+		ArrayList<Sample> bgpArrayList = new ArrayList<>();
+
+		for (int no=0;no<baseFeatures[0].n; no++) {
+			HashMap featureMap = new HashMap();
+			for (int i = 0; i < baseFeatures.length; i++) {
+				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
+			}
+			Sample bgp = new Sample(no, featureMap);
+			bgpArrayList.add( no, bgp);
+		}
+
+		SampleSet backgroundPoints = new SampleSet();
+		backgroundPoints.speciesMap.put("backgroundpoints", bgpArrayList);
+
+		/**
+		 *
+		 * end create sampleset with background points for AICC
+		 *
+		 * **/
+
 
 		// note.
 		boolean addSamplesToFeatures = samplesAddedToFeatures =
@@ -1652,38 +2193,6 @@ public class Runner {
 			////////////////////////////////////// add fvs
 			ArrayList<String> FvsVariables = new ArrayList<>();
 
-		/*
-			if (is("fvs") ) {
-				/** add Forward Variable Selection here: ?
-				 * -> just use selected features for run
-				 * -> would mean: fvs returns ArrayList with variable names
-				 * 				-> features are set with makeFeatures and variableNoOfFeatures(Feature[] baseFeatures, ArrayList<String> tempSelectedVars)
-				 *
-				 *
-				 * **/
-/*
-				forwardVariableSelection( baseFeatures,  ss, testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null,  FvsVariables);
-				System.out.println(FvsVariables);
-				//String[] strs = {"pre6190_l10", "h_dem", "pre6190_l7", "tmn6190_ann"};
-				//FvsVariables.addAll(Arrays.asList(strs));
-				Feature[] features2 = makeFeatures(variableNoOfFeatures(baseFeatures, FvsVariables));
-
-				res = maxentRun(features2, ss,
-					testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-
-			} else {
-
-
-
-				//contributions = null;
-				res = maxentRun(features, ss,
-						testSampleSet != null ? testSampleSet.getSamples(theSpecies) : null);
-
-			}
-			//////////////////////////////////// end fvs
-
-
-		*/
 
 
 			res = maxentRun(features, ss,
@@ -1713,6 +2222,73 @@ public class Runner {
 			double trainauc = X.getAUC(backgroundIterator, X.samples);
 			aucmax = X.aucmax;
 			double nParams = X.countParameters();
+
+
+
+
+
+			/**
+			 * calculate AICC
+			 * **/
+
+			double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
+
+
+			ArrayList<Double> vals1 = new ArrayList<>();
+
+			for (int i=0; i<X.samples.length;i++) {
+				double raw = X.getDensity(X.samples[i]) / X.densityNormalizer;
+				vals1.add(i, raw);
+			}
+			//System.out.println("raw prediction values samples: "+vals1);
+
+			ArrayList<Double> vals = new ArrayList<>();
+			for (int i=0; i<baseFeatures[0].n;i++) {
+				double raw = X.getDensity(bgpArrayList.get(i)) / X.densityNormalizer;
+				vals.add(i, raw);
+			}
+			//System.out.println("raw prediction values samples: "+vals);
+			vals.addAll(vals1);
+			System.out.println(vals.size());
+
+			ArrayList<Double> valsLog = new ArrayList<>();
+			for (int i=0; i<vals.size(); i++){
+				double logValue = Math.log(vals.get(i));
+				valsLog.add(logValue);
+			}
+
+			double logLikelihood = 0;
+			for(int i = 0; i < valsLog.size(); i++)
+				logLikelihood += valsLog.get(i);
+			System.out.println(logLikelihood);
+
+			double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
+			System.out.println("AICC: "+AICC);
+
+		/*
+		double test = 0;
+		for(int i = 0; i < vals.size(); i++)
+			test += vals.get(i);
+		System.out.println("equal to 1? "+test);
+*/
+
+			/**
+			 *
+			 * (1) n/numberOccuenceLocalities is the number of occurrence localities (presence and background)
+			 * int numberOccuenceLocalities = presence + background;
+			 * (2) loglikelihood = sum(log(vals))
+			 * (3) vals: is a vector of Maxent raw/exponential values at occurrence localities and the sum of these values across the study extent is equal to 1
+			 *
+			 * -> AICC = (2∗nParams−2∗logLikelihood)+(2∗nParams)∗(nParams+1)/(numberOccuenceLocalities−nParams−1)
+			 * **/
+
+
+
+
+
+
+
+
 			//	    Grid.interpolateSamples = saveInterpolate;
 			if (backgroundIterator != null)
 				X.setDensityNormalizer(backgroundIterator);
@@ -1795,6 +2371,7 @@ public class Runner {
 
 				if (Utils.interrupt) return;
 				projectedGrids = new ArrayList();
+
 				if (projectPrefix != null && is("outputGrids"))
 					for (int i = 0; i < projectPrefix.length; i++) {
 						if (Utils.interrupt) return;
@@ -1826,6 +2403,8 @@ public class Runner {
 							return;
 						}
 					}
+
+
 				if (Utils.interrupt) return;
 				try {
 					writeSampleAverages(baseFeaturesWithSamples, ss);
@@ -1857,7 +2436,7 @@ public class Runner {
 				System.out.println(jackknifeGain);
 
 
-				writeSummary(res, testGain, auc, aucSD, trainauc, nParams, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
+				writeSummary(res, testGain, auc, aucSD, trainauc, nParams,AICC, results, baseFeaturesNoBias, jackknifeGain, entropy, prevalence, permcontribs);
 
 				writeHtmlDetails(res, testGain, auc, aucSD, trainauc, FvsVariables);
 				htmlout.close();
@@ -2917,7 +3496,7 @@ public class Runner {
 
 	}
 */
-	public double tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features) {
+	public double tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 		/** test beta values **/
 		ArrayList<Double> testGainOneModel = new ArrayList<>();
 		ArrayList<Double> testAucOneModel = new ArrayList<>();
@@ -2951,7 +3530,7 @@ public class Runner {
 			// set beta multiplier
 			params.setBetamultiplier(b[beta]);
 			System.out.println("beta multiplier: "+betaMultiplier());
-			startNew(bestVariables, FfsFeatures, testGainOneModel, baseFeatures,  addSamplesToFeatures, features);
+			startNew(bestVariables, FfsFeatures, testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 			end();
 			params.setOutputdirectory(outDirOrg);
 			//calculate testgain Average
@@ -2972,7 +3551,12 @@ public class Runner {
 		/**
 		 * get best model and return beta multiplier **/
 		//Best Model:
-		double currentTestGain = Collections.max(testGainTmp);
+		double currentTestGain=0.0000;
+		if (decideOnTestGain() | decideOnTestAuc()) {
+			 currentTestGain = Collections.max(testGainTmp);
+		} else if (decideOnAICC()){
+			 currentTestGain = Collections.min(testGainTmp);
+		}
 		//System.out.println(currentTestGain);
 		// get var combination of best model
 		int indexTemp = testGainTmp.indexOf(currentTestGain);
@@ -2992,7 +3576,7 @@ public class Runner {
 	 * ForwardFeatureSelection für Hing, linear... etc
 	 * für jede mögliche Kombination der features**/
 	void forwardFeatureSelection(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures,
-								 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features) {
+								 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 
 		// input variables
 		String[] strs = {"quadratic" ,"product", "threshold", "hinge", "linear"};
@@ -3003,6 +3587,7 @@ public class Runner {
 		ArrayList<Double> testGainOneModel = new ArrayList<>();
 		ArrayList<Double> testGainTmp = new ArrayList<>();
 		double bestTestGain = 0.0;
+		double currentTestGain=0.0000;
 
 		ArrayList<String> selectedFeatures = new ArrayList<>();
 		params.setAutofeature(false);
@@ -3045,7 +3630,7 @@ public class Runner {
 				// set directories
 				params.setOutputdirectory(outdir);
 
-				startNew(bestVariables, tempSelectedFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features);
+				startNew(bestVariables, tempSelectedFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 				end();
 				params.setOutputdirectory(outDirOrg);
 				//calculate testgain Average
@@ -3054,7 +3639,7 @@ public class Runner {
 					sum += d;
 				}
 				Double testGainAverage = (sum / testGainOneModel.size());
-				System.out.println("Test gain average is: "+ testGainAverage);
+				System.out.println("Decision parameter average is: "+ testGainAverage);
 
 				//add average testgain of one model to testGainAverageBeta to choose best beta model
 				testGainTmp.add(testGainAverage);
@@ -3065,36 +3650,62 @@ public class Runner {
 			//	if (runner.threads()<=1) task.run();
 			//	else runner.parallelRunner.add(task, myname);
 
-
+			//System.out.println(testGainTmp);
 			//Best Model:
-			double currentTestGain = Collections.max(testGainTmp);
+			if (decideOnTestAuc() | decideOnTestGain()){
+				currentTestGain = Collections.max(testGainTmp);
+			} else if(decideOnAICC()){
+				 currentTestGain = Collections.min(testGainTmp);
+			}
+
 			//System.out.println(currentTestGain);
 			// get var combination of best model
 			int indexTemp = testGainTmp.indexOf(currentTestGain);
 
-
-			if(currentTestGain > bestTestGain) {
-				bestTestGain = currentTestGain;
-				selectedFeatures.add(featureNames.get(indexTemp));
-				featureNames.remove(indexTemp);
-			} else {
-				/** return what ?
-				 * needs to return: ArrayList FvsVariables
-				 * **/
-				FfsFeatures.addAll(selectedFeatures);
-				System.out.println(FfsFeatures);
-				break;
+			if (i == 0){
+				 bestTestGain = currentTestGain;
 			}
+			if (decideOnAICC()) {
+
+					if (currentTestGain <= bestTestGain) {
+						bestTestGain = currentTestGain;
+						selectedFeatures.add(featureNames.get(indexTemp));
+						featureNames.remove(indexTemp);
+					} else {
+						/** return what ?
+						 * needs to return: ArrayList FvsVariables
+						 * **/
+						FfsFeatures.addAll(selectedFeatures);
+						System.out.println(FfsFeatures);
+						break;
+					}
+				} else if (decideOnTestAuc() | decideOnTestGain()) {
+
+					if (currentTestGain >= bestTestGain) {
+						bestTestGain = currentTestGain;
+						selectedFeatures.add(featureNames.get(indexTemp));
+						featureNames.remove(indexTemp);
+					} else {
+						/** return what ?
+						 * needs to return: ArrayList FvsVariables
+						 * **/
+						FfsFeatures.addAll(selectedFeatures);
+						System.out.println(FfsFeatures);
+						break;
+					}
+				}
+
+
 			testGainTmp.clear();
 
 			//testAucTmp.clear();
 		} // end for-loop
-		System.out.println(FfsFeatures);
+		//System.out.println(FfsFeatures);
 	}
 
 	/** needs to return: ArrayList of selected Variables*/
 	void forwardVariableSelectionNew(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
-									 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features) {
+									 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 		int num = varNames.size();
 		// range Integer predictor number
 		List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
@@ -3146,20 +3757,20 @@ public class Runner {
 				new File(outdir).mkdirs();
 			}
 			params.setOutputdirectory(outdir);
-			startNew(twoVarComb, bestFeatures, testGainOneModel, baseFeatures,  addSamplesToFeatures, features);
+			startNew(twoVarComb, bestFeatures, testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 			end();
 			params.setOutputdirectory(outDirOrg);
 			/**
 			 * - get average of test gain
 			 * - add to test gain temp ArrayList
 			 * **/
-
+			//System.out.println(testGainOneModel);
 			double sum = 0;
 			for(double d : testGainOneModel) {
 				sum += d;
 			}
 			Double testGainAverage = (sum / testGainOneModel.size());
-			System.out.println("Test gain average is: "+ testGainAverage);
+			System.out.println("Decision parameter average is: "+ testGainAverage);
 
 			testGainTmp.add(testGainAverage);
 			testGainOneModel.clear();
@@ -3171,7 +3782,13 @@ public class Runner {
 		System.out.println("Check here test gain temporary array: "+testGainTmp);
 		// get best model
 
-		double bestTestGain  = Collections.max(testGainTmp);
+		double bestTestGain =0;
+		if(decideOnTestAuc() | decideOnTestGain()) {
+			 bestTestGain = Collections.max(testGainTmp);
+		} else if (decideOnAICC()) {
+			 bestTestGain = Collections.min(testGainTmp);
+		}
+		System.out.println("Best value two vars: "+bestTestGain);
 		// get var combination of best model
 		int index = testGainTmp.indexOf(bestTestGain);
 
@@ -3235,7 +3852,7 @@ public class Runner {
 				}
 				// set directories
 				params.setOutputdirectory(outdir);
-				startNew(tempSelectedVars, bestFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features);
+				startNew(tempSelectedVars, bestFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 				end();
 				params.setOutputdirectory(outDirOrg);
 				//calculate testgain Average
@@ -3244,7 +3861,7 @@ public class Runner {
 					sum += d;
 				}
 				Double testGainAverage = (sum / testGainOneModel.size());
-				System.out.println("Test gain average is: "+ testGainAverage);
+				System.out.println("Decision parameter average is: "+ testGainAverage);
 
 				testGainTmp.add(testGainAverage);
 				testGainOneModel.clear();
@@ -3254,19 +3871,38 @@ public class Runner {
 			System.out.println(testGainTmp);
 
 			//Best Model:
-			double currentTestGain = Collections.max(testGainTmp);
+			double currentTestGain = 0;
+			if(decideOnTestGain() | decideOnTestAuc()) {
+				 currentTestGain = Collections.max(testGainTmp);
+			} else if (decideOnAICC()){
+				 currentTestGain = Collections.min(testGainTmp);
+			}
 			//System.out.println(currentTestGain);
 			// get var combination of best model
 			int indexTemp = testGainTmp.indexOf(currentTestGain);
-			if(currentTestGain > bestTestGain) {
-				bestTestGain = currentTestGain;
-				selectedVars.add(varNames.get(indexTemp));
-				varNames.remove(indexTemp);
-			} else {
-								FvsVariables.addAll(selectedVars);
-				System.out.println(FvsVariables);
-				break;
+
+			if(decideOnAICC()){
+				if(currentTestGain < bestTestGain) {
+					bestTestGain = currentTestGain;
+					selectedVars.add(varNames.get(indexTemp));
+					varNames.remove(indexTemp);
+				} else {
+					FvsVariables.addAll(selectedVars);
+					System.out.println(FvsVariables);
+					break;
+				}
+			} else if (decideOnTestGain() | decideOnTestAuc()) {
+				if(currentTestGain > bestTestGain) {
+					bestTestGain = currentTestGain;
+					selectedVars.add(varNames.get(indexTemp));
+					varNames.remove(indexTemp);
+				} else {
+					FvsVariables.addAll(selectedVars);
+					System.out.println(FvsVariables);
+					break;
+				}
 			}
+
 			testGainTmp.clear();
 
 		} // end for-loop
@@ -3704,6 +4340,7 @@ public class Runner {
 				if (!hasAllData(X.samples[i], baseFeatures)) continue;
 				// can't use trainvals[i] as array is sorted
 				double raw = X.getDensity(X.samples[i]) / X.densityNormalizer;
+
 				sout.println(X.samples[i].lon + "," + X.samples[i].lat + ",train," + raw + "," + Project.interpolateCumulative(raw2cum, raw) + "," + proj.occurrenceProbability(raw, entropy));
 			}
 			for (int i=0; i<testvals.length; i++)
@@ -4077,7 +4714,7 @@ public class Runner {
 		}
 	}
 
-	void writeSummary(MaxentRunResults res, double testGain, double auc, double aucSD, double trainauc, double nParams, CsvWriter writer, Feature[] baseFeatures, double[][] jackknifeGain, double entropy, double prevalence, double[] permcontribs) {
+	void writeSummary(MaxentRunResults res, double testGain, double auc, double aucSD, double trainauc, double nParams,double AICC, CsvWriter writer, Feature[] baseFeatures, double[][] jackknifeGain, double entropy, double prevalence, double[] permcontribs) {
 		double gain = res.gain;
 		int iters = res.iterations;
 		FeaturedSpace X = res.X;
@@ -4088,6 +4725,7 @@ public class Runner {
 		writer.print("Iterations", iters);
 		writer.print("Training AUC", trainauc);
 		writer.print("Number Parameters", nParams);
+		writer.print("AICC", AICC);
 		if (X.numTestSamples!=0) {
 			writer.print("#Test samples", X.numTestSamples);
 			writer.print("Test gain", testGain);

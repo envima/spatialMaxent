@@ -25,7 +25,7 @@ randomTestPoints,X,Random test percentage,integer,0,BASIC,"<html>Percentage of p
 betaStart,,beta start,double,0.5,SPATIAL,,
 betaEnd,,beta end,double,7,SPATIAL,,
 betaStep,,beta Step,double,0.5,SPATIAL,,
-decisionParameter,,Decision parameter,string/test gain/test auc,test gain,SPATIAL,,
+decisionParameter,,Decision parameter,string/test gain/test auc/AICC,test gain,SPATIAL,,
 betaMultiplier,b,Regularization multiplier,double,1,BASIC,Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.,
 maximumbackground,MB,Max number of background points,integer,10000,BASIC,"If the number of background points / grid cells is larger than this number, then this number of cells is chosen randomly for background points",
 biasFile,,Bias file,file,,ADVANCED,"<html>Sampling is assumed to be biased according to the sampling distribution given in this grid file.<br>Values in this file must not be zero or negative.  MaxEnt will factor out the bias.<br>Requires environmental data to be in grids, rather than a SWD format file",

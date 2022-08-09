@@ -40,9 +40,14 @@ public class Sample {
 	featureMap = map;
 	name = s;
     }
+    public Sample(int p, HashMap map) {
+        point = p;
+        featureMap = map;
+    }
 
     public Sample(int p, int r, int c, int lat, int lon, String s, String spat, HashMap map) {
     }
+
    /* public Sample(int p, int r, int c, int lat, int lon, String s, HashMap map) {
     }  */
 
