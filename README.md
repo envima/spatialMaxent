@@ -1,4 +1,9 @@
 ## spatialMaxent
+___
+<div class="alert-success">
+spatialMaxent is an extension for maxent version 3.4.4 (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the beta multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited to work with spatial data.
+</div>
+ 
 
 spatialMaxent is an extension for maxent version 3.4.4 (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the beta multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited to work with spatial data. 
 
