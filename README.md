@@ -2,13 +2,10 @@
 
 ### What is it?
 spatialMaxent is an extension for `maxent version 3.4.4` (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the beta multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited for spatial data.
-___
 
 ### How to run it?
 
 The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here] and just run the batch file. It can be used as maxent version 3.4.4 via the command line or the GUI. 
-
-___
 
 ### How to structure your data?
 
@@ -28,7 +25,7 @@ The spatial validation can be chosen in the basic tab as `Replicated run type`. 
 
 ![alt text](https://github.com/Baldl/spatialMaxent/blob/main/images/settings1.png)
 
-___
+
 
 All the tuning procedures can be found in the GUI in a new tab of the settings called `spatial`. Each of the steps variable selection, feature selection and beta multiplier tuning can be omitted but we highly recommend to do all of them.
 
@@ -47,8 +44,10 @@ If you are working on the command line these are the parameters to use:
 
 #### Forward Variable Selection (FVS)
 
+The `Forward Variable Selection` as designed by [Meyer et al. (2018)](https://doi.org/10.1016/j.envsoft.2017.12.001) is used to 
+
 #### Forward Feature Selection (FFS)
-The FFS (parameter: ffs=true/false) trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features ar . Note that the setting of features in the main maxent tab ("Auto features", "Hinge features", etc.) will be ignored by spatialMaxent as all features are tested one after another.
+The `Forward Feature Selection` follows the same structure as the FVS. It trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features are tested in combination with it until no in crease in model performance is observed. Note that the setting of features in the main maxent tab (`Auto features`, `Hinge features`, etc.) will be ignored by spatialMaxent if a FFS is done as all features are tested one after another.
 
 #### Beta multiplier tuning
 The beta multiplier tuning has three input parameters: The lowest beta multiplier to be tuned (beta start) the highest beta multiplier to be tuned (beta end) and the steps in which the beta multiplier is increased from betastart to the highest beta multiplier (beta step). e.g.(beta start=1,beta end=5 and beta step=0.5 will try the following beta multipliers: 1 1.5 2 2.5 3 3.5 4 4.5 5).
