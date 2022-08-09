@@ -51,18 +51,19 @@ If you are working on the command line these are the parameters to use:
 The FFS (parameter: ffs=true/false) trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features ar . Note that the setting of features in the main maxent tab ("Auto features", "Hinge features", etc.) will be ignored by spatialMaxent as all features are tested one after another.
 
 #### Beta multiplier tuning
-The beta multiplier tuning has three input parameters: The lowest beat multiplier to be tuned (beta start) the highest beta multiplier to be tuned and the steps in which the beta multiplier is increased from betastart to betaend. e.g.(1,5,0.5 will try the following beta multipliers: 1 1.5 2 2.5 3 3.5 4 4.5 5)
+The beta multiplier tuning has three input parameters: The lowest beta multiplier to be tuned (beta start) the highest beta multiplier to be tuned (beta end) and the steps in which the beta multiplier is increased from betastart to the highest beta multiplier (beta step). e.g.(beta start=1,beta end=5 and beta step=0.5 will try the following beta multipliers: 1 1.5 2 2.5 3 3.5 4 4.5 5).
 
-Which model is the best can be either determined based on the `test gain` or the `test auc` value (`decision parameter`).
+Which model is the best one can be either determined based on the `test gain` or the `test auc` value (`decision parameter`).
 
 ![alt text](https://github.com/Baldl/spatialMaxent/blob/main/images/settings2.png)
 
 #### The `allModels` setting
-You can set the `allModels`setting to true if you want to generate output not only for the last model with the selected variables, features and beta multiplier but for each step of the FFS, FVS and beta multiplier tuning. **Be very careful with this setting!** If it is set to true depending on your input data huge amounts of data will be generated and the processing time will increase considerably. It is not recommended for large rasters and high amount of variables.
+You can set the `allModels`setting to true if you want to generate output not only for the last model with the selected variables, features and beta multiplier but for each step of the FFS, FVS and beta multiplier tuning. **Be very careful with this setting!** If it is set to true depending on your input data huge amounts of data will be generated and the processing time will increase considerably. It is not recommended for the output of large rasters and high amount of variables.
 
 
 #### general notes
-The FFS, FVS and beta multiplier tuning all have large processing times. Especially if the FVS is done and there are lots of input variables 
+The FFS, FVS and beta multiplier tuning all have large processing times. Especially if the FVS is done and there are lots of input variables alone in the first step of the FFS this can lead to a large amount of models to be trained if the input consists of 10 variables 45 models are trained in the first step of the fvs if it consists of 20 variables it increases to 190 models. Just keep in mind, that the whole process can take a while.
+ 
 ___
 
 ### References
@@ -73,8 +74,14 @@ Meyer, H., Reudenbach, C., Wöllauer, S., & Nauss, T. (2019). Importance of spat
 
 Phillips, S. J., Anderson, R. P., & Schapire, R. E. (2006). Maximum entropy modeling of species geographic distributions. Ecological Modelling, 190(3–4), 231–259. https://doi.org/10.1016/j.ecolmodel.2005.03.026
 
-Valavi, R., Elith, J., Lahoz‐Monfort, J. J., & Guillera‐Arroita, G. (2019). block CV: An r package for generating spatially or environmentally separated folds for k ‐fold cross‐validation of species distribution models. Methods in Ecology and Evolution, 10(2), 225–232. https://doi.org/10.1111/2041-210X.13107
+Valavi, R., Elith, J., Lahoz‐Monfort, J. J., & Guillera‐Arroita, G. (2019). block CV: An r package for generating spatially or environmentally separated folds for k‐fold cross‐validation of species distribution models. Methods in Ecology and Evolution, 10(2), 225–232. https://doi.org/10.1111/2041-210X.13107
 
 ### spatialMaxent was created using:
 
+maxent version 3.4.4 Copyright (c) 2016 Steven Phillips, Miro Dudik and Rob Schapire
 
+OpenJDK JDK18
+
+IntelliJ IDEA Community Edition 2021.3.3
+
+Google Core Libraries for Java: Guava 31.1
