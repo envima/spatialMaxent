@@ -39,13 +39,14 @@ Each of the tuning steps can be omitted but we highly recommend to do each one o
 
 command line parameters:
 |Name|type|default|
+| --------- |:--------:| -----:|
 |fvs| boolean| true|
 |ffs| boolean| true|
 |tuneBeta|boolean| true|
 |betaStart| double| 0.5|
 |betaEnd| double| 7|
 |betaStep| double| 0.5|
-allModels|boolean|false|
+|allModels|boolean|false|
 
 
 
