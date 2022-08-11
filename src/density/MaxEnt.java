@@ -27,7 +27,7 @@ import java.util.*;
 
 public class MaxEnt {
 
-    /*
+
     static void checkVersion() {
         String version = System.getProperties().getProperty("java.version");
         double v = Double.parseDouble(version);
@@ -39,7 +39,7 @@ public class MaxEnt {
         }
 
     }
-*/
+
 
     public static void main(String args[]) {
         final Params params = new Params();
@@ -69,7 +69,7 @@ public class MaxEnt {
     }
 
     private static void createAndShowGUI(Params params) {
-        JFrame f = Utils.topLevelFrame = new JFrame("Maximum Entropy Species Distribution Modeling, Version " + Utils.version);
+        JFrame f = Utils.topLevelFrame = new JFrame("Maximum Entropy Species Distribution Modeling, Version " + Utils.version + " | spatialMaxent extension, Version 1.0.0");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         GUI gui = new GUI(params);
         //	f.setJMenuBar(gui.makeMenuBar());
