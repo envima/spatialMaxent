@@ -723,6 +723,16 @@ public class Runner {
 			return;
 		}
 
+		if ((subsample() || bootstrap() )&& (params.isFfs() || params.isFvs() || params.isTuneBeta())) {
+			popupError("Forward Feature Selection, Forward Variable Selection and beta multiplier tuning have to be evaluated with spatial crossvalidation or crossvalidation.", null);
+			return;
+		}
+
+		if (params.isJackknife() && params.isFvs() ) {
+			popupError("Using Jackknife and Forward Variable Selection is not possible. Deselect one.", null);
+			return;
+		}
+
 		if (!spatialCV()) {
 			if (!cv() && replicates()>1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
 				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
