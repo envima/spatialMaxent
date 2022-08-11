@@ -5,7 +5,7 @@ spatialMaxent is an extension for `maxent version 3.4.4` (Copyright 2016 Steven 
 
 ### How to run it?
 
-The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here] and just run the batch file. It can be used as maxent version 3.4.4 via the command line or the GUI. 
+The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here](https://github.com/Baldl/spatialMaxent/blob/main/out/artifacts/spatialMaxent_jar.zip) and just run the batch file. It can be used as maxent version 3.4.4 via the command line or the GUI. 
 
 ### How to structure your data?
 
