@@ -34,7 +34,7 @@ public class Params extends ParamsPre {
      * Get a list of all Maxent parameters
      * @return The list of parameters
      */
-    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "decisionParameter","fvs","allModels", "ffs" , "betaStep","betaEnd","betaStart",  "tuneBeta","outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
+    public String[] getParameters() { return new String[] { "responsecurves" ,"pictures" ,"jackknife", "decisionParameter","fvs","allModels", "ffs" , "RMIncrease","RMMax","RMMin",  "tuneRM","outputformat" ,"outputfiletype" ,"outputdirectory" ,"projectionlayers" ,"samplesfile" ,"environmentallayers" ,"randomseed" ,"logscale" ,"warnings" ,"tooltips" ,"askoverwrite" ,"skipifexists" ,"removeduplicates" ,"writeclampgrid" ,"writemess" ,"randomtestpoints" ,"betamultiplier" ,"maximumbackground" ,"biasfile" ,"testsamplesfile" ,"replicates" ,"replicatetype" ,"perspeciesresults" ,"writebackgroundpredictions" ,"biasisbayesianprior" ,"responsecurvesexponent" ,"linear" ,"quadratic" ,"product" ,"threshold" ,"hinge" ,"polyhedral" ,"addsamplestobackground" ,"addallsamplestobackground" ,"autorun" ,"dosqrtcat" ,"writeplotdata" ,"fadebyclamping" ,"extrapolate" ,"visible" ,"autofeature" ,"givemaxaucestimate" ,"doclamp" ,"outputgrids" ,"plots" ,"appendtoresultsfile" ,"parallelupdatefrequency" ,"maximumiterations" ,"convergencethreshold" ,"adjustsampleradius" ,"threads" ,"lq2lqptthreshold" ,"l2lqthreshold" ,"hingethreshold" ,"beta_threshold" ,"beta_categorical" ,"beta_lqp" ,"beta_hinge" ,"biastype" ,"logfile" ,"scientificpattern" ,"cache" ,"cachefeatures" ,"defaultprevalence" ,"applythresholdrule" ,"togglelayertype" ,"togglespeciesselected" ,"togglelayerselected" ,"verbose" ,"allowpartialdata" ,"prefixes" ,"printversion" ,"nodata" ,"nceas" ,"factorbiasout" ,"priordistribution" ,"debiasaverages" ,"minclamping" ,"manualreplicates" }; }
     /**
      * Set value of <i>responsecurves</i> parameter: Create graphs showing how predicted relative probability of occurrence depends on the value of each environmental variable
      * <p>
@@ -78,8 +78,8 @@ public class Params extends ParamsPre {
     public void setAllModels(boolean value) { setValue("allModels", value); }
     public boolean isAllModels() { return getboolean("allModels"); }
 
-    public void setTuneBeta(boolean value) { setValue("tuneBeta", value); }
-    public boolean isTuneBeta() { return getboolean("tuneBeta"); }
+    public void setTuneBeta(boolean value) { setValue("tuneRM", value); }
+    public boolean isTuneBeta() { return getboolean("tuneRM"); }
 
     public void setFfs(boolean value) { setValue("ffs", value); }
     public boolean isFfs() { return getboolean("ffs"); }
@@ -282,27 +282,27 @@ public class Params extends ParamsPre {
     public double getBetamultiplier() { return getdouble("betamultiplier"); }
 
 
-    public void setBetaStart(double value) { setValue("betaStart", value); }
+    public void setBetaStart(double value) { setValue("RMMin", value); }
     /**
      * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
      * @return The value <i>betamultiplier</i> parameter
      */
-    public double getBetaStart() { return getdouble("betaStart"); }
+    public double getBetaStart() { return getdouble("RMMin"); }
 
 
-    public void setBetaEnd(double value) { setValue("betaEnd", value); }
+    public void setBetaEnd(double value) { setValue("RMMax", value); }
     /**
      * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
      * @return The value <i>betamultiplier</i> parameter
      */
-    public double getBetaEnd() { return getdouble("betaEnd"); }
+    public double getBetaEnd() { return getdouble("RMMax"); }
 
-    public void setBetaStep(double value) { setValue("betaStep", value); }
+    public void setBetaStep(double value) { setValue("RMIncrease", value); }
     /**
      * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
      * @return The value <i>betamultiplier</i> parameter
      */
-    public double getBetaStep() { return getdouble("betaStep"); }
+    public double getBetaStep() { return getdouble("RMIncrease"); }
 
 
 
