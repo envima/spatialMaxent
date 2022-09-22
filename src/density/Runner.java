@@ -723,7 +723,7 @@ public class Runner {
 			return;
 		}
 
-		if ((subsample() || bootstrap() )&& (params.isFfs() || params.isFvs() || params.isTuneBeta())) {
+		if ((subsample() || bootstrap() )&& (params.isFfs() || params.isFvs() || params.isTuneRM())) {
 			popupError("Forward Feature Selection, Forward Variable Selection and beta multiplier tuning have to be evaluated with spatial crossvalidation or crossvalidation.", null);
 			return;
 		}
@@ -926,7 +926,7 @@ public class Runner {
 			if(is("ffs")){
 				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 
-				if(is("tuneBeta")){
+				if(is("tuneRM")){
 
 					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
@@ -943,7 +943,7 @@ public class Runner {
 					end();
 				}
 			} else {
-				if(is("tuneBeta")){
+				if(is("tuneRM")){
 					double bestBetaMultiplier =  tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					params.setAllModels(true);
@@ -963,7 +963,7 @@ public class Runner {
 			bestVariables.addAll(List.of(params.layers));
 			if(is("ffs")){
 				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if (is("tuneBeta")) {
+				if (is("tuneRM")) {
 					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					// final run with best parameters
@@ -980,7 +980,7 @@ public class Runner {
 				}
 			} else {
 
-				if (is("tuneBeta")) {
+				if (is("tuneRM")) {
 					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					params.setBetamultiplier(bestBetaMultiplier);
 					params.setAllModels(true);
@@ -3513,9 +3513,9 @@ public class Runner {
 		ArrayList<Double> testGainTmp = new ArrayList<>();
 
 		//get all beta Multipliers
-		double bStart = params.getBetaStart();
-		double bEnd = params.getBetaEnd();
-		double bStep = params.getBetaStep();
+		double bStart = params.getRMMin();
+		double bEnd = params.getRMMax();
+		double bStep = params.getRMIncrease();
 
 		DoubleStream betaMultiplier = DoubleStream.iterate(bStart, d -> d + bStep)
 				.limit((int) (1 + (bEnd - bStart) / bStep));

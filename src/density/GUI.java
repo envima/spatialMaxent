@@ -108,6 +108,7 @@ public class GUI {
 //				if (sel)
 //				    featureButtons[i].setSelected(true);
 				featureButtons[i].setEnabled(!sel);
+
 			    }
 			}});
 		button.setSelected(params.getboolean("autofeature"));
@@ -115,6 +116,7 @@ public class GUI {
 	    else button.setSelected(params.getboolean(featureTypes[i]));
 
 	}
+
 
 	checks.setBorder(BorderFactory.createEmptyBorder(0,0,0,20));
 	runButton = new JButton("Run");

@@ -78,8 +78,8 @@ public class Params extends ParamsPre {
     public void setAllModels(boolean value) { setValue("allModels", value); }
     public boolean isAllModels() { return getboolean("allModels"); }
 
-    public void setTuneBeta(boolean value) { setValue("tuneRM", value); }
-    public boolean isTuneBeta() { return getboolean("tuneRM"); }
+    public void setTuneRM(boolean value) { setValue("tuneRM", value); }
+    public boolean isTuneRM() { return getboolean("tuneRM"); }
 
     public void setFfs(boolean value) { setValue("ffs", value); }
     public boolean isFfs() { return getboolean("ffs"); }
@@ -282,27 +282,27 @@ public class Params extends ParamsPre {
     public double getBetamultiplier() { return getdouble("betamultiplier"); }
 
 
-    public void setBetaStart(double value) { setValue("RMMin", value); }
+    public void setRMMin(double value) { setValue("RMMin", value); }
     /**
      * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
      * @return The value <i>betamultiplier</i> parameter
      */
-    public double getBetaStart() { return getdouble("RMMin"); }
+    public double getRMMin() { return getdouble("RMMin"); }
 
 
-    public void setBetaEnd(double value) { setValue("RMMax", value); }
+    public void setRMMax(double value) { setValue("RMMax", value); }
     /**
      * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
      * @return The value <i>betamultiplier</i> parameter
      */
-    public double getBetaEnd() { return getdouble("RMMax"); }
+    public double getRMMax() { return getdouble("RMMax"); }
 
-    public void setBetaStep(double value) { setValue("RMIncrease", value); }
+    public void setRMIncrease(double value) { setValue("RMIncrease", value); }
     /**
      * Get value of <i>betamultiplier</i> parameter: Multiply all automatic regularization parameters by this number.  A higher number gives a more spread-out distribution.
      * @return The value <i>betamultiplier</i> parameter
      */
-    public double getBetaStep() { return getdouble("RMIncrease"); }
+    public double getRMIncrease() { return getdouble("RMIncrease"); }
 
 
 
