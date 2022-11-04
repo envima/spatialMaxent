@@ -1,5 +1,10 @@
 ## spatialMaxent
 
+* [Download spatialMaxent](https://github.com/Nature40/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip)
+* [Tutorial](https://nature40.github.io/spatialMaxentPaper/)
+
+## Short Introduction
+
 ### What is it?
 spatialMaxent is an extension for `maxent version 3.4.4` (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the regularization multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited for spatial data. A Tutorial on spatialMaxent can be found [here](https://nature40.github.io/spatialMaxentPaper/).
 
