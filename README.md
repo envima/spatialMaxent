@@ -1,11 +1,16 @@
 ## spatialMaxent
 
+* [Download spatialMaxent](https://github.com/Nature40/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip)
+* [Tutorial](https://nature40.github.io/spatialMaxentPaper/)
+
+## Short Introduction
+
 ### What is it?
-spatialMaxent is an extension for `maxent version 3.4.4` (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the regularization multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited for spatial data.
+spatialMaxent is an extension for `maxent version 3.4.4` (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the regularization multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited for spatial data. A Tutorial on spatialMaxent can be found [here](https://nature40.github.io/spatialMaxentPaper/).
 
 ### How to run it?
 
-The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here](https://github.com/Baldl/spatialMaxent/blob/main/out/artifacts/spatialMaxent_jar.zip?raw=true) and just run the batch file. It can be used as maxent version 3.4.4 via the command line or the GUI. 
+The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here](https://github.com/Nature40/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip) and just run the batch file. It can be used as maxent version 3.4.4 via the command line or the GUI. 
 
 ### How to structure your data?
 
