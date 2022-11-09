@@ -328,6 +328,8 @@ public class Runner {
 		params.setOutputdirectory("D:\\maxent\\bradypus\\test\\");
 		params.setEnvironmentallayers("D:\\Natur40\\BatModelingRLP\\bg.csv");
 		params.setSamplesfile("D:\\Natur40\\BatModelingRLP\\mops.csv");
+		params.setEnvironmentallayers("D:\\maxent\\shredder\\background\\CAN\\can01_bg.csv");
+		params.setSamplesfile("D:\\maxent\\shredder\\samples\\CAN\\can01\\can01_01\\can01_01_train.csv");
 		params.setReplicatetype("Spatial Crossvalidate");
 		//params.setReplicates(1);
 		params.setSelections();
@@ -335,9 +337,31 @@ public class Runner {
 		//params.setBetaEnd(4);
 		//params.setBetaStart(3);
 		//params.setSelections();
-		params.setThreads(4);
+		params.setThreads(5);
 		Runner runner = new Runner(params);
 
+
+
+		Double[] test = new Double[7];
+		System.out.println(test.length);
+		System.out.println(Arrays.toString(test));
+		Arrays.fill(test, 0.0);
+		System.out.println(Arrays.toString(test));
+
+
+
+/*
+		ArrayList<String> testArrayList = new ArrayList<>();
+		System.out.println("testArrayList"+testArrayList);
+		testArrayList.add(4, "four");
+		testArrayList.add(5, "five");
+		testArrayList.add(0, "zero");
+		testArrayList.add(3, "two");
+		testArrayList.add(7, "seven");
+		System.out.println("testArrayList"+testArrayList);
+
+
+*/
 
 
 		Utils.startTimer();
@@ -532,7 +556,7 @@ public class Runner {
 			}
 
 			ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
-			ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
+
 			final Double[] testGain2var = new Double[allComb.length];
 
 			if (runner.threads()>1)
@@ -591,7 +615,8 @@ public class Runner {
 
 			System.out.println(Arrays.toString(testGain2var));
 			System.out.println("stop parallel");
-
+			if (runner.threads()>1)
+				parallelRunner.clear();
 
 			//derive best testgain/auc:
 			double bestTestGain  = 0;
@@ -623,7 +648,7 @@ public class Runner {
 
 
 			/** empty testGainTmp ArrayList after each two var combination is defined**/
-			testGainTmp.clear();
+			//testGainTmp.clear();
 
 
 			// Needed Variables:
@@ -644,6 +669,15 @@ public class Runner {
 			/**
 			 * run MaxEnt while adding on variable each time:
 			 * **/
+
+			/** create temporary array that is somewhat to large for test gain?**/
+			//ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
+			Double[] testGainTmpArray = new Double[varNames.size()];
+			//System.out.println(testGainTmpArray.length);
+			//System.out.println(Arrays.toString(testGainTmpArray));
+			Arrays.fill(testGainTmpArray, 0.0);
+			//System.out.println(testGainTmpArray.length);
+			//System.out.println(Arrays.toString(testGainTmpArray));
 			ArrayList<String> tempSelectedVars = new ArrayList<>();
 			int noPredictors = varNames.size();
 
@@ -653,68 +687,95 @@ public class Runner {
 
 					//if (runner.threads()>1)
 					//	runner.parallelRunner.clear();
-
+					//ArrayList<String> tempSelectedVars = new ArrayList<>();
+					//System.out.println(selectedVars);
 					tempSelectedVars.addAll(selectedVars);
 					tempSelectedVars.add(varNames.get(k));
+					//System.out.println(varNames.get(k));
+					//System.out.println(tempSelectedVars);
 
 
 					//if (Utils.interrupt) return null; include again in function!!!!!
 
-					int me = k;
+					final int me = k;
 					String myname = "Forward Variable Selection: using " + tempSelectedVars;
-					Utils.echoln(myname);
-					System.out.println("Forward Variable Selection: using " + tempSelectedVars);
-					Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + tempSelectedVars + ": ");
-					testGainOneModel.clear();
-
-					// get path to output directory
-					String outDirOrg = params.getOutputdirectory();
-
-					// create path to subfolders
-					String outDirName = "\\fvs\\"+i+"\\add__"+ tempSelectedVars.get(tempSelectedVars.size()-1);
-					String outdir = new File(runner.outDir(), outDirName).getPath();
-					//create new directory
-					if(runner.is("allModels")) {
-						new File(outdir).mkdirs();
-					}
-					// set directories
-					params.setOutputdirectory(outdir);
-					runner.startNew(tempSelectedVars, bestFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 
 					/** startParallel processing here?
 					 * -> remove option all models out and output directories
 					 * -> sort output array / ArrayList different?
 					 * **/
 
-					runner.end();
-					params.setOutputdirectory(outDirOrg);
-					//calculate testgain Average
-					double sum = 0;
-					for(double d : testGainOneModel) {
-						sum += d;
-					}
-					Double testGainAverage = (sum / testGainOneModel.size());
-					System.out.println("Decision parameter average is: "+ testGainAverage);
+					//final Object[] tempSelectedVarsArray = tempSelectedVars.toArray();
+					final String [] tempSelectedVarsArray = tempSelectedVars.stream().toArray( n -> new String[n]);
 
-					testGainTmp.add(testGainAverage);
+
+
+					Runnable task = new Runnable() {
+						@Override
+						public void run() {
+							System.out.println("Forward Variable Selection: using " + Arrays.toString(tempSelectedVarsArray));
+
+							runner.startParallel2(tempSelectedVarsArray, bestFeatures, baseFeatures, addSamplesToFeatures, testGainTmpArray, me);
+							//System.out.println(me+" of "+ comb.size()+" Variable combinations");
+
+							/** end parallel processing ?**/
+							//runner.end();
+							//params.setOutputdirectory(outDirOrg);
+							//calculate testgain Average
+							//double sum = 0;
+							//for(double d : testGainOneModel) {
+							//	sum += d;
+							//}
+							//Double testGainAverage = (sum / testGainOneModel.size());
+							//System.out.println("Decision parameter average is: "+ testGainAverage);
+
+							//testGainTmp.add(me, testGainTestedVariables);
+
+						}
+					};
+					if (runner.threads()<=1) task.run();
+					else parallelRunner.add(task, myname);
 					testGainOneModel.clear();
 					tempSelectedVars.clear();
 
-				} // end for loop
-				System.out.println(testGainTmp);
 
+
+				} // end for loop
+
+				// run tasks in parallel:
+				if(runner.threads()>1){
+					parallelRunner.runall("fvs part2", runner.is("verbose"));
+				}
+				if (runner.threads()>1)
+					parallelRunner.clear();
+
+				//System.out.println(testGainTmpArray);
+
+				/** determine test gain for one run over all variables **/
 				//Best Model:
 				double currentTestGain = 0;
 				if(runner.decideOnTestGain() | runner.decideOnTestAuc()) {
-					currentTestGain = Collections.max(testGainTmp);
+					//currentTestGain = Collections.max(testGainTmp);
+
+					for (int b = 0; b < testGainTmpArray.length; b++) {
+						if (testGainTmpArray[b] > currentTestGain) {
+							currentTestGain = testGainTmpArray[b];
+						}
+					}
+
+
 				} else if (runner.decideOnAICC()){
-					currentTestGain = Collections.min(testGainTmp);
+					//currentTestGain = Collections.min(testGainTmp);
 				}
 				//System.out.println(currentTestGain);
 				// get var combination of best model
-				int indexTemp = testGainTmp.indexOf(currentTestGain);
+				//int indexTemp = testGainTmp.indexOf(currentTestGain);
+				int indexTemp = Arrays.asList(testGainTmpArray).indexOf(currentTestGain);
+
+				/** end determine test gain for one run over all variables **/
 
 				if(runner.decideOnAICC()){
+					/*
 					if(currentTestGain < bestTestGain) {
 						bestTestGain = currentTestGain;
 						selectedVars.add(varNames.get(indexTemp));
@@ -724,6 +785,7 @@ public class Runner {
 						System.out.println(FvsVariables);
 						break;
 					}
+					*/
 				} else if (runner.decideOnTestGain() | runner.decideOnTestAuc()) {
 					if(currentTestGain > bestTestGain) {
 						bestTestGain = currentTestGain;
@@ -736,7 +798,9 @@ public class Runner {
 					}
 				}
 
-				testGainTmp.clear();
+				//testGainTmp.clear();
+				Arrays.fill(testGainTmpArray, 0.0);
+				//System.out.println(Arrays.toString(testGainTmpArray));
 
 			} // end for-loop
 
@@ -847,9 +911,12 @@ public class Runner {
 
 
 
+
+
+
 	/** make private for multithreading **/
-	void startParallel2(ArrayList<String> bestVariables,ArrayList<String> bestFeatures,
-					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final ArrayList<Double> testGainFinal,final int me) {
+	void startParallel2(String[] bestVariables,ArrayList<String> bestFeatures,
+						final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
 		final double testGainOneModel[] = new double[replicates()];
 
 		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
@@ -864,7 +931,8 @@ public class Runner {
 				} catch (IOException e) {
 					popupError("Problem opening " + theSpeciesPar + " results file", e);
 					final double testGainAver = averageTestGain(testGainOneModel);
-					testGainFinal.add(me, testGainAver);
+					//testGainFinal.add(me, testGainAver);
+					testGainFinal[me] = testGainAver;
 				}
 			}
 
@@ -892,26 +960,30 @@ public class Runner {
 
 
 			if (Utils.interrupt) {final double testGainAver = averageTestGain(testGainOneModel);
-				//testGainFinal[me] = testGainAver;
-			testGainFinal.add(me, testGainAver);
+				testGainFinal[me] = testGainAver;
+				//testGainFinal.add(me, testGainAver);
 			}
 			Utils.reportDoing(theSpeciesPar + ": ");
 			contributions = null;
 
 			//if(bestVariables.size()>0){
 			//just use selected features
-			//final ArrayList<String> vars = new ArrayList<>();
+			final ArrayList<String> vars = new ArrayList<>();
 			//vars.add(bestVariables[0]);
 			//vars.add(bestVariables[1]);
-			final Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, bestVariables));
+			Collections.addAll(vars, bestVariables);
+
+
+
+			final Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, vars));
 			//}
 
 			MaxentRunResults res = maxentRunParallel(features, ss,
 					testSampleSet != null ? testSampleSet.getSamples(theSpeciesPar) : null);
 			if (res == null) {
 				final double testGainAver = averageTestGain(testGainOneModel);
-				//testGainFinal[me] = testGainAver;
-				testGainFinal.add(me, testGainAver);
+				testGainFinal[me] = testGainAver;
+				//testGainFinal.add(me, testGainAver);
 			}
 			//Utils.echoln("Resulting gain: " + res.gain);
 
@@ -944,9 +1016,11 @@ public class Runner {
 		//params.speciesCV = null;
 		final double testGainAver = averageTestGain(testGainOneModel);
 		//testGainFinal[me] = testGainAver;
-		testGainFinal.add(me, testGainAver);
-		System.out.println("Decision Parameter: "+testGainAver);
+		testGainFinal[me] = testGainAver;
+		//System.out.println("Decision Parameter: "+testGainAver);
 	}
+
+
 
 
 
@@ -4191,7 +4265,7 @@ public class Runner {
 
 
 
-	void forwardVariableSelectionParallel(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
+	void forwardVariableSelectionParallel2VarCombination(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
 										  	Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 										  int num = varNames.size();
 	// range Integer predictor number
@@ -4274,7 +4348,9 @@ public class Runner {
 		System.out.println(Arrays.toString(testGain2var));
 		System.out.println("stop parallel");
 
-
+		if (threads()>1)
+			parallelRunner.clear();
+			//parallelRunner.close();
 	//derive best testgain/auc:
 	double bestTestGain  = 0;
 		for (int i = 0; i < testGain2var.length; i++) {
@@ -4423,6 +4499,288 @@ public class Runner {
 		} // end for-loop
 
 	}
+
+
+
+
+	void forwardVariableSelectionParallel(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
+				Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
+	int num = varNames.size();
+	// range Integer predictor number
+	List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
+			.boxed().collect(Collectors.toList());
+
+	// create guava Sets with all possible combinations of var Integer
+	Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
+
+	// create empty array
+	Integer[][] allComb = new Integer[comb.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+			for (int i=0;i<comb.size();i++) {
+		//get one set
+		Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
+		// get each element of set
+		allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
+		allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
+	}
+
+	ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
+
+	final Double[] testGain2var = new Double[allComb.length];
+
+			if (threads()>1)
+					parallelRunner.clear();
+	//final Feature[] features = runner.getTrueBaseFeatures(baseFeatures);
+
+			for (int i=0; i<comb.size(); i++) {
+		//for (int i=comb.size() - 1; i>0; i--) {
+		//if (Utils.interrupt) return null; include again in function!!!!!
+		final int me2 = allComb[i][0];
+		final int me1 = allComb[i][1];
+		final int me = i;
+		String myname = "Forward Variable Selection: using only " + varNames.get(me1) + " & " + varNames.get(me2);
+
+		final String[] twoVarComb = new String[]{varNames.get(me1), varNames.get(me2)};
+
+		Runnable task = new Runnable() {
+			@Override
+			public void run() {
+
+
+				startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var, me);
+				System.out.println(me+" of "+ comb.size()+" Variable combinations");
+
+				//
+				//params.setOutputdirectory(outDirOrg);
+				/**
+				 * - get average of test gain
+				 * - add to test gain temp ArrayList
+
+				 //System.out.println(testGainOneModel);
+				 double sum = 0;
+				 for(double d : testGainOneModel) {
+				 sum += d;
+				 }
+				 Double testGainAverage = (sum / testGainOneModel.size());
+				 System.out.println("Decision parameter average is: "+ testGainAverage);
+
+				 testGainTmp.add(testGainAverage);
+				 testGainOneModel.clear();
+				 //twoVarComb.clear();
+				 * **/
+
+			}
+		};
+		if (threads()<=1) task.run();
+		else parallelRunner.add(task, myname);
+
+
+	} //end for loop
+
+	// run tasks in parallel:
+			if(threads()>1){
+		parallelRunner.runall("fvs", is("verbose"));
+	}
+
+			System.out.println(Arrays.toString(testGain2var));
+			System.out.println("stop parallel");
+			if (threads()>1)
+					parallelRunner.clear();
+
+	//derive best testgain/auc:
+	double bestTestGain  = 0;
+			for (int i = 0; i < testGain2var.length; i++) {
+		if (testGain2var[i] > bestTestGain) {
+			bestTestGain = testGain2var[i];
+		}
+	}
+
+			System.out.println("Best test auc value:"+ bestTestGain);
+	// get var combination of best model
+
+	/** Why index -1 ????? **/
+	int index = Arrays.asList(testGain2var).indexOf(bestTestGain);
+			System.out.println(index);
+
+
+	//int index = testGain2var.indexOf(bestTestGain);
+
+
+	//get position of two best variables:
+	int var2 = allComb[index][0];
+	int var1 = allComb[index][1];
+
+	//System.out.println("Forward Variable Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
+
+
+
+
+
+	/** empty testGainTmp ArrayList after each two var combination is defined**/
+	//testGainTmp.clear();
+
+
+	// Needed Variables:
+	ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
+
+	//double currentTestGain; // store the best TestGain of the current Models inside
+
+	//add selected vars to selectedVars ArrayList
+			selectedVars.add(varNames.get(var1));
+			selectedVars.add(varNames.get(var2));
+			System.out.println(selectedVars);
+
+
+	// remove selected vars from varNames
+			varNames.remove(var1);
+			varNames.remove(var2);
+
+	/**
+	 * run MaxEnt while adding on variable each time:
+	 * **/
+
+	/** create temporary array that is somewhat to large for test gain?**/
+	//ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
+	Double[] testGainTmpArray = new Double[varNames.size()];
+	//System.out.println(testGainTmpArray.length);
+	//System.out.println(Arrays.toString(testGainTmpArray));
+			Arrays.fill(testGainTmpArray, 0.0);
+	//System.out.println(testGainTmpArray.length);
+	//System.out.println(Arrays.toString(testGainTmpArray));
+	ArrayList<String> tempSelectedVars = new ArrayList<>();
+	int noPredictors = varNames.size();
+
+			for (int i=0; i <noPredictors; i++){
+		for(int k=0; k<varNames.size(); k++){
+
+
+			//if (runner.threads()>1)
+			//	runner.parallelRunner.clear();
+			//ArrayList<String> tempSelectedVars = new ArrayList<>();
+			//System.out.println(selectedVars);
+			tempSelectedVars.addAll(selectedVars);
+			tempSelectedVars.add(varNames.get(k));
+			//System.out.println(varNames.get(k));
+			//System.out.println(tempSelectedVars);
+
+
+			//if (Utils.interrupt) return null; include again in function!!!!!
+
+			final int me = k;
+			String myname = "Forward Variable Selection: using " + tempSelectedVars;
+
+			/** startParallel processing here?
+			 * -> remove option all models out and output directories
+			 * -> sort output array / ArrayList different?
+			 * **/
+
+			//final Object[] tempSelectedVarsArray = tempSelectedVars.toArray();
+			final String [] tempSelectedVarsArray = tempSelectedVars.stream().toArray( n -> new String[n]);
+
+
+
+			Runnable task = new Runnable() {
+				@Override
+				public void run() {
+					System.out.println("Forward Variable Selection: using " + Arrays.toString(tempSelectedVarsArray));
+
+					startParallel2(tempSelectedVarsArray, bestFeatures, baseFeatures, addSamplesToFeatures, testGainTmpArray, me);
+					//System.out.println(me+" of "+ comb.size()+" Variable combinations");
+
+					/** end parallel processing ?**/
+					//runner.end();
+					//params.setOutputdirectory(outDirOrg);
+					//calculate testgain Average
+					//double sum = 0;
+					//for(double d : testGainOneModel) {
+					//	sum += d;
+					//}
+					//Double testGainAverage = (sum / testGainOneModel.size());
+					//System.out.println("Decision parameter average is: "+ testGainAverage);
+
+					//testGainTmp.add(me, testGainTestedVariables);
+
+				}
+			};
+			if (threads()<=1) task.run();
+			else parallelRunner.add(task, myname);
+			testGainOneModel.clear();
+			tempSelectedVars.clear();
+
+
+
+		} // end for loop
+
+		// run tasks in parallel:
+		if(threads()>1){
+			parallelRunner.runall("fvs part2", is("verbose"));
+		}
+		if (threads()>1)
+			parallelRunner.clear();
+
+		//System.out.println(testGainTmpArray);
+
+		/** determine test gain for one run over all variables **/
+		//Best Model:
+		double currentTestGain = 0;
+		if(decideOnTestGain() | decideOnTestAuc()) {
+			//currentTestGain = Collections.max(testGainTmp);
+
+			for (int b = 0; b < testGainTmpArray.length; b++) {
+				if (testGainTmpArray[b] > currentTestGain) {
+					currentTestGain = testGainTmpArray[b];
+				}
+			}
+
+
+		} else if (decideOnAICC()){
+			//currentTestGain = Collections.min(testGainTmp);
+		}
+		//System.out.println(currentTestGain);
+		// get var combination of best model
+		//int indexTemp = testGainTmp.indexOf(currentTestGain);
+		int indexTemp = Arrays.asList(testGainTmpArray).indexOf(currentTestGain);
+		System.out.println("Decision parameter: "+currentTestGain);
+		/** end determine test gain for one run over all variables **/
+
+		if(decideOnAICC()){
+					/*
+					if(currentTestGain < bestTestGain) {
+						bestTestGain = currentTestGain;
+						selectedVars.add(varNames.get(indexTemp));
+						varNames.remove(indexTemp);
+					} else {
+						FvsVariables.addAll(selectedVars);
+						System.out.println(FvsVariables);
+						break;
+					}
+					*/
+		} else if (decideOnTestGain() | decideOnTestAuc()) {
+			if(currentTestGain > bestTestGain) {
+				bestTestGain = currentTestGain;
+				selectedVars.add(varNames.get(indexTemp));
+				varNames.remove(indexTemp);
+			} else {
+				FvsVariables.addAll(selectedVars);
+				System.out.println(FvsVariables);
+				break;
+			}
+		}
+
+		//testGainTmp.clear();
+		Arrays.fill(testGainTmpArray, 0.0);
+		//System.out.println(Arrays.toString(testGainTmpArray));
+
+	} // end for-loop
+
+		}
+	/** END FORWARD VARIABLE SELECTION TEST FOR PARALLEL PROCESSING **/
+
+
+
+
+
 
 
 

@@ -99,6 +99,7 @@ public class GUI {
 	    featureButtons[i] = button;
 	    setToolTipText(featureButtons[i], "Feature types to be used during training.  See Help for details.");
 	    checks.add(button);
+
 	    if (featureTypes[i].equals("Auto")) {
 	        setToolTipText(featureButtons[i], "<html>Allow automatic limiting of feature types for small sample sizes,<br>with feature types being a subset of those selected above.");
 		button.addItemListener(new ItemListener() {
