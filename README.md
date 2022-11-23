@@ -51,7 +51,7 @@ If you are working on the command line these are the parameters to use:
 
 #### Forward Variable Selection (FVS)
 
-The `Forward Variable Selection` as designed by [Meyer et al. (2018)](https://doi.org/10.1016/j.envsoft.2017.12.001) is a variable selection method particularly designed for spatial data. FFS trains all possible 2 variable combinations, choses the best one and then trains these two variables together with each of the remaining variables and repeats this step until the model show no increase in performance. FFS will be run in parallel if threads>1.
+The `Forward Variable Selection` as designed by [Meyer et al. (2018)](https://doi.org/10.1016/j.envsoft.2017.12.001) is a variable selection method particularly designed for spatial data. FFS trains all possible 2 variable combinations, choses the best one and then trains these two variables together with each of the remaining variables and repeats this step until the model show no increase in performance. FVS will be run in parallel if threads>1.
 
 #### Forward Feature Selection (FFS)
 The `Forward Feature Selection` follows the same structure as the FVS. It trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features are tested in combination with it until no increase in model performance is observed. Note that the setting of features in the main maxent tab (`Auto features`, `Hinge features`, etc.) will be ignored by spatialMaxent if a FFS is done as all features are tested one after another.
