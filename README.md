@@ -6,15 +6,15 @@
 ## Short Introduction
 
 ### What is it?
-spatialMaxent is an extension for `maxent version 3.4.4` (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the regularization multiplier together with a Leave-Location-Out (LLO) cross-validation. These methods are especially suited for spatial data. A Tutorial on spatialMaxent can be found [here](https://nature40.github.io/spatialMaxentPaper/).
+spatialMaxent is an extension for `Maxent version 3.4.4` (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the regularization multiplier together with spatial cross-validation. These methods are especially suited for spatial data. A Tutorial on spatialMaxent can be found [here](https://nature40.github.io/spatialMaxentPaper/).
 
 ### How to run it?
 
-The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here](https://github.com/Nature40/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip) and just run the batch file. It can be used as maxent version 3.4.4 via the command line or the GUI. 
+The spatialMaxent extension requires a Java 18 (or newer) environment to run. If you are on windows you can then download the jar and the batch file [here](https://github.com/Nature40/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip) and just run the batch file. It can be used as Maxent version 3.4.4 via the command line or the GUI. 
 
 ### How to structure your data?
 
-The data structure that needs to be supplied to maxent changes insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial fold as integer value. If the SWD data format is choosen also the environmental layers .csv file needs to have an additional column for the folds, but no values are required here.
+The data structure that needs to be supplied to maxent changes insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial fold as integer value. If the SWD data format is chosen also the environmental layers .csv file needs to have an additional column for the folds, but no values are required here. Note that in spatialMaxent contrary to Maxent the processing of several species at once from the same samples file is not supported.
 
 Example of a samples file created to work with spatialMaxent on the [maxent tutorial data](https://biodiversityinformatics.amnh.org/open_source/maxent/):
 
@@ -43,26 +43,31 @@ If you are working on the command line these are the parameters to use:
 |RMMin| double| 0.5|
 |RMMax| double| 7|
 |RMIncrease| double| 0.5|
-|allModels|boolean|false|
+|cvGrids|boolean|false|
+|finalModel|boolean|true|
+
 
 
 
 #### Forward Variable Selection (FVS)
 
-The `Forward Variable Selection` as designed by [Meyer et al. (2018)](https://doi.org/10.1016/j.envsoft.2017.12.001) is a variable selection method particularly designed for spatial data. FFS trains all possible 2 variable combinations, choses the best one and then trains these two variables together with each of the remaining variables and repeats this step until the model show no increase in performance.
+The `Forward Variable Selection` as designed by [Meyer et al. (2018)](https://doi.org/10.1016/j.envsoft.2017.12.001) is a variable selection method particularly designed for spatial data. FFS trains all possible 2 variable combinations, choses the best one and then trains these two variables together with each of the remaining variables and repeats this step until the model show no increase in performance. FFS will be run in parallel if threads>1.
 
 #### Forward Feature Selection (FFS)
-The `Forward Feature Selection` follows the same structure as the FVS. It trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features are tested in combination with it until no in crease in model performance is observed. Note that the setting of features in the main maxent tab (`Auto features`, `Hinge features`, etc.) will be ignored by spatialMaxent if a FFS is done as all features are tested one after another.
+The `Forward Feature Selection` follows the same structure as the FVS. It trains one model with each feature (hinge, linear, threshold, product, quadratic). Then the best one is chosen and the other features are tested in combination with it until no increase in model performance is observed. Note that the setting of features in the main maxent tab (`Auto features`, `Hinge features`, etc.) will be ignored by spatialMaxent if a FFS is done as all features are tested one after another.
 
 #### Regularization multiplier tuning
-The regularization multiplier tuning has three input parameters: The lowest regularization multiplier to be tuned the highest regularization multiplier to be tuned and the steps in which the regularization multiplier is increased from the minimum regularization multiplier to the highest regularization multiplier. e.g.(RMMin=1,RMMax=5 and RMIncrease=0.5 will try the following regularization multipliers: 1 1.5 2 2.5 3 3.5 4 4.5 5).
+The regularization multiplier tuning has three input parameters: The lowest regularization multiplier to be tuned the highest regularization multiplier to be tuned and the steps in which the regularization multiplier is increased from the minimum regularization multiplier to the highest regularization multiplier. e.g. (RMMin=1,RMMax=5 and RMIncrease=0.5 will try the following regularization multipliers: 1 1.5 2 2.5 3 3.5 4 4.5 5).
 
 Which model is the best one can be either determined based on the `test gain` or the `test auc` value (`decision parameter`).
 
 ![alt text](https://github.com/Baldl/spatialMaxent/blob/main/images/settings2.png)
 
-#### The `allModels` setting
-You can set the `allModels`setting to true if you want to generate output not only for the last model with the selected variables, features and regularization multiplier but for each step of the FFS, FVS and regularization multiplier tuning. **Be very careful with this setting!** If it is set to true depending on your input data huge amounts of data will be generated and the processing time will increase considerably. It is not recommended for the output of large rasters and high amount of variables.
+#### Optional output of summarized grids
+With the setting `cvGrids ` it is possible to omit the output of the summarized html page and grids of cross-validation or spatial cross-validation. The grids average, max, median, min and stddev will not be written to disc if this parameter is set to false.
+
+#### Calculate a final Model
+The setting `finalModel ` can be used to train one model at the end with the selected variables, the selected features and the selected regularization-multiplier and all presence records. 
 
 
 #### general notes
