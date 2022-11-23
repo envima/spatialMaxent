@@ -71,7 +71,7 @@ The setting `finalModel ` can be used to train one model at the end with the sel
 
 
 #### general notes
-The FFS, FVS and regularization multiplier tuning all have large processing times. Especially if the FVS is done and there are lots of input variables alone in the first step of the FFS this can lead to a large amount of models to be trained if the input consists of 10 variables 45 models are trained in the first step of the fvs if it consists of 20 variables it increases to 190 models. Just keep in mind, that the whole process can take a while.
+The FFS, FVS and regularization multiplier tuning all have large processing times. Especially if the FVS is done and there are lots of input variables alone in the first step of the FVS this can lead to a large amount of models to be trained if the input consists of 10 variables 45 models are trained in the first step of the fvs if it consists of 20 variables it increases to 190 models. Just keep in mind, that the whole process can take a while.
  
 ___
 
