@@ -321,545 +321,6 @@ public class Runner {
 		Utils.disposeProgressMonitor();
 	}
 
-
-	public static void main(String[] args) {
-
-		final Params params = new Params();
-		params.setOutputdirectory("D:\\maxent\\bradypus\\test\\");
-		//params.setEnvironmentallayers("D:\\Natur40\\BatModelingRLP\\bg.csv");
-		//params.setSamplesfile("D:\\Natur40\\BatModelingRLP\\mops.csv");
-		params.setEnvironmentallayers("D:\\maxentTutorial\\data\\background\\CAN_bg.csv");
-		params.setSamplesfile("D:\\maxentTutorial\\data\\samples\\can01\\can01_01\\can01_01_train.csv");
-		params.setProjectionlayers("D:\\maxentTutorial\\data\\layers\\");
-		//params.setReplicatetype("crossvalidate");
-		//params.setReplicates(5);
-
-		//params.setBetamultiplier(15);
-		//params.setBetaEnd(4);
-		//params.setBetaStart(3);
-		//params.setSelections();
-		params.setThreads(5);
-		params.setFinalModel(true);
-		params.setOutputgrids(false);
-		params.setcvGrids(true);
-		params.setWritemess(false);
-		params.setDoclamp(false);
-		params.setWriteclampgrid(false);
-
-		params.setSelections();
-		Runner runner = new Runner(params);
-
-
-		Utils.applyStaticParams(params);
-		if (params.layers==null)
-			params.setSelections();
-		if (runner.cv() || runner.spatialCV() && runner.replicates()>1 && params.getRandomtestpoints() != 0) {
-			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
-			params.setRandomtestpoints(0);
-		}
-
-
-		if (runner.subsample() && runner.replicates()>1 && params.getint("randomTestPoints") <= 0 && !runner.is("manualReplicates")) {
-			runner.popupError("Subsampled replicates require nonzero random test percentage", null);
-			return;
-		}
-
-		if ((runner.subsample() || runner.bootstrap() )&& (params.isFfs() || params.isFvs() || params.isTuneRM())) {
-			runner.popupError("Forward Feature Selection, Forward Variable Selection and beta multiplier tuning have to be evaluated with spatial crossvalidation or crossvalidation.", null);
-			return;
-		}
-
-		if (params.isJackknife() && params.isFvs() ) {
-			runner.popupError("Using Jackknife and Forward Variable Selection is not possible. Deselect one.", null);
-			return;
-		}
-
-		if (!runner.spatialCV()) {
-			if (!runner.cv() && runner.replicates()>1 && !params.getboolean("randomseed") && !runner.is("manualReplicates")) {
-				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
-				params.setValue("randomseed", true);
-			}
-		}
-
-		if (runner.outDir()==null || runner.outDir().trim().equals("")) {
-			runner.popupError("An output directory is needed", null);
-			return;
-		}
-		if (runner.is("allModels")) {
-			if (!(new File(runner.outDir()).exists())) {
-				runner.popupError("Output directory does not exist", null);
-				return;
-			}
-		}
-		if (!runner.biasFile().equals("") && runner.gridsFromFile()) {
-			runner.popupError("Bias grid cannot be used with SWD-format background", null);
-			return;
-		}
-		if (runner.is("perSpeciesResults") && runner.replicates()>1) {
-			Utils.warn2("PerSpeciesResults is not supported with replicates>1, setting perSpeciesResults to false", "unsettingPerSpeciesResults");
-			params.setValue("perSpeciesResults", false);
-		}
-		if(runner.is("allModels")) {
-			// other parameter consistency checks?
-			if (runner.is("allModels")) {
-				try {
-					Utils.openLog(runner.outDir(), params.getString("logFile"));
-				} catch (IOException e) {
-					runner.popupError("Error opening log file", e);
-					return;
-				}
-			}
-		}
-		Utils.startTimer();
-		Utils.echoln(new Date().toString());
-		Utils.echoln("MaxEnt version "+Utils.version);
-		Utils.interrupt = false;
-		if (runner.threads()>1)
-			parallelRunner = new ParallelRun(runner.threads());
-		Thread.currentThread().setPriority(Thread.NORM_PRIORITY-1);
-		if (params.layers == null || params.layers.length==0) {
-			runner.popupError("No environmental layers selected", null);
-			return;
-		}
-		if (params.species.length==0) {
-			runner.popupError("No species selected", null);
-			return;
-		}
-		if (Utils.progressMonitor!=null)
-			Utils.progressMonitor.setMaximum(100);
-
-		Utils.generator = new Random(!params.isRandomseed() ? 0 : System.currentTimeMillis());
-		gs = runner.initializeGrids();
-		if (Utils.interrupt || gs==null) return;
-
-		SampleSet2 sampleSet2 = gs.train;
-
-		if (runner.projectionLayers().length()>0) {
-			String[] dirs = runner.projectionLayers().trim().split(",");
-			projectPrefix = new String[dirs.length];
-			for (int i=0; i<projectPrefix.length; i++)
-				projectPrefix[i] = (new File(dirs[i].trim())).getPath();
-		}
-
-		if (!runner.testSamplesFile().equals("")) {
-			testSampleSet = gs.test;
-		}
-
-		if (Utils.interrupt) return;
-		if (runner.is("removeDuplicates"))
-			sampleSet2.removeDuplicates(runner.gridsFromFile() ? null : gs.getDimension());
-
-		Feature[] baseFeatures;
-		baseFeatures = (gs==null) ? null : gs.toFeatures();
-		coords = gs.getDimension().coords;
-		if (baseFeatures==null || baseFeatures.length==0 || baseFeatures[0].n==0) {
-			runner.popupError("No background points with data in all layers", null);
-			return;
-		}
-
-
-		/**
-		 *
-		 * create sampleset with background points for AICC
-		 *
-		 * **/
-
-		//SampleSet backgroundPoints = null;
-		ArrayList<Sample> bgpArrayList = new ArrayList<>();
-
-		for (int no=0;no<baseFeatures[0].n; no++) {
-			HashMap featureMap = new HashMap();
-			for (int i = 0; i < baseFeatures.length; i++) {
-				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
-			}
-			Sample bgp = new Sample(no, featureMap);
-			bgpArrayList.add( no, bgp);
-		}
-
-
-		/**
-		 *
-		 * end create sampleset with background points for AICC
-		 *
-		 * **/
-
-		// note.
-		boolean addSamplesToFeatures = runner.samplesAddedToFeatures =
-				runner.is("addSamplesToBackground") &&
-						(sampleSet2.samplesHaveData || (gs instanceof Extractor));
-
-
-		if (addSamplesToFeatures)
-			Utils.echoln("Adding samples to background in feature space");
-
-		Feature[] features=null;
-
-		if (!addSamplesToFeatures) {
-			features = runner.makeFeatures(baseFeatures);
-			if (Utils.interrupt) return;
-		}
-
-		sampleSet=sampleSet2;
-		speciesCount = new HashMap();
-
-		// set replicates for spatial cv
-		// get number of distinct locations
-		if(runner.spatialCV()) {
-			String[] names = sampleSet.getNames();
-			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
-			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
-			//field1List.forEach(System.out::println);
-			HashSet<Integer> locHset = new HashSet<Integer>(locations);
-			// Converting HashSet to ArrayList
-			List<Integer> locArr = new ArrayList<Integer>(locHset);
-			int num = locArr.size(); //minimum ist 3
-
-			// reset replicates
-			Utils.warn2("Resetting replicates to number of distinct locations (replicates: " + num + ") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
-			params.setReplicates(num);
-		}
-
-		if (runner.replicates()>1 && !runner.is("manualReplicates")) {
-
-			if (runner.cv()) {
-				for (String s: sampleSet.getNames())
-					speciesCount.put(s, sampleSet.getSamples(s).length);
-				testSampleSet = sampleSet.splitForCV(runner.replicates());
-			} else if (runner.spatialCV()){
-				for (String s: sampleSet.getNames())
-					speciesCount.put(s, sampleSet.getSamples(s).length);
-				testSampleSet = sampleSet.splitForSpatialCV();
-
-
-			} else
-				sampleSet.replicate(runner.replicates(), runner.bootstrap());
-			ArrayList<String> torun = new ArrayList();
-			for (String s: sampleSet.getNames())
-				if (s.matches(".*_[0-9]+$"))
-					torun.add(s);
-
-			params.speciesCV = torun.toArray(new String[0]);
-		}
-
-
-
-
-
-		if (runner.testSamplesFile().equals("") && params.getint("randomTestPoints")!=0) {
-			SampleSet train=null;
-			if (!runner.is("randomseed")) Utils.generator = new Random(11111);
-			testSampleSet =
-					sampleSet.randomSample(params.getint("randomTestPoints"));
-		}
-		if (Utils.interrupt) return;
-
-		ArrayList<Double> testGain = new ArrayList<>();
-		ArrayList<String> bestVariables = new ArrayList<>();
-		ArrayList<String> bestFeatures = new ArrayList<>();
-		if(runner.is("fvs")){
-			//ArrayList with all variables
-			ArrayList<String> varNamesAL = new ArrayList<>();
-			varNamesAL.addAll(List.of(params.layers));
-
-			/** pass best Variables ArrayList to function to save output **/
-			//forwardVariableSelectionNew(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-			runner.forwardVariableSelectionParallel(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-			if (runner.threads()>1)parallelRunner.clear();
-
-			if(runner.is("ffs")){
-			runner.forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-
-
-			if(runner.is("tuneRM")){
-
-				double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				params.setBetamultiplier(bestBetaMultiplier);
-				//final Model
-				params.setAllModels(true);
-
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			} else {
-				// final run with best parameters
-				params.setAllModels(true);
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			}
-		} else {
-			if(runner.is("tuneRM")){
-				double bestBetaMultiplier =  runner.tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				params.setBetamultiplier(bestBetaMultiplier);
-				params.setAllModels(true);
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			}  else {
-				//ArrayList<Double> testGain = new ArrayList<>();
-				ArrayList<Double> testAuc = new ArrayList<>();
-				params.setAllModels(true);
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			}
-		}
-	} else {
-		bestVariables.addAll(List.of(params.layers));
-		if(runner.is("ffs")){
-			runner.forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-			if (runner.is("tuneRM")) {
-				double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				params.setBetamultiplier(bestBetaMultiplier);
-				// final run with best parameters
-				params.setAllModels(true);
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			} else {
-				// final run with best parameters
-				params.setAllModels(true);
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			}
-		} else {
-
-			if (runner.is("tuneRM")) {
-				double bestBetaMultiplier = runner.tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				params.setBetamultiplier(bestBetaMultiplier);
-				params.setAllModels(true);
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			} else {
-				params.setAllModels(true);
-
-				runner.startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				if(runner.is("finalModel"))runner.startFinalModel(bestVariables, bestFeatures, testGain);
-				runner.end();
-			}
-		}
-	}
-		if(runner.threads()>1)parallelRunner.close();
-	}
-
-
-
-
-	/** make private for multithreading **/
-	void startParallel(String[] bestVariables,ArrayList<String> bestFeatures,
-					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
-		final double testGainOneModel[] = new double[replicates()];
-
-		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
-
-
-		for (int sample=0; sample<params.speciesCV.length; sample++) {
-			final String theSpeciesPar = params.speciesCV[sample];
-			//if (Utils.interrupt) return;
-			if (is("perSpeciesResults")) {
-				try {
-					results = new CsvWriter(new File(outDir(), theSpeciesPar + "Results.csv"));
-				} catch (IOException e) {
-					popupError("Problem opening " + theSpeciesPar + " results file", e);
-					final double testGainAver = averageTestGain(testGainOneModel);
-					testGainFinal[me] = testGainAver;
-				}
-			}
-
-
-
-			Sample[] sss = sampleSet.getSamples(theSpeciesPar);
-			if (!params.allowpartialdata())
-				sss = withAllData(baseFeatures, sss);
-			final Sample[] ss = sss;
-			if (ss.length == 0) {
-				Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
-				continue;
-			}
-			if (testSampleSet != null) {
-				int len = testSampleSet.getSamples(theSpeciesPar).length;
-				if (len == 0) {
-					//		    if (MaxEnt.bootstrapBetaResults!=null)
-					//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
-					Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 test samples", "skippingBecauseNoTestSamples");
-					continue;
-				}
-			}
-			Utils.reportMemory("getSamples");
-
-
-
-			if (Utils.interrupt) {final double testGainAver = averageTestGain(testGainOneModel);
-				testGainFinal[me] = testGainAver;}
-			Utils.reportDoing(theSpeciesPar + ": ");
-			//contributions = null;
-
-			//if(bestVariables.size()>0){
-			//just use selected features
-			final ArrayList<String> vars = new ArrayList<>();
-			vars.add(bestVariables[0]);
-			vars.add(bestVariables[1]);
-			final Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, vars));
-			//}
-
-			MaxentRunResults res = maxentRun(features, ss,
-					testSampleSet != null ? testSampleSet.getSamples(theSpeciesPar) : null);
-			if (res == null) {
-				final double testGainAver = averageTestGain(testGainOneModel);
-				testGainFinal[me] = testGainAver;
-			}
-			//Utils.echoln("Resulting gain: " + res.gain);
-
-			final FeaturedSpace X = res.X;
-
-			res.removeBiasDistribution();
-			DoubleIterator backgroundIterator = null;
-
-			double auc = X.getAUC(backgroundIterator, X.testSamples);
-			//aucmax = X.aucmax;
-			//System.out.println("Resulting auc: " + auc);
-			//	    Grid.interpolateSamples = saveInterpolate;
-			if (backgroundIterator != null)
-				X.setDensityNormalizer(backgroundIterator);
-			double testGain = (testSampleSet == null) ? 0 : getTestGain(X);
-
-
-
-			if (decideOnTestGain()) {
-				//testGainOneModel.add(testGain);
-				testGainOneModel[sample] = testGain;
-			}
-			if (decideOnTestAuc()) {
-				//testGainOneModel.add(auc);
-				testGainOneModel[sample] = auc;
-			}
-		}
-
-		//params.speciesCV = null;
-		final double testGainAver = averageTestGain(testGainOneModel);
-		testGainFinal[me] = testGainAver;
-		//System.out.println("Decision Parameter: "+testGainAver);
-	}
-
-
-
-
-
-
-	/** make private for multithreading **/
-	void startParallel2(String[] bestVariables,ArrayList<String> bestFeatures,
-						final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
-		final double testGainOneModel[] = new double[replicates()];
-
-		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
-
-
-		for (int sample=0; sample<params.speciesCV.length; sample++) {
-			final String theSpeciesPar = params.speciesCV[sample];
-			//if (Utils.interrupt) return;
-			if (is("perSpeciesResults")) {
-				try {
-					results = new CsvWriter(new File(outDir(), theSpeciesPar + "Results.csv"));
-				} catch (IOException e) {
-					popupError("Problem opening " + theSpeciesPar + " results file", e);
-					final double testGainAver = averageTestGain(testGainOneModel);
-					//testGainFinal.add(me, testGainAver);
-					testGainFinal[me] = testGainAver;
-				}
-			}
-
-
-
-			Sample[] sss = sampleSet.getSamples(theSpeciesPar);
-			if (!params.allowpartialdata())
-				sss = withAllData(baseFeatures, sss);
-			final Sample[] ss = sss;
-			if (ss.length == 0) {
-				Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
-				continue;
-			}
-			if (testSampleSet != null) {
-				int len = testSampleSet.getSamples(theSpeciesPar).length;
-				if (len == 0) {
-					//		    if (MaxEnt.bootstrapBetaResults!=null)
-					//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
-					Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 test samples", "skippingBecauseNoTestSamples");
-					continue;
-				}
-			}
-			Utils.reportMemory("getSamples");
-
-
-
-			if (Utils.interrupt) {final double testGainAver = averageTestGain(testGainOneModel);
-				testGainFinal[me] = testGainAver;
-				//testGainFinal.add(me, testGainAver);
-			}
-			Utils.reportDoing(theSpeciesPar + ": ");
-			contributions = null;
-
-			//if(bestVariables.size()>0){
-			//just use selected features
-			final ArrayList<String> vars = new ArrayList<>();
-			//vars.add(bestVariables[0]);
-			//vars.add(bestVariables[1]);
-			Collections.addAll(vars, bestVariables);
-
-
-
-			final Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, vars));
-			//}
-
-			MaxentRunResults res = maxentRunParallel(features, ss,
-					testSampleSet != null ? testSampleSet.getSamples(theSpeciesPar) : null);
-			if (res == null) {
-				final double testGainAver = averageTestGain(testGainOneModel);
-				testGainFinal[me] = testGainAver;
-				//testGainFinal.add(me, testGainAver);
-			}
-			//Utils.echoln("Resulting gain: " + res.gain);
-
-			final FeaturedSpace X = res.X;
-
-			res.removeBiasDistribution();
-			DoubleIterator backgroundIterator = null;
-
-			double auc = X.getAUC(backgroundIterator, X.testSamples);
-			aucmax = X.aucmax;
-			//System.out.println("Resulting auc: " + auc);
-			//	    Grid.interpolateSamples = saveInterpolate;
-			if (backgroundIterator != null)
-				X.setDensityNormalizer(backgroundIterator);
-			double testGain = (testSampleSet == null) ? 0 : getTestGain(X);
-
-
-
-			if (decideOnTestGain()) {
-				//testGainOneModel.add(testGain);
-				testGainOneModel[sample] = testGain;
-			}
-			if (decideOnTestAuc()) {
-				//testGainOneModel.add(auc);
-				testGainOneModel[sample] = auc;
-			}
-		}
-
-		//params.speciesCV = null;
-		final double testGainAver = averageTestGain(testGainOneModel);
-		//testGainFinal[me] = testGainAver;
-		testGainFinal[me] = testGainAver;
-		//System.out.println("Decision Parameter: "+testGainAver);
-	}
-
-
-
-
-
-
-
 	double averageTestGain (double[] testGainOneModelArr){
 		double sum = 0;
 		for(double d : testGainOneModelArr) {
@@ -868,9 +329,6 @@ public class Runner {
 		final double testGainAverage = (sum / testGainOneModelArr.length);
 		return testGainAverage;
 	}
-
-
-
 
 
 	/**
@@ -1089,7 +547,6 @@ public class Runner {
 			varNamesAL.addAll(List.of(params.layers));
 
 			/** pass best Variables ArrayList to function to save output **/
-			//forwardVariableSelectionNew(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 			forwardVariableSelectionParallel(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 			if (threads()>1)parallelRunner.clear();
 
@@ -1325,9 +782,9 @@ public class Runner {
 			// stuff for AICC:
 			double nParams = X.countParameters();
 
-/**
- * calculate AICC
- * **/
+			/**
+ 					* calculate AICC
+			 * **/
 
 			double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
 
@@ -1363,12 +820,7 @@ public class Runner {
 			double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
 			//System.out.println("AICC: "+AICC);
 
-		/*
-		double test = 0;
-		for(int i = 0; i < vals.size(); i++)
-			test += vals.get(i);
-		System.out.println("equal to 1? "+test);
-*/
+
 
 			/**
 			 *
@@ -1864,12 +1316,8 @@ public class Runner {
 
 
 
-/**
- * calculate AICC
- * **/
-
+			/** * calculate AICC * **/
 			double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
-
 
 			ArrayList<Double> vals1 = new ArrayList<>();
 
@@ -1902,12 +1350,12 @@ public class Runner {
 			double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
 			//System.out.println("AICC: "+AICC);
 
-		/*
-		double test = 0;
-		for(int i = 0; i < vals.size(); i++)
-			test += vals.get(i);
-		System.out.println("equal to 1? "+test);
-*/
+			/*
+			double test = 0;
+			for(int i = 0; i < vals.size(); i++)
+				test += vals.get(i);
+			System.out.println("equal to 1? "+test);
+			*/
 
 			/**
 			 *
@@ -1918,18 +1366,6 @@ public class Runner {
 			 *
 			 * -> AICC = (2∗nParams−2∗logLikelihood)+(2∗nParams)∗(nParams+1)/(numberOccuenceLocalities−nParams−1)
 			 * **/
-
-
-
-
-
-
-
-
-
-
-
-
 
 			//	    Grid.interpolateSamples = saveInterpolate;
 			if (backgroundIterator != null)
@@ -2086,15 +1522,6 @@ public class Runner {
 
 		//params.speciesCV = null;
 	}
-
-
-
-
-
-
-
-
-
 
 
 	/**
@@ -2417,13 +1844,7 @@ public class Runner {
 			aucmax = X.aucmax;
 			double nParams = X.countParameters();
 
-
-
-
-
-			/**
-			 * calculate AICC
-			 * **/
+			/**	 * calculate AICC	 * **/
 
 			double numberOccuenceLocalities = baseFeatures[0].n + X.samples.length;
 
@@ -2459,12 +1880,12 @@ public class Runner {
 			double AICC = (2*nParams-2*logLikelihood)+(2*nParams)*(nParams+1)/(numberOccuenceLocalities-nParams-1);
 			System.out.println("AICC: "+AICC);
 
-		/*
-		double test = 0;
-		for(int i = 0; i < vals.size(); i++)
-			test += vals.get(i);
-		System.out.println("equal to 1? "+test);
-*/
+			/*
+			double test = 0;
+			for(int i = 0; i < vals.size(); i++)
+				test += vals.get(i);
+			System.out.println("equal to 1? "+test);
+			*/
 
 			/**
 			 *
@@ -2475,12 +1896,6 @@ public class Runner {
 			 *
 			 * -> AICC = (2∗nParams−2∗logLikelihood)+(2∗nParams)∗(nParams+1)/(numberOccuenceLocalities−nParams−1)
 			 * **/
-
-
-
-
-
-
 
 
 			//	    Grid.interpolateSamples = saveInterpolate;
@@ -2818,9 +2233,6 @@ public class Runner {
 	}
 
 
-
-
-
 	void replicatedJackknife(PrintWriter htmlout, String species, Feature[] baseFeatures) throws IOException {
 		int nf = baseFeatures.length; // number of predictors ?
 
@@ -2850,9 +2262,6 @@ public class Runner {
 		makeJackknifePlots(htmlout, species, gain, testgain, auc, baseFeatures, allGain, allTestGain, allauc, hastest, "  Values shown are averages over replicate runs.");
 		results.reopen();
 	}
-
-
-
 
 
 	void replicatedProfiles(String species, Feature[] baseFeatures) throws IOException {
@@ -3397,11 +2806,6 @@ public class Runner {
 
 	}
 
-
-
-
-
-
 	void oneVarResponseRun(Feature[] baseFeatures, Sample[] ss, Feature f) {
 		Feature[] only = onlyOneFeature(baseFeatures, f);
 		Feature[] features = makeFeatures(only);
@@ -3639,39 +3043,6 @@ public class Runner {
 		}
 	}
 
-	void onlyTwoRun(Feature[] baseFeatures, Sample[] ss, Sample[] testSamples, int me, double[] gain, double[] testgain, double[] auc, Feature feature1, Feature feature2, int maxComb) {
-
-		/** num has to be set to length of possible var combinations**/
-		boolean hastest = testSamples!=null && testSamples.length>0;
-
-		Feature[] two = onlyTwoFeatures(baseFeatures, feature1, feature2); // for loop i fvs function to iterate over all features
-
-		Feature[] features = //(addSamplesToFeatures) ?
-				//	    makeFeatures(featuresWithSamples(only, ss)) :
-				makeFeatures(two);
-		if (features==null) return;
-		if (Utils.interrupt) return;
-		Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + feature1.name + " & " + feature2.name + ": ");
-		final MaxentRunResults res = maxentRun(features, ss, testSamples);
-		if (res==null) return;
-		Utils.echoln("Res.gain: " + res.gain);
-		res.removeBiasDistribution();
-		gain[me] = res.gain;
-		if (hastest) {
-			DoubleIterator backgroundIterator = null;
-	    /*
-	    if (addSamplesToFeatures)
-		backgroundIterator=new DoubleIterator(baseFeatures[0].n) {
-			double getNext() { return res.X.getDensity(i++); }
-		    };
-	    */
-			auc[me] = res.X.getAUC(backgroundIterator, testSamples);
-			if (backgroundIterator!=null)
-				res.X.setDensityNormalizer(backgroundIterator);
-			testgain[me] = getTestGain(res.X);
-		}
-	}
-
 	public double tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 		/** test beta values **/
 		ArrayList<Double> testGainOneModel = new ArrayList<>();
@@ -3746,8 +3117,6 @@ public class Runner {
 		return bestBetaValue;
 	}
 
-
-
 	/**
 	 * ForwardFeatureSelection für Hing, linear... etc
 	 * für jede mögliche Kombination der features**/
@@ -3789,24 +3158,7 @@ public class Runner {
 				Utils.reportDoing(theSpecies + ": Forward Feature Selection: " + tempSelectedFeatures + ": ");
 				// clean temporary ArrayLists
 				testGainOneModel.clear();
-/*
-				/////////////////////////////
-				// get path to output directory
-				String outDirOrg = params.getOutputdirectory();
 
-				// create path to subfolders
-				System.out.println(tempSelectedFeatures);
-				String outDirName = "\\ffs\\"+i+"\\"+ tempSelectedFeatures;
-				String outdir = new File(outDir(), outDirName).getPath();
-				//create new directory
-
-				if(is("allModels")) {
-					new File(outdir).mkdirs();
-				}
-
-				// set directories
-				params.setOutputdirectory(outdir);
-*/
 				startNew(bestVariables, tempSelectedFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 				end();
 				//params.setOutputdirectory(outDirOrg);
@@ -3824,18 +3176,13 @@ public class Runner {
 				tempSelectedFeatures.clear();
 
 			} // end for loop
-			//	if (runner.threads()<=1) task.run();
-			//	else runner.parallelRunner.add(task, myname);
 
-			//System.out.println(testGainTmp);
 			//Best Model:
 			if (decideOnTestAuc() | decideOnTestGain()){
 				currentTestGain = Collections.max(testGainTmp);
 			} else if(decideOnAICC()){
 				 currentTestGain = Collections.min(testGainTmp);
 			}
-
-			//System.out.println(currentTestGain);
 			// get var combination of best model
 			int indexTemp = testGainTmp.indexOf(currentTestGain);
 
@@ -3843,7 +3190,6 @@ public class Runner {
 				 bestTestGain = currentTestGain;
 			}
 			if (decideOnAICC()) {
-
 					if (currentTestGain <= bestTestGain) {
 						bestTestGain = currentTestGain;
 						selectedFeatures.add(featureNames.get(indexTemp));
@@ -3877,12 +3223,10 @@ public class Runner {
 
 			//testAucTmp.clear();
 		} // end for-loop
-		//System.out.println(FfsFeatures);
 	}
 
-	/** needs to return: ArrayList of selected Variables*/
-	void forwardVariableSelectionNew(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
-									 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
+	void forwardVariableSelectionParallel(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
+										  Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 		int num = varNames.size();
 		// range Integer predictor number
 		List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
@@ -3904,88 +3248,61 @@ public class Runner {
 		}
 
 		ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
-		ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
+
+		final Double[] testGain2var = new Double[allComb.length];
+
+		if (threads()>1)
+			parallelRunner.clear();
 
 		for (int i=0; i<comb.size(); i++) {
-		//for (int i=comb.size() - 1; i>0; i--) {
+			//for (int i=comb.size() - 1; i>0; i--) {
 			//if (Utils.interrupt) return null; include again in function!!!!!
 			final int me2 = allComb[i][0];
 			final int me1 = allComb[i][1];
 			final int me = i;
 			String myname = "Forward Variable Selection: using only " + varNames.get(me1) + " & " + varNames.get(me2);
-			Utils.echoln(myname);
-			//Runnable task = new Runnable() {
-			//	public void run() { // me is used in onlyTwoRun for gain somehow [num+me]
-			//		onlyTwoRun(baseFeatures, ss, testSamples, me, gain, testgain, aucFVS, features[me1], features[me2], allComb.length);
-			//	}
-			//};
-			ArrayList<String> twoVarComb = new ArrayList<>();
-			twoVarComb.add(varNames.get(me1));
-			twoVarComb.add(varNames.get(me2));
 
-			// get path to output directory
-			String outDirOrg = params.getOutputdirectory();
+			final String[] twoVarComb = new String[]{varNames.get(me1), varNames.get(me2)};
 
-			// create path to subfolders
-			String outDirName = "\\fvs\\2varCombinations\\"+ varNames.get(me1) + "___" + varNames.get(me2);
-			String outdir = new File(outDir(), outDirName).getPath();
-			//create new directory
-			if(is("allModels")) {
-				new File(outdir).mkdirs();
+			Runnable task = new Runnable() {
+				@Override
+				public void run() {
+					startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var, me);
+					System.out.println(me+" of "+ comb.size()+" Variable combinations");
+				}
+			};
+			if (threads()<=1) task.run();
+			else parallelRunner.add(task, myname);
+		} //end for loop
+
+		// run tasks in parallel:
+		if(threads()>1){parallelRunner.runall("fvs", is("verbose"));}
+		if (threads()>1)parallelRunner.clear();
+
+		//derive best testgain/auc:
+		double bestTestGain  = 0;
+		for (int i = 0; i < testGain2var.length; i++) {
+			if (testGain2var[i] > bestTestGain) {
+				bestTestGain = testGain2var[i];
 			}
-			params.setOutputdirectory(outdir);
-			startNew(twoVarComb, bestFeatures, testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-			end();
-			params.setOutputdirectory(outDirOrg);
-			/**
-			 * - get average of test gain
-			 * - add to test gain temp ArrayList
-			 * **/
-			//System.out.println(testGainOneModel);
-			double sum = 0;
-			for(double d : testGainOneModel) {
-				sum += d;
-			}
-			Double testGainAverage = (sum / testGainOneModel.size());
-			System.out.println("Decision parameter average is: "+ testGainAverage);
-
-			testGainTmp.add(testGainAverage);
-			testGainOneModel.clear();
-			twoVarComb.clear();
-
 		}
 
-
-		System.out.println("Check here test gain temporary array: "+testGainTmp);
-		// get best model
-
-		double bestTestGain =0;
-		if(decideOnTestAuc() | decideOnTestGain()) {
-			 bestTestGain = Collections.max(testGainTmp);
-		} else if (decideOnAICC()) {
-			 bestTestGain = Collections.min(testGainTmp);
-		}
-		System.out.println("Best value two vars: "+bestTestGain);
+		System.out.println("Best decision parameter:"+ bestTestGain);
 		// get var combination of best model
-		int index = testGainTmp.indexOf(bestTestGain);
 
-		/** empty testGainTmp ArrayList after each two var combination is defined**/
-		testGainTmp.clear();
+		/** Why index -1 ????? **/
+		int index = Arrays.asList(testGain2var).indexOf(bestTestGain);
 
 		//get position of two best variables:
 		int var2 = allComb[index][0];
 		int var1 = allComb[index][1];
 
-		//Utils.echoln("Forward Variable Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
-
 		// Needed Variables:
 		ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
-
-		//double currentTestGain; // store the best TestGain of the current Models inside
-
 		//add selected vars to selectedVars ArrayList
 		selectedVars.add(varNames.get(var1));
 		selectedVars.add(varNames.get(var2));
+		System.out.println("Best two variable combination: "+selectedVars);
 
 		// remove selected vars from varNames
 		varNames.remove(var1);
@@ -3994,589 +3311,65 @@ public class Runner {
 		/**
 		 * run MaxEnt while adding on variable each time:
 		 * **/
+
+		/** create temporary array that is somewhat to large for test gain?**/
+		Double[] testGainTmpArray = new Double[varNames.size()];
+		Arrays.fill(testGainTmpArray, 0.0);
+
 		ArrayList<String> tempSelectedVars = new ArrayList<>();
 		int noPredictors = varNames.size();
 
 		for (int i=0; i <noPredictors; i++){
 			for(int k=0; k<varNames.size(); k++){
-
-
-				//if (runner.threads()>1)
-				//	runner.parallelRunner.clear();
-
 				tempSelectedVars.addAll(selectedVars);
 				tempSelectedVars.add(varNames.get(k));
-
-
-				//if (Utils.interrupt) return null; include again in function!!!!!
-
-				int me = k;
+				final int me = k;
 				String myname = "Forward Variable Selection: using " + tempSelectedVars;
-				Utils.echoln(myname);
-				System.out.println("Forward Variable Selection: using " + tempSelectedVars);
-				Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + tempSelectedVars + ": ");
-				testGainOneModel.clear();
-
-				// get path to output directory
-				String outDirOrg = params.getOutputdirectory();
-
-				// create path to subfolders
-				String outDirName = "\\fvs\\"+i+"\\add__"+ tempSelectedVars.get(tempSelectedVars.size()-1);
-				String outdir = new File(outDir(), outDirName).getPath();
-				//create new directory
-				if(is("allModels")) {
-					new File(outdir).mkdirs();
-				}
-				// set directories
-				params.setOutputdirectory(outdir);
-				startNew(tempSelectedVars, bestFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
-				end();
-				params.setOutputdirectory(outDirOrg);
-				//calculate testgain Average
-				double sum = 0;
-				for(double d : testGainOneModel) {
-					sum += d;
-				}
-				Double testGainAverage = (sum / testGainOneModel.size());
-				System.out.println("Decision parameter average is: "+ testGainAverage);
-
-				testGainTmp.add(testGainAverage);
-				testGainOneModel.clear();
-				tempSelectedVars.clear();
-
-			} // end for loop
-			System.out.println(testGainTmp);
-
-			//Best Model:
-			double currentTestGain = 0;
-			if(decideOnTestGain() | decideOnTestAuc()) {
-				 currentTestGain = Collections.max(testGainTmp);
-			} else if (decideOnAICC()){
-				 currentTestGain = Collections.min(testGainTmp);
-			}
-			//System.out.println(currentTestGain);
-			// get var combination of best model
-			int indexTemp = testGainTmp.indexOf(currentTestGain);
-
-			if(decideOnAICC()){
-				if(currentTestGain < bestTestGain) {
-					bestTestGain = currentTestGain;
-					selectedVars.add(varNames.get(indexTemp));
-					varNames.remove(indexTemp);
-				} else {
-					FvsVariables.addAll(selectedVars);
-					System.out.println(FvsVariables);
-					break;
-				}
-			} else if (decideOnTestGain() | decideOnTestAuc()) {
-				if(currentTestGain > bestTestGain) {
-					bestTestGain = currentTestGain;
-					selectedVars.add(varNames.get(indexTemp));
-					varNames.remove(indexTemp);
-				} else {
-					FvsVariables.addAll(selectedVars);
-					System.out.println(FvsVariables);
-					break;
-				}
-			}
-
-			testGainTmp.clear();
-
-		} // end for-loop
-		//System.out.println(bestTestGain);
-		/**get best testgain for 1 round an index of variable in selectedVars ArrayList
-		 * - compare to previous best testGain
-		 * - if (better)
-		 * 	- get index of Variable Name
-		 * 	- remove variable from varNames
-		 * 	- add variable to selected vars
-		 * 	rerun...**/
-
-	}
-
-
-
-	void forwardVariableSelectionParallel2VarCombination(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
-										  	Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
-										  int num = varNames.size();
-	// range Integer predictor number
-	List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
-			.boxed().collect(Collectors.toList());
-
-	// create guava Sets with all possible combinations of var Integer
-	Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
-
-	// create empty array
-	Integer[][] allComb = new Integer[comb.size()][2];
-
-	//add values from Set<Set<Integer>> to Array
-			for (int i=0;i<comb.size();i++) {
-		//get one set
-		Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
-		// get each element of set
-		allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
-		allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
-	}
-
-	ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
-	ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
-	final Double[] testGain2var = new Double[allComb.length];
-
-		if (threads()>1)
-				parallelRunner.clear();
-	//final Feature[] features = runner.getTrueBaseFeatures(baseFeatures);
-
-			for (int i=0; i<comb.size(); i++) {
-		//for (int i=comb.size() - 1; i>0; i--) {
-		//if (Utils.interrupt) return null; include again in function!!!!!
-		final int me2 = allComb[i][0];
-		final int me1 = allComb[i][1];
-		final int me = i;
-		String myname = "Forward Variable Selection: using only " + varNames.get(me1) + " & " + varNames.get(me2);
-
-		final String[] twoVarComb = new String[]{varNames.get(me1), varNames.get(me2)};
-
-		Runnable task = new Runnable() {
-			@Override
-			public void run() {
-
-
-				startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var, me);
-				System.out.println(me+" of "+ comb.size()+" Variable combinations");
-
-				//
-				//params.setOutputdirectory(outDirOrg);
-				/**
-				 * - get average of test gain
-				 * - add to test gain temp ArrayList
-
-				 //System.out.println(testGainOneModel);
-				 double sum = 0;
-				 for(double d : testGainOneModel) {
-				 sum += d;
-				 }
-				 Double testGainAverage = (sum / testGainOneModel.size());
-				 System.out.println("Decision parameter average is: "+ testGainAverage);
-
-				 testGainTmp.add(testGainAverage);
-				 testGainOneModel.clear();
-				 //twoVarComb.clear();
-				 * **/
-
-			}
-		};
-		if (threads()<=1) task.run();
-		else parallelRunner.add(task, myname);
-
-
-	} //end for loop
-
-	// run tasks in parallel:
-		if(threads()>1){
-		parallelRunner.runall("fvs", is("verbose"));
-	}
-
-		//System.out.println(Arrays.toString(testGain2var));
-		//System.out.println("stop parallel");
-
-		if (threads()>1)
-			parallelRunner.clear();
-	//derive best testgain/auc:
-	double bestTestGain  = 0;
-		for (int i = 0; i < testGain2var.length; i++) {
-		if (testGain2var[i] > bestTestGain) {
-			bestTestGain = testGain2var[i];
-		}
-	}
-
-		System.out.println("Best decision parameter:"+ bestTestGain);
-	// get var combination of best model
-
-	/** Why index -1 ????? **/
-	int index = Arrays.asList(testGain2var).indexOf(bestTestGain);
-		//System.out.println(index);
-
-
-	//int index = testGain2var.indexOf(bestTestGain);
-
-
-	//get position of two best variables:
-	int var2 = allComb[index][0];
-	int var1 = allComb[index][1];
-
-	//System.out.println("Forward Variable Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
-
-
-
-
-
-	/** empty testGainTmp ArrayList after each two var combination is defined**/
-		testGainTmp.clear();
-
-
-	// Needed Variables:
-	ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
-
-	//double currentTestGain; // store the best TestGain of the current Models inside
-
-	//add selected vars to selectedVars ArrayList
-			selectedVars.add(varNames.get(var1));
-			selectedVars.add(varNames.get(var2));
-			System.out.println("Best two var combination: "+selectedVars);
-
-
-		// remove selected vars from varNames
-		varNames.remove(var1);
-		varNames.remove(var2);
-
-		/**
-		 * run MaxEnt while adding on variable each time:
-		 * **/
-		ArrayList<String> tempSelectedVars = new ArrayList<>();
-		int noPredictors = varNames.size();
-
-		for (int i=0; i <noPredictors; i++){
-			for(int k=0; k<varNames.size(); k++){
-
-
-				//if (runner.threads()>1)
-				//	runner.parallelRunner.clear();
-
-				tempSelectedVars.addAll(selectedVars);
-				tempSelectedVars.add(varNames.get(k));
-
-
-				//if (Utils.interrupt) return null; include again in function!!!!!
-
-				int me = k;
-				String myname = "Forward Variable Selection: using " + tempSelectedVars;
-				Utils.echoln(myname);
-				System.out.println("Forward Variable Selection: using " + tempSelectedVars);
-				Utils.reportDoing(theSpecies + ": Forward Variable Selection: " + tempSelectedVars + ": ");
-				testGainOneModel.clear();
-/*
-				// get path to output directory
-				String outDirOrg = params.getOutputdirectory();
-
-				// create path to subfolders
-				String outDirName = "\\fvs\\"+i+"\\add__"+ tempSelectedVars.get(tempSelectedVars.size()-1);
-				String outdir = new File(outDir(), outDirName).getPath();
-				//create new directory
-				if(is("allModels")) {
-					new File(outdir).mkdirs();
-				}
-				// set directories
-				params.setOutputdirectory(outdir);
-				*/
-
-				startNew(tempSelectedVars, bestFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 
 				/** startParallel processing here?
 				 * -> remove option all models out and output directories
 				 * -> sort output array / ArrayList different?
 				 * **/
+				final String [] tempSelectedVarsArray = tempSelectedVars.stream().toArray( n -> new String[n]);
 
-				end();
-				//params.setOutputdirectory(outDirOrg);
-				//calculate testgain Average
-				double sum = 0;
-				for(double d : testGainOneModel) {
-					sum += d;
-				}
-				Double testGainAverage = (sum / testGainOneModel.size());
-				System.out.println("Decision parameter average is: "+ testGainAverage);
-
-				testGainTmp.add(testGainAverage);
+				Runnable task = new Runnable() {
+					@Override
+					public void run() {
+						System.out.println("Forward Variable Selection: using " + Arrays.toString(tempSelectedVarsArray));
+						startParallel2(tempSelectedVarsArray, bestFeatures, baseFeatures, addSamplesToFeatures, testGainTmpArray, me);
+					}
+				};
+				if (threads()<=1) task.run();
+				else parallelRunner.add(task, myname);
 				testGainOneModel.clear();
 				tempSelectedVars.clear();
-
 			} // end for loop
-			System.out.println(testGainTmp);
 
+			// run tasks in parallel:
+			if(threads()>1){
+				parallelRunner.runall("fvs part2", is("verbose"));
+			}
+			if (threads()>1)
+				parallelRunner.clear();
+
+			/** determine test gain for one run over all variables **/
 			//Best Model:
 			double currentTestGain = 0;
 			if(decideOnTestGain() | decideOnTestAuc()) {
-				currentTestGain = Collections.max(testGainTmp);
+
+				for (int b = 0; b < testGainTmpArray.length; b++) {
+					if (testGainTmpArray[b] > currentTestGain) {
+						currentTestGain = testGainTmpArray[b];
+					}
+				}
 			} else if (decideOnAICC()){
-				currentTestGain = Collections.min(testGainTmp);
+				//currentTestGain = Collections.min(testGainTmp);
 			}
-			//System.out.println(currentTestGain);
-			// get var combination of best model
-			int indexTemp = testGainTmp.indexOf(currentTestGain);
+			int indexTemp = Arrays.asList(testGainTmpArray).indexOf(currentTestGain);
+			System.out.println("Decision parameter: "+currentTestGain);
+			/** end determine test gain for one run over all variables **/
 
 			if(decideOnAICC()){
-				if(currentTestGain < bestTestGain) {
-					bestTestGain = currentTestGain;
-					selectedVars.add(varNames.get(indexTemp));
-					varNames.remove(indexTemp);
-				} else {
-					FvsVariables.addAll(selectedVars);
-					System.out.println(FvsVariables);
-					break;
-				}
-			} else if (decideOnTestGain() | decideOnTestAuc()) {
-				if(currentTestGain > bestTestGain) {
-					bestTestGain = currentTestGain;
-					selectedVars.add(varNames.get(indexTemp));
-					varNames.remove(indexTemp);
-				} else {
-					FvsVariables.addAll(selectedVars);
-					System.out.println(FvsVariables);
-					break;
-				}
-			}
-
-			testGainTmp.clear();
-
-		} // end for-loop
-
-	}
-
-
-
-
-	void forwardVariableSelectionParallel(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
-				Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
-	int num = varNames.size();
-	// range Integer predictor number
-	List<Integer> range = IntStream.rangeClosed(0, num-1) // 14 objects?
-			.boxed().collect(Collectors.toList());
-
-	// create guava Sets with all possible combinations of var Integer
-	Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(range), 2);
-
-	// create empty array
-	Integer[][] allComb = new Integer[comb.size()][2];
-
-	//add values from Set<Set<Integer>> to Array
-			for (int i=0;i<comb.size();i++) {
-		//get one set
-		Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(i);
-		// get each element of set
-		allComb[i][0] = arr.stream().collect(Collectors.toList()).get(0);
-		allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
-	}
-
-	ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
-
-	final Double[] testGain2var = new Double[allComb.length];
-
-			if (threads()>1)
-					parallelRunner.clear();
-	//final Feature[] features = runner.getTrueBaseFeatures(baseFeatures);
-
-			for (int i=0; i<comb.size(); i++) {
-		//for (int i=comb.size() - 1; i>0; i--) {
-		//if (Utils.interrupt) return null; include again in function!!!!!
-		final int me2 = allComb[i][0];
-		final int me1 = allComb[i][1];
-		final int me = i;
-		String myname = "Forward Variable Selection: using only " + varNames.get(me1) + " & " + varNames.get(me2);
-
-		final String[] twoVarComb = new String[]{varNames.get(me1), varNames.get(me2)};
-
-		Runnable task = new Runnable() {
-			@Override
-			public void run() {
-
-
-				startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var, me);
-				System.out.println(me+" of "+ comb.size()+" Variable combinations");
-
-				//
-				//params.setOutputdirectory(outDirOrg);
-				/**
-				 * - get average of test gain
-				 * - add to test gain temp ArrayList
-
-				 //System.out.println(testGainOneModel);
-				 double sum = 0;
-				 for(double d : testGainOneModel) {
-				 sum += d;
-				 }
-				 Double testGainAverage = (sum / testGainOneModel.size());
-				 System.out.println("Decision parameter average is: "+ testGainAverage);
-
-				 testGainTmp.add(testGainAverage);
-				 testGainOneModel.clear();
-				 //twoVarComb.clear();
-				 * **/
-
-			}
-		};
-		if (threads()<=1) task.run();
-		else parallelRunner.add(task, myname);
-
-
-	} //end for loop
-
-	// run tasks in parallel:
-			if(threads()>1){
-		parallelRunner.runall("fvs", is("verbose"));
-	}
-
-			//System.out.println(Arrays.toString(testGain2var));
-			//System.out.println("stop parallel");
-			if (threads()>1)
-					parallelRunner.clear();
-
-	//derive best testgain/auc:
-	double bestTestGain  = 0;
-			for (int i = 0; i < testGain2var.length; i++) {
-		if (testGain2var[i] > bestTestGain) {
-			bestTestGain = testGain2var[i];
-		}
-	}
-
-			System.out.println("Best decision parameter:"+ bestTestGain);
-	// get var combination of best model
-
-	/** Why index -1 ????? **/
-	int index = Arrays.asList(testGain2var).indexOf(bestTestGain);
-			//System.out.println(index);
-
-
-	//int index = testGain2var.indexOf(bestTestGain);
-
-
-	//get position of two best variables:
-	int var2 = allComb[index][0];
-	int var1 = allComb[index][1];
-
-	//System.out.println("Forward Variable Selection best two variable combination " + features[var1].name + " & " + features[var2].name);
-
-
-
-
-
-	/** empty testGainTmp ArrayList after each two var combination is defined**/
-	//testGainTmp.clear();
-
-
-	// Needed Variables:
-	ArrayList<String> selectedVars = new ArrayList<>(); // best selected variable combination so far
-
-	//double currentTestGain; // store the best TestGain of the current Models inside
-
-	//add selected vars to selectedVars ArrayList
-			selectedVars.add(varNames.get(var1));
-			selectedVars.add(varNames.get(var2));
-			System.out.println("Best two variable combination: "+selectedVars);
-
-
-	// remove selected vars from varNames
-			varNames.remove(var1);
-			varNames.remove(var2);
-
-	/**
-	 * run MaxEnt while adding on variable each time:
-	 * **/
-
-	/** create temporary array that is somewhat to large for test gain?**/
-	//ArrayList<Double> testGainTmp = new ArrayList<>();  // beinhaltet average testGains von mehreren Modellen
-	Double[] testGainTmpArray = new Double[varNames.size()];
-	//System.out.println(testGainTmpArray.length);
-	//System.out.println(Arrays.toString(testGainTmpArray));
-			Arrays.fill(testGainTmpArray, 0.0);
-	//System.out.println(testGainTmpArray.length);
-	//System.out.println(Arrays.toString(testGainTmpArray));
-	ArrayList<String> tempSelectedVars = new ArrayList<>();
-	int noPredictors = varNames.size();
-
-			for (int i=0; i <noPredictors; i++){
-		for(int k=0; k<varNames.size(); k++){
-
-
-			//if (runner.threads()>1)
-			//	runner.parallelRunner.clear();
-			//ArrayList<String> tempSelectedVars = new ArrayList<>();
-			//System.out.println(selectedVars);
-			tempSelectedVars.addAll(selectedVars);
-			tempSelectedVars.add(varNames.get(k));
-			//System.out.println(varNames.get(k));
-			//System.out.println(tempSelectedVars);
-
-
-			//if (Utils.interrupt) return null; include again in function!!!!!
-
-			final int me = k;
-			String myname = "Forward Variable Selection: using " + tempSelectedVars;
-
-			/** startParallel processing here?
-			 * -> remove option all models out and output directories
-			 * -> sort output array / ArrayList different?
-			 * **/
-
-			//final Object[] tempSelectedVarsArray = tempSelectedVars.toArray();
-			final String [] tempSelectedVarsArray = tempSelectedVars.stream().toArray( n -> new String[n]);
-
-
-
-			Runnable task = new Runnable() {
-				@Override
-				public void run() {
-					System.out.println("Forward Variable Selection: using " + Arrays.toString(tempSelectedVarsArray));
-
-					startParallel2(tempSelectedVarsArray, bestFeatures, baseFeatures, addSamplesToFeatures, testGainTmpArray, me);
-					//System.out.println(me+" of "+ comb.size()+" Variable combinations");
-
-					/** end parallel processing ?**/
-					//runner.end();
-					//params.setOutputdirectory(outDirOrg);
-					//calculate testgain Average
-					//double sum = 0;
-					//for(double d : testGainOneModel) {
-					//	sum += d;
-					//}
-					//Double testGainAverage = (sum / testGainOneModel.size());
-					//System.out.println("Decision parameter average is: "+ testGainAverage);
-
-					//testGainTmp.add(me, testGainTestedVariables);
-
-				}
-			};
-			if (threads()<=1) task.run();
-			else parallelRunner.add(task, myname);
-			testGainOneModel.clear();
-			tempSelectedVars.clear();
-
-
-
-		} // end for loop
-
-		// run tasks in parallel:
-		if(threads()>1){
-			parallelRunner.runall("fvs part2", is("verbose"));
-		}
-		if (threads()>1)
-			parallelRunner.clear();
-
-		//System.out.println(testGainTmpArray);
-
-		/** determine test gain for one run over all variables **/
-		//Best Model:
-		double currentTestGain = 0;
-		if(decideOnTestGain() | decideOnTestAuc()) {
-			//currentTestGain = Collections.max(testGainTmp);
-
-			for (int b = 0; b < testGainTmpArray.length; b++) {
-				if (testGainTmpArray[b] > currentTestGain) {
-					currentTestGain = testGainTmpArray[b];
-				}
-			}
-
-
-		} else if (decideOnAICC()){
-			//currentTestGain = Collections.min(testGainTmp);
-		}
-		//System.out.println(currentTestGain);
-		// get var combination of best model
-		//int indexTemp = testGainTmp.indexOf(currentTestGain);
-		int indexTemp = Arrays.asList(testGainTmpArray).indexOf(currentTestGain);
-		System.out.println("Decision parameter: "+currentTestGain);
-		/** end determine test gain for one run over all variables **/
-
-		if(decideOnAICC()){
 					/*
 					if(currentTestGain < bestTestGain) {
 						bestTestGain = currentTestGain;
@@ -4588,34 +3381,20 @@ public class Runner {
 						break;
 					}
 					*/
-		} else if (decideOnTestGain() | decideOnTestAuc()) {
-			if(currentTestGain > bestTestGain) {
-				bestTestGain = currentTestGain;
-				selectedVars.add(varNames.get(indexTemp));
-				varNames.remove(indexTemp);
-			} else {
-				FvsVariables.addAll(selectedVars);
-				System.out.println(FvsVariables);
-				break;
+			} else if (decideOnTestGain() | decideOnTestAuc()) {
+				if(currentTestGain > bestTestGain) {
+					bestTestGain = currentTestGain;
+					selectedVars.add(varNames.get(indexTemp));
+					varNames.remove(indexTemp);
+				} else {
+					FvsVariables.addAll(selectedVars);
+					System.out.println(FvsVariables);
+					break;
+				}
 			}
-		}
-
-		//testGainTmp.clear();
-		Arrays.fill(testGainTmpArray, 0.0);
-		//System.out.println(Arrays.toString(testGainTmpArray));
-
-	} // end for-loop
-
-		}
-	/** END FORWARD VARIABLE SELECTION TEST FOR PARALLEL PROCESSING **/
-
-
-
-
-
-
-
-
+			Arrays.fill(testGainTmpArray, 0.0);
+		} // end for-loop
+	}
 
 	double[][] jackknifeGain(final Feature[] baseFeatures, final Sample[] ss, final Sample[] testSamples, double allGain, double allTestGain, double allauc) {
 		final Feature[] features = getTrueBaseFeatures(baseFeatures);
@@ -5604,4 +4383,196 @@ public class Runner {
 		htmlputs();
 	}
 
+	/** make private for multithreading **/
+	void startParallel(String[] bestVariables,ArrayList<String> bestFeatures,
+					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
+		final double testGainOneModel[] = new double[replicates()];
+
+		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
+
+
+		for (int sample=0; sample<params.speciesCV.length; sample++) {
+			final String theSpeciesPar = params.speciesCV[sample];
+			//if (Utils.interrupt) return;
+			if (is("perSpeciesResults")) {
+				try {
+					results = new CsvWriter(new File(outDir(), theSpeciesPar + "Results.csv"));
+				} catch (IOException e) {
+					popupError("Problem opening " + theSpeciesPar + " results file", e);
+					final double testGainAver = averageTestGain(testGainOneModel);
+					testGainFinal[me] = testGainAver;
+				}
+			}
+
+
+
+			Sample[] sss = sampleSet.getSamples(theSpeciesPar);
+			if (!params.allowpartialdata())
+				sss = withAllData(baseFeatures, sss);
+			final Sample[] ss = sss;
+			if (ss.length == 0) {
+				Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
+				continue;
+			}
+			if (testSampleSet != null) {
+				int len = testSampleSet.getSamples(theSpeciesPar).length;
+				if (len == 0) {
+					//		    if (MaxEnt.bootstrapBetaResults!=null)
+					//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
+					Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 test samples", "skippingBecauseNoTestSamples");
+					continue;
+				}
+			}
+			Utils.reportMemory("getSamples");
+
+
+
+			if (Utils.interrupt) {final double testGainAver = averageTestGain(testGainOneModel);
+				testGainFinal[me] = testGainAver;}
+			Utils.reportDoing(theSpeciesPar + ": ");
+			//contributions = null;
+
+			//if(bestVariables.size()>0){
+			//just use selected features
+			final ArrayList<String> vars = new ArrayList<>();
+			vars.add(bestVariables[0]);
+			vars.add(bestVariables[1]);
+			final Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, vars));
+			//}
+
+			MaxentRunResults res = maxentRun(features, ss,
+					testSampleSet != null ? testSampleSet.getSamples(theSpeciesPar) : null);
+			if (res == null) {
+				final double testGainAver = averageTestGain(testGainOneModel);
+				testGainFinal[me] = testGainAver;
+			}
+			//Utils.echoln("Resulting gain: " + res.gain);
+
+			final FeaturedSpace X = res.X;
+
+			res.removeBiasDistribution();
+			DoubleIterator backgroundIterator = null;
+
+			double auc = X.getAUC(backgroundIterator, X.testSamples);
+			//aucmax = X.aucmax;
+			//System.out.println("Resulting auc: " + auc);
+			//	    Grid.interpolateSamples = saveInterpolate;
+			if (backgroundIterator != null)
+				X.setDensityNormalizer(backgroundIterator);
+			double testGain = (testSampleSet == null) ? 0 : getTestGain(X);
+
+
+
+			if (decideOnTestGain()) {
+				//testGainOneModel.add(testGain);
+				testGainOneModel[sample] = testGain;
+			}
+			if (decideOnTestAuc()) {
+				//testGainOneModel.add(auc);
+				testGainOneModel[sample] = auc;
+			}
+		}
+
+		//params.speciesCV = null;
+		final double testGainAver = averageTestGain(testGainOneModel);
+		testGainFinal[me] = testGainAver;
+		//System.out.println("Decision Parameter: "+testGainAver);
+	}
+
+	/** make private for multithreading **/
+	void startParallel2(String[] bestVariables,ArrayList<String> bestFeatures,
+						final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
+		final double testGainOneModel[] = new double[replicates()];
+
+		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
+
+
+		for (int sample=0; sample<params.speciesCV.length; sample++) {
+			final String theSpeciesPar = params.speciesCV[sample];
+			//if (Utils.interrupt) return;
+			if (is("perSpeciesResults")) {
+				try {
+					results = new CsvWriter(new File(outDir(), theSpeciesPar + "Results.csv"));
+				} catch (IOException e) {
+					popupError("Problem opening " + theSpeciesPar + " results file", e);
+					final double testGainAver = averageTestGain(testGainOneModel);
+					//testGainFinal.add(me, testGainAver);
+					testGainFinal[me] = testGainAver;
+				}
+			}
+
+
+
+			Sample[] sss = sampleSet.getSamples(theSpeciesPar);
+			if (!params.allowpartialdata())
+				sss = withAllData(baseFeatures, sss);
+			final Sample[] ss = sss;
+			if (ss.length == 0) {
+				Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 training samples", "skippingBecauseNoTrainingSamples");
+				continue;
+			}
+			if (testSampleSet != null) {
+				int len = testSampleSet.getSamples(theSpeciesPar).length;
+				if (len == 0) {
+					//		    if (MaxEnt.bootstrapBetaResults!=null)
+					//			MaxEnt.bootstrapBetaResults.add(new Double(0.0));
+					Utils.warn2("Skipping " + theSpeciesPar + " because it has 0 test samples", "skippingBecauseNoTestSamples");
+					continue;
+				}
+			}
+			Utils.reportMemory("getSamples");
+
+
+
+			if (Utils.interrupt) {final double testGainAver = averageTestGain(testGainOneModel);
+				testGainFinal[me] = testGainAver;
+				//testGainFinal.add(me, testGainAver);
+			}
+			Utils.reportDoing(theSpeciesPar + ": ");
+			contributions = null;
+
+
+			final ArrayList<String> vars = new ArrayList<>();
+			Collections.addAll(vars, bestVariables);
+			final Feature[] features = makeFeatures(variableNoOfFeatures(baseFeatures, vars));
+
+			MaxentRunResults res = maxentRunParallel(features, ss,
+					testSampleSet != null ? testSampleSet.getSamples(theSpeciesPar) : null);
+			if (res == null) {
+				final double testGainAver = averageTestGain(testGainOneModel);
+				testGainFinal[me] = testGainAver;
+			}
+			//Utils.echoln("Resulting gain: " + res.gain);
+
+			final FeaturedSpace X = res.X;
+
+			res.removeBiasDistribution();
+			DoubleIterator backgroundIterator = null;
+
+			double auc = X.getAUC(backgroundIterator, X.testSamples);
+			aucmax = X.aucmax;
+			//System.out.println("Resulting auc: " + auc);
+			//	    Grid.interpolateSamples = saveInterpolate;
+			if (backgroundIterator != null)
+				X.setDensityNormalizer(backgroundIterator);
+			double testGain = (testSampleSet == null) ? 0 : getTestGain(X);
+
+			if (decideOnTestGain()) {
+				//testGainOneModel.add(testGain);
+				testGainOneModel[sample] = testGain;
+			}
+			if (decideOnTestAuc()) {
+				//testGainOneModel.add(auc);
+				testGainOneModel[sample] = auc;
+			}
+		}
+
+		//params.speciesCV = null;
+		final double testGainAver = averageTestGain(testGainOneModel);
+		testGainFinal[me] = testGainAver;
+		//System.out.println("Decision Parameter: "+testGainAver);
+	}
+
+
 }
+
