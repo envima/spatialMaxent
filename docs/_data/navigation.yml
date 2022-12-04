@@ -1,0 +1,37 @@
+# main links
+main:
+  - title: "Tutorial"
+    url: /docs/060_nceas/
+  - title: "Source"
+    url: https://github.com/Nature40/spatialMaxent   
+  - title: "About"
+    url: https://www.uni-marburg.de/en/fb19/disciplines/physisch/environmentalinformatics
+  
+docs:
+  - title: Maxent
+    url: /docs/020_the_original/
+    children:
+      - title: "The original"
+        url: /docs/020_the_original/
+      - title: "spatialMaxent"
+        url: /docs/030_spatialMaxent/   
+      - title: "Setup"
+        url: /docs/040_getting_started/        
+      - title: "troubleshooting"
+        url: /docs/050_troubleshooting/
+                     
+  - title: Tutorial
+    url: /docs/060_nceas/
+    children:
+      - title: "NCEAS data"
+        url: /docs/060_nceas/
+      - title: "Spatial validation"
+        url: /docs/070_spatial_blocks/ 
+      - title: "Environmental layers and background points"
+        url: /docs/080_bg/
+      - title: "Spatial validation, variable selection and parameter tuning in one go"
+        url: /docs/090_spatialMaxent_short_introduction
+      - title: "Train spatialMaxent"
+        url: /docs/100_train_maxent/ 
+      - title: "Default vs. spatial"
+        url: /docs/110_default_vs_spatial/          

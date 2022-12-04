@@ -1,0 +1,44 @@
+title: spatialMaxent
+# for github pages:
+baseurl: "/spatialMaxent" # the subpath of your site, e.g. /blog
+# for glocal jekyll page
+#baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://envima.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+github_username:  envima
+repository: 'envima/spatialMaxent'
+
+markdown: kramdown
+remote_theme: "mmistakes/minimal-mistakes@4.17.2"
+plugins:
+  - jekyll-include-cache
+  - jekyll-feed
+
+minimal_mistakes_skin: "default" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum" "sunrise"
+
+logo: "/assets/images/logo_umr.png"
+search: true
+search_full_content: true
+
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/Nature40/spatialMaxentPaper"
+
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:path/
+
+defaults:
+   #_docs
+  - scope:
+      path: ""
+      type: docs
+    values:
+      layout: single
+      classes: wide
+      author_profile: false
+      sidebar:
+        nav: "docs"      
+
