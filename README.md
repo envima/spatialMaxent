@@ -1,7 +1,8 @@
 ## spatialMaxent
 
-* [Download spatialMaxent](https://github.com/Nature40/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip)
-* [Tutorial](https://nature40.github.io/spatialMaxentPaper/)
+* [Download spatialMaxent](https://github.com/envima/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip)
+* [Tutorial](https://envima.github.io/spatialMaxent/)
+* Help for getting spatialMaxent to run
 
 ## Short Introduction
 
