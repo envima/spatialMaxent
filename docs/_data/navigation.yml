@@ -1,37 +1,37 @@
 # main links
 main:
   - title: "Tutorial"
-    url: /docs/060_nceas/
+    url: /docs/040_tutorial
   - title: "Source"
-    url: https://github.com/Nature40/spatialMaxent   
+    url: https://github.com/envima/spatialMaxent 
   - title: "About"
     url: https://www.uni-marburg.de/en/fb19/disciplines/physisch/environmentalinformatics
   
 docs:
-  - title: Maxent
-    url: /docs/020_the_original/
+  - title: spatialMaxent
+    url: /docs/010_how_to_navigate_this_tutorial
     children:
-      - title: "The original"
-        url: /docs/020_the_original/
-      - title: "spatialMaxent"
-        url: /docs/030_spatialMaxent/   
-      - title: "Setup"
-        url: /docs/040_getting_started/        
-      - title: "troubleshooting"
-        url: /docs/050_troubleshooting/
+      - title: Setting up spatialMaxent
+        url: /docs/020_spatialMaxent
+      - title: "Short introduction to spatialMaxent"
+        url: /docs/030_spatialMaxent_short_introduction
+   
                      
   - title: Tutorial
-    url: /docs/060_nceas/
+    url: /docs/040_tutorial
     children:
-      - title: "NCEAS data"
-        url: /docs/060_nceas/
-      - title: "Spatial validation"
-        url: /docs/070_spatial_blocks/ 
-      - title: "Environmental layers and background points"
-        url: /docs/080_bg/
-      - title: "Spatial validation, variable selection and parameter tuning in one go"
-        url: /docs/090_spatialMaxent_short_introduction
       - title: "Train spatialMaxent"
-        url: /docs/100_train_maxent/ 
+        url: /docs/050_train_maxent/ 
       - title: "Default vs. spatial"
-        url: /docs/110_default_vs_spatial/          
+        url: /docs/060_default_vs_spatial/          
+
+  - title: Data preprocessing
+    url: /docs/070_preprocessing/
+    children:
+      - title: "Presence-only data"
+        url: /docs/080_nceas/
+      - title: "Spatial blocks"
+        url: /docs/090_spatial_blocks/ 
+      - title: "Background points"
+        url: /docs/100_bg/
+     

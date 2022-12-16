@@ -8,7 +8,7 @@ header:
   overlay_image: /assets/images/title_image.jpg
   actions:
     - label: "Get started"
-      url: /docs/010_start_page/
+      url: /docs/010_how_to_navigate_this_tutorial
   caption: "Photo credit: Herr Olsen [CC BY-NC 2.0] via [flickr.com](https://www.flickr.com/photos/herrolsen/26966727587/)"
 excerpt: "Adapting Species Distribution Modeling to spatial data."  
 intro: 
