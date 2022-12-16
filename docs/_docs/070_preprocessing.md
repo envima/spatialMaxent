@@ -13,7 +13,9 @@ This tutorial was created with R version 4.1.2 and requires the following packag
 * [sf]( https://cran.r-project.org/web/packages/sf/index.html) version 1.0.8,
 * [Metrics]( https://cran.r-project.org/web/packages/Metrics/index.html) version 0.1.4, 
 * [dplyr]( https://cran.r-project.org/web/packages/dplyr/index.html) version 1.0.8
-* [ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html) version 3.3 as dependencies.
+* [ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html) version 3.3
+* [disdat](https://cran.r-project.org/web/packages/disdat/index.html) version 1.0.0
+* [clhs]( https://cran.r-project.org/web/packages/clhs/index.html) version 0.9.0
 
 ### Create directory structure
 For the tutorial to run smoothly, it is recommended that you use the same folder structure as shown here. Start by creating an empty folder, and set it as the working directory in R. In this folder we will now create the following directory structure:
@@ -42,8 +44,4 @@ In this tutorial we will use the data for the region Ontario in Canada (see map 
 
 ### Download environmental layers
 
-
-
-
-
-
+The environmental layers will be used exactly as they are provided in the NCEAS dataset. Go to [osf]( https://osf.io/kwc4v/) and download the environmental layers for the region canada into the `data/layers` folder.

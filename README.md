@@ -1,8 +1,9 @@
 ## spatialMaxent
-
-* [Download spatialMaxent](https://github.com/envima/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip)
-* [Tutorial](https://envima.github.io/spatialMaxent/)
-* Help for getting spatialMaxent to run
+spatialMaxent is an extension for Maxent version 3.4.4 (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire) built by Lisa Bald, Jannis Gottwald and Dirk Zeuss, that provides a forward-variables-selection (fvs), forward-feature-selection (ffs) and tuning of the regularization-multiplier together with spatial cross-validation. These methods are especially suited for spatial data.
+* [Download spatialMaxent version 1.0.0 here](https://github.com/envima/spatialMaxent/raw/main/out/artifacts/spatialMaxent_jar.zip)
+* [Help to get spatialMaxent to run on your PC]( https://envima.github.io/spatialMaxent/docs/020_spatialMaxent/)
+*  [A short introduction into the functionalities of spatialMaxent]( https://envima.github.io/spatialMaxent/docs/030_spatialMaxent_short_introduction/)
+* [A full tutorial on spatialMaxent is available here](https://envima.github.io/spatialMaxent/)
 
 
 
