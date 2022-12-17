@@ -12,7 +12,7 @@ This tutorial was created with R version 4.1.2 and requires the following packag
 * [sf]( https://cran.r-project.org/web/packages/sf/index.html) version 1.0.8,
 * [Metrics]( https://cran.r-project.org/web/packages/Metrics/index.html) version 0.1.4, 
 * [dplyr]( https://cran.r-project.org/web/packages/dplyr/index.html) version 1.0.8
-* [ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html) version 3.3 as dependencies.
+* [ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html) version 3.3
 
 ### Create directory structure
 For the tutorial to run smoothly, it is recommended that you use the same folder structure as shown here. Start by creating an empty folder, and set it as the working directory in R. In this folder we will now create the following directory structure:
