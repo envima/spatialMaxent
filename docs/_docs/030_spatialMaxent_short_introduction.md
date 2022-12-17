@@ -35,6 +35,7 @@ The regularization-multiplier tuning has three input parameters: The lowest regu
 
 
 ![]({{ site.baseurl }}/assets/images/settings2.png)
+
 Which model is the best one can be either determined based on the `test gain` or the `test auc` value (`decision parameter`).
 
 ### Optional output of summarized grids
