@@ -17,7 +17,7 @@ If you also want to follow the tutorial on spatialMaxent on an example dataset, 
 
 1.	[getting spatialMaxent to run]( ../020_spatialMaxent) on your PC
 1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software.
-1.	Then download the preprocessed data via [dataDryad}(https://doi.org/10.5061/dryad.dbrv15f4z) 
+1.	Then download the preprocessed data via [dataDryad](https://doi.org/10.5061/dryad.dbrv15f4z) 
 1.	and follow the [tutorial](../040_tutorial) chapter,
 
 to just do the modeling with spatialMaxent but skip the data preprocessing.
