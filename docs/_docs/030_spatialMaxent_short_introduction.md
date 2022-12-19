@@ -4,23 +4,24 @@ header:
   image: "/assets/images/title_image.jpg"
   caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
 ---
-
+Maxent is a freely available open source software used for Species Distribution Modeling (SDM) and Habitat Suitability Modeling (HSM). It is used to predict the habitat of animals and plants on point-based information (presence only data) and information on the environment of the study area. Maxent was created by Steven Phillips and is open source since 2017. You can download the original Maxent [here]( https://biodiversityinformatics.amnh.org/open_source/maxent/). To get a detailed description of Maxent read the papers on Maxent by [(Phillips et al. 2006)]( https://www.sciencedirect.com/science/article/pii/S030438000500267X) and [(Phillips and Dudík 2008)]( https://onlinelibrary.wiley.com/doi/full/10.1111/j.0906-7590.2008.5203.x).
+If you are not familiar with Maxent we recommend doing the [Maxent tutorial]( https://biodiversityinformatics.amnh.org/open_source/maxent/) first to familiarize yourself with the software as this tutorial covers only what is new about the spatialMaxent extension and not the general functionalities of Maxent.
 
 This page serves as a short introduction to spatialMaxent. Please read it carefully before you start with the modeling. There are a few things that have changed compared to Maxent and we will explain here what you should look out for.
 
 ### The data structure
 
-First of all, the data structure changes slightly insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial fold as integer value. At minimum you therefore need four columns: species, longitude, latitude and spatial fold. If the Species with data (SWD) format is chosen after the fourth column all columns containing the extract environmental layer information are added. This should look like this:
+First of all, the data structure changes slightly insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial block as integer value. At minimum you therefore need four columns: species, longitude, latitude and spatial block. If the species with data (SWD) format is chosen after the fourth column all columns containing the extract environmental layer information are added. This should look like this:
 ![]({{ site.baseurl }}/assets/images/data_format.png)
-If you are using the SWD format also the environmental layers csv file needs to have an additional column for the spatial folds, but no values are required here (thus exactly the same structure as for the samples files is needed). Note that in spatialMaxent contrary to Maxent the processing of several species at once from the same samples file is not supported.
+If you are using the SWD format also the environmental layers csv file needs to have an additional column for the spatial blocks, but no values are required here (thus exactly the same structure as for the samples files is needed). Note that in spatialMaxent contrary to Maxent the processing of several species at once from the same samples file is not supported. Please prepare one file for each species.
 
 ### Spatial Validation
 
-The spatial validation is a new option that can be chosen in the `basic tab` as `Replicated run type`. If the `spatial crossvalidate` option is used the setting of `replicates` will have no effect anymore as the number of replicates will be set to the number of distinct folds in the fourth column of the sample data.
+The spatial validation is a new option that can be chosen in the `basic tab` of the settings as `Replicated run type`. If the `spatial crossvalidate` option is used the setting of `replicates` will have no effect anymore as the number of replicates will be set to the number of distinct blocks in the fourth column of the sample data.
 
 ![]({{ site.baseurl }}/assets/images/settings1.png)
 
-### Tuning options
+## Tuning options
 The nice thing about spatialMaxent is that all tuning tasks are available at once with just a few clicks. In addition to the selection of the replication-multiplier and the features, a variable selection is also carried out. The following functionalities are available in spatialMaxent: forward-variable-selection, forward-feature-selection and regularization-multiplier tuning. All the tuning procedures can be found in the GUI in a new tab of the settings called `spatial`. Each of the steps variable selection, feature selection and regularization-multiplier tuning can be omitted by the user if necessary but we highly recommend to do all of them.
 
 ### Forward-variable-selection
@@ -43,10 +44,11 @@ Which model is the best one can be either determined based on the `test gain` or
 
 ### Optional output of summarized grids
 With the setting `cvGrids ` it is possible to omit the output of the summarized html page and grids of cross-validation or spatial cross-validation. The grids average, max, median, min and stddev will not be written to disc if this parameter is set to false.
+This option can be found in the tab of the settings called `spatial`.
 
 ### Calculate a final Model
 The setting `finalModel ` can be used to train one model at the end with the selected variables, the selected features and the selected regularization-multiplier and all presence records. 
-
+This option can be found in the tab of the settings called `spatial`.
 
 ### general notes
 The forward-variable-selection, forward-feature-selection and regularization-multiplier tuning all have large processing times. Especially if the forward-variable-selection is done and there are lots of input variables alone in the first step of the forward-variable-selection this can lead to a large number of models to be trained. If the input consists of 10 variables 45 models are trained in the first step of the FVS, if it consists of 20 variables it increases to 190 models. Just keep in mind, that the whole process can take a while. In this case consider trying out the parallel processing of the forward-variable-selection by setting `threads` larger than 1.
