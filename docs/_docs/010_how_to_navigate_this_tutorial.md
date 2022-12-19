@@ -2,7 +2,7 @@
 title: How to navigate this tutorial
 header:
   image: "/assets/images/title_image.jpg"
-  caption: "Photo credit: Herr Olsen [CC BY-NC 2.0] via [flickr.com](https://www.flickr.com/photos/herrolsen/26966727587/)"
+  caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
 ---
 
 
@@ -17,7 +17,7 @@ If you also want to follow the tutorial on spatialMaxent on an example dataset, 
 
 1.	[getting spatialMaxent to run]( ../020_spatialMaxent) on your PC
 1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software.
-1.	Then download the preprocessed data via [dataDryad](https://doi.org/10.5061/dryad.dbrv15f4z) 
+1.	Then download the preprocessed tutorial data [here](https://hessenbox.uni-marburg.de/getlink/fiUeey1V4M5w8hCQFN845dKX/) 
 1.	and follow the [tutorial](../040_tutorial) chapter,
 
 to just do the modeling with spatialMaxent but skip the data preprocessing.

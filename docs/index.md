@@ -9,7 +9,7 @@ header:
   actions:
     - label: "Get started"
       url: /docs/010_how_to_navigate_this_tutorial
-  caption: "Photo credit: Herr Olsen [CC BY-NC 2.0] via [flickr.com](https://www.flickr.com/photos/herrolsen/26966727587/)"
+  caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
 excerpt: "Adapting Species Distribution Modeling to spatial data."  
 intro: 
   - excerpt: 'spatialMaxent is an extension for maxent version 3.4.4 (Copyright 2016 Steven Phillips, Miro Dudik and Rob Schapire), that provides a Forward-Variables-Selection (FVS), Forward-Feature-Selection (FFS) and tuning of the regularization multiplier together with a spatial cross-validation.' 

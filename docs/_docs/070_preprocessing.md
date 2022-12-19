@@ -2,7 +2,7 @@
 title: Data Preprocessing
 header:
   image: "/assets/images/title_image.jpg"
-  caption: "Photo credit: Herr Olsen [CC BY-NC 2.0] via [flickr.com](https://www.flickr.com/photos/herrolsen/26966727587/)"
+  caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
 ---
 
 This R tutorial will guide you through the modeling of a total of 20 species with spatialMaxent. We use data from the National Center for Ecological Analysis and Synthesis (NCEAS) dataset for the Canada region ([Elith et al. 2020]( https://doi.org/10.17161/bi.v15i2.13384)).  As you have decided to start the tutorial with the data preprocessing we will guide you through the hole process from deriving the data to model evaluation.

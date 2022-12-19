@@ -2,7 +2,7 @@
 title: Spatial blocks
 header:
   image: "/assets/images/title_image.jpg"
-  caption: "Photo credit: Herr Olsen [CC BY-NC 2.0] via [flickr.com](https://www.flickr.com/photos/herrolsen/26966727587/)"
+  caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
 ---
 
 
