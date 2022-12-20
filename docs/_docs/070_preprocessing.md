@@ -48,4 +48,5 @@ In this tutorial we will use the data for the region Ontario in Canada (see map 
 
 ### Download environmental layers
 
-The environmental layers will be used exactly as they are provided in the NCEAS dataset. Go to [osf]( https://osf.io/kwc4v/) and download the environmental layers for the region canada into the `data/layers` folder.
+The environmental layers will be used similar as they are provided in the NCEAS dataset. Go to [osf]( https://osf.io/kwc4v/) and download the environmental layers for the region canada into the `data/layers` folder. We will just change the data format, as Maxent and spatialMaxent are not working with tif files we will convert each environmental raster layer to the ascii format.
+<script src="https://gist.github.com/Baldl/375df5b27dc507f69daca4c05d91a7e2.js"></script>
