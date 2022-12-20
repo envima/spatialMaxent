@@ -13,7 +13,8 @@ This tutorial was created with R version 4.1.2 and requires the following packag
 * [Metrics]( https://cran.r-project.org/web/packages/Metrics/index.html) version 0.1.4, 
 * [dplyr]( https://cran.r-project.org/web/packages/dplyr/index.html) version 1.0.8
 * [ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html) version 3.3
-* [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html) version 2.3.3.6
+* [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html) version 3.3.6
+* [viridis](https://cran.r-project.org/web/packages/viridis/index.html) version 0.6.2
 
 ### Create directory structure
 For the tutorial to run smoothly, it is recommended that you use the same folder structure as shown here. Start by creating an empty folder, and set it as the working directory in R. In this folder we will now create the following directory structure:
@@ -30,7 +31,7 @@ You can set up the working environment with the following script:
 <script src="https://gist.github.com/Baldl/533446161f5cd9f1af3ec039936e90ca.js"></script>
 
 ### Data download 
-[Download the tutorial.zip file](https://hessenbox.uni-marburg.de/getlink/fiUeey1V4M5w8hCQFN845dKX/) with the preprocessed tutorial data and extract it into the data folder. It contains three folders: samples, background, and layers. The folder layers contains 11 environmental layers in the ascii format exactly as they are provided in the NCEAS dataset. There are two files in the background folder each one of them contains `10000 background points` for the Canada region. Once as a georeferenced geopackage file and once as a csv file, which is already in the format we need for modeling with spatialMaxent: the first four columns contain species, longitude, latitude, and spatial folds. Whereby the spatial folds column remains empty for the background points or contains NAs. From line five the extracted values from the raster layers follow. 
+[Download the tutorial.zip file](https://hessenbox.uni-marburg.de/getlink/fiUeey1V4M5w8hCQFN845dKX/) with the preprocessed tutorial data and extract it into the data folder. It contains three folders: samples, background, and layers. The folder layers contains 11 environmental layers in the ascii format exactly as they are provided in the NCEAS dataset. There are two files in the background folder each one of them contains `10000 background points` for the Canada region. One as a georeferenced geopackage file and one as a csv file, which is already in the format we need for modeling with spatialMaxent: the first four columns contain species, longitude, latitude, and spatial folds. Whereby the spatial folds column remains empty for the background points or contains NAs. From line five the extracted values from the raster layers follow. 
 
 The structure of the samples files seems a bit confusing at first sight, but don't let that scare you off. There is a folder for each species, which follows the naming of the anonymized species in the NCEAS dataset (e.g. `can01`). In this folder you will find all presence-points of the species, which were obtained from the presence-only and presence-absence data as geopackage (e.g. `can01.gpkg`).  
 

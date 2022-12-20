@@ -16,7 +16,10 @@ This tutorial was created with R version 4.1.2 and requires the following packag
 * [ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html) version 3.3
 * [disdat](https://cran.r-project.org/web/packages/disdat/index.html) version 1.0.0
 * [clhs]( https://cran.r-project.org/web/packages/clhs/index.html) version 0.9.0
-* [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html) version 2.3.3.6
+* [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html) version 3.3.6
+* [blockCV](https://cran.r-project.org/web/packages/blockCV/index.html) version 2.1.4
+* [purrr](https://cran.r-project.org/web/packages/purrr/index.html) version 0.3.4
+* [viridis](https://cran.r-project.org/web/packages/viridis/index.html) version 0.6.2
 
 ### Create directory structure
 For the tutorial to run smoothly, it is recommended that you use the same folder structure as shown here. Start by creating an empty folder, and set it as the working directory in R. In this folder we will now create the following directory structure:
@@ -30,7 +33,7 @@ data
 └─ background
 ```
 You can set up the working environment with the following script:
-<script src="https://gist.github.com/Baldl/533446161f5cd9f1af3ec039936e90ca.js"></script>
+<script src="https://gist.github.com/Baldl/50ec54245fcd8a5bcaedc857896c5676.js"></script>
 
 ### The NCEAS data
 
