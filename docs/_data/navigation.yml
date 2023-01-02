@@ -1,7 +1,7 @@
 # main links
 main:
-  - title: "Tutorial"
-    url: /docs/040_tutorial
+  - title: "How to navigate this tutorial"
+    url: /docs/010_how_to_navigate_this_tutorial
   - title: "Source"
     url: https://github.com/envima/spatialMaxent 
   - title: "About"
@@ -11,27 +11,32 @@ docs:
   - title: spatialMaxent
     url: /docs/010_how_to_navigate_this_tutorial
     children:
-      - title: Setting up spatialMaxent
+      - title: "Setting up spatialMaxent"
         url: /docs/020_spatialMaxent
       - title: "Short introduction to spatialMaxent"
         url: /docs/030_spatialMaxent_short_introduction
+      - title: "Data structure"
+        url: /docs/040_data_structure
+      - title: "Customizable standalone workflow"
+        url: /docs/050_standalone_workflow
    
-                     
-  - title: Tutorial
-    url: /docs/040_tutorial
-    children:
-      - title: "Train spatialMaxent"
-        url: /docs/050_train_maxent/ 
-      - title: "Default vs. spatial"
-        url: /docs/060_default_vs_spatial/          
-
-  - title: Data preprocessing
-    url: /docs/070_preprocessing/
+  - title: "Data preprocessing"
+    url: /docs/060_preprocessing/
     children:
       - title: "Presence-only data"
-        url: /docs/080_nceas/
+        url: /docs/070_nceas/
       - title: "Spatial blocks"
-        url: /docs/090_spatial_blocks/ 
+        url: /docs/080_spatial_blocks/ 
       - title: "Background points"
-        url: /docs/100_bg/
+        url: /docs/090_bg/
+                     
+  - title: Tutorial
+    url: /docs/100_tutorial
+    children:
+      - title: "Train spatialMaxent"
+        url: /docs/110_train_maxent/ 
+      - title: "Default vs. spatial"
+        url: /docs/120_default_vs_spatial/          
+
+
      

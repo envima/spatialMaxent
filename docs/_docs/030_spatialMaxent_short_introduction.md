@@ -9,11 +9,6 @@ If you are not familiar with Maxent we recommend doing the [Maxent tutorial]( ht
 
 This page serves as a short introduction to spatialMaxent. Please read it carefully before you start with the modeling. There are a few things that have changed compared to Maxent and we will explain here what you should look out for.
 
-### The data structure
-
-First of all, the data structure changes slightly insofar as it is necessary to provide the samples file with a fourth column containing the association of each point with a spatial block as integer value. At minimum you therefore need four columns: species, longitude, latitude and spatial block. If the species with data (SWD) format is chosen after the fourth column all columns containing the extract environmental layer information are added. This should look like this:
-![]({{ site.baseurl }}/assets/images/data_format.png)
-If you are using the SWD format also the environmental layers csv file needs to have an additional column for the spatial blocks, but no values are required here (thus exactly the same structure as for the samples files is needed). Note that in spatialMaxent contrary to Maxent the processing of several species at once from the same samples file is not supported. Please prepare one file for each species.
 
 ### Spatial Validation
 
@@ -50,10 +45,11 @@ This option can be found in the tab of the settings called `spatial`.
 The setting `finalModel ` can be used to train one model at the end with the selected variables, the selected features and the selected regularization-multiplier and all presence records. 
 This option can be found in the tab of the settings called `spatial`.
 
-### general notes
+### General notes
 The forward-variable-selection, forward-feature-selection and regularization-multiplier tuning all have large processing times. Especially if the forward-variable-selection is done and there are lots of input variables alone in the first step of the forward-variable-selection this can lead to a large number of models to be trained. If the input consists of 10 variables 45 models are trained in the first step of the FVS, if it consists of 20 variables it increases to 190 models. Just keep in mind, that the whole process can take a while. In this case consider trying out the parallel processing of the forward-variable-selection by setting `threads` larger than 1.
  
-If you are working on the command line these are the parameters to use:
+### Parameters
+If you are working on the command line these are the aditional parameters to use:
 
 |**Name**|**Type**|**Default**|
 | --------- |:--------:| -----:|
@@ -68,6 +64,7 @@ If you are working on the command line these are the parameters to use:
 | decisionParameter|String| test auc|
 | replicatetype|String| Spatial Crossvalidate|
 
+A full list of all possible command line parameters can be found [here](https://github.com/envima/spatialMaxent/blob/main/src/density/parameters.csv).
 
 If you are following the Tutorial with the downloaded preporcessed data [go to the Tutorial page next](../040_tutorial). If you are reproducing the whole workflow from front to back including preprocessing the data [go to the page data preprocessing next](../070_preprocessing).
 

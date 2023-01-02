@@ -5,6 +5,15 @@ header:
   caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
 ---
 
+{% capture java-version %}
+
+**NOTE: You can skip this page if you have done the preprocessing workflow of the data yourself.**
+
+{% endcapture %}
+<div class="notice--success">
+  {{ java-version | markdownify }}
+</div> 
+
 This R tutorial will guide you through the modeling of a total of 20 species with spatialMaxent. We use data from the National Center for Ecological Analysis and Synthesis (NCEAS) dataset for the Canada region ([Elith et al. 2020]( https://doi.org/10.17161/bi.v15i2.13384)).  Before we can start modeling we need to download the data, make sure all necessary R packages are installed and we have a clean working environment.
 ###	Check if all necessary R packages are installed
 This tutorial was created with R version 4.1.2 and requires the following packages. Please make sure you have them installed before we start:

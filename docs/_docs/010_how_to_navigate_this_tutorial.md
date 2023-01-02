@@ -6,28 +6,38 @@ header:
 ---
 
 
-**Please read this page carefully before you start!** If you are only interested in how to set up spatialMaxent on your PC and how it functions, read the following two chapters on spatialMaxent:
+**Please read this page carefully before you start!** If you are only interested in how to set up spatialMaxent on your PC and how it functions, read the following chapters on spatialMaxent:
 * [Setting up spatialMaxent](../020_spatialMaxent)
 * [Short introduction to spatialMaxent](../030_spatialMaxent_short_introduction)
+* [Data structure](../040/data_structure) needed for spatialMaxent
 
-### Tutorial
-If you also want to follow the tutorial on spatialMaxent on an example dataset, you can do this in one of two possible ways: 
+
+## Customizable standalone workflow
+If you are interested in testing spatialMaxent quickly and easily on an example dataset that can be effortlessly customized to other data, we recommend that you look at the 
+
+* [Customizable standalone workflow](../050_standalone_workflow) after reading the three pages above. 
+
+You don't need any extra data for this workflow and the processing time as well as the needed memory are low. 
+The chapter is especially well suited to subsequently apply the workflow to your own data.
+
+## Tutorial
+If you want to reproduce the entire workflow of the spatialMaxent paper, you can do the comprehensive tutorial on a sample dataset covering 20 species. This is much more time-consuming than the [short standalone workflow](../050_standalone_workflow) and requires a significant amount of computing time and storage space. You can do this in one of two possible ways: 
 
 **Either** start with
 
 1.	[getting spatialMaxent to run]( ../020_spatialMaxent) on your PC
-1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software.
+1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software and the page explaining the [data structure]( ../040/data_structure).
 1.	Then download the preprocessed tutorial data [here](https://hessenbox.uni-marburg.de/getlink/fiUeey1V4M5w8hCQFN845dKX/) 
-1.	and follow the [tutorial](../040_tutorial) chapter,
+1.	and follow the [tutorial](../100_tutorial) chapter,
 
 to just do the modeling with spatialMaxent but skip the data preprocessing.
 
 **OR** start with
 
 1.	[getting spatialMaxent to run]( ../020_spatialMaxent) on your PC
-1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software.
-1.	Then do the chapter on how to [preprocess the data](../070_preprocessing) 
-1.	and follow the [train spatialMaxent](../050_train_maxent) and
-1. [default vs. spatial](../060_default_vs_spatial) pages afterwards.
+1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software and the page explaining the [data structure]( ../040/data_structure).
+1.	Then do the chapter on how to [preprocess the data](../060_preprocessing) 
+1.	and follow the [train spatialMaxent](../110_train_maxent) and
+1. [default vs. spatial](../120_default_vs_spatial) pages afterwards.
 
 to reproduce the whole workflow from front to back.

@@ -6,7 +6,7 @@ header:
 ---
 
 
-To assess which modeling approach performs best we will use four different evaluation criteria. We will calculate the [AUC (area under the receiver operating characteristic curve)]( https://en.wikipedia.org/wiki/Receiver_operating_characteristic) and the [MAE (mean absolute error)]( https://en.wikipedia.org/wiki/Mean_absolute_error) as proposed by  [Konowalik & Nosol (2021)]( 10.1038/s41598-020-80062-1). Both  metrics will be calculated on the spatially seperated test data from the presence records using the [R package Metrics]( https://cran.r-project.org/web/packages/Metrics/index.html). As a third metric we will calculate the Boyce-Index [(Boyce et al., 2002)]( 10.1016/S0304-3800(02)00200-4) using the [R package ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html)  with the prediction raster and the test data. To assess how complex the models are we will furthermore have a look at the number of parameters of each model. We will determine all four metrics for each combination of training and test data and calculate the median of all these values to get a comprehensive picture of the performance of each modeling approach. 
+To assess which modeling approach performs best we will use four different evaluation criteria. We will calculate the [AUC (area under the receiver operating characteristic curve)]( https://en.wikipedia.org/wiki/Receiver_operating_characteristic) and the [MAE (mean absolute error)]( https://en.wikipedia.org/wiki/Mean_absolute_error) as proposed by  [Konowalik & Nosol (2021)]( 10.1038/s41598-020-80062-1). Both  metrics will be calculated on the spatially seperated test data from the presence records using the [R package Metrics]( https://cran.r-project.org/web/packages/Metrics/index.html). As a third metric we will calculate the Boyce-Index [(Boyce et al., 2002)](https://www.sciencedirect.com/science/article/pii/S0304380002002004) using the [R package ecospat]( https://cran.r-project.org/web/packages/ecospat/index.html)  with the prediction raster and the test data. To assess how complex the models are we will furthermore have a look at the number of parameters of each model. We will determine all four metrics for each combination of training and test data and calculate the median of all these values to get a comprehensive picture of the performance of each modeling approach. 
 
 We will start by calculating the metrics for each fold: 
 
@@ -33,7 +33,3 @@ We repeat the same plots again this time with the number of parameters instead o
 
 ![]({{ site.baseurl }}/assets/images/results3.png)
 *Figure: Results of region Ontario, Canada modeled with the methods spatial (yellow) and standard (purple). AUC (point) and Boyce-Index (triangle) on the y-axis and the Number of parameters on the x-axis. For each Species the median value is given.*
-
-
-
-This brings us to the end of the tutorial. If you haven't done so yet, you could take a look at data preprocessing on the following pages.

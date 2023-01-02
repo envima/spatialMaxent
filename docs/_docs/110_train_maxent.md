@@ -9,7 +9,7 @@ header:
 
 We will now train two models for each species in the Canada dataset. One with a random 5-fold cross-validation and the Maxent default settings (default modeling approach) and one with spatial cross-validation and forward-variable-selection, forward-feature-selection and regularization multiplier tuning (spatial modeling approach). Both models are trained and evaluated on the exact same data and we will compare their performance in the next section. 
 
-We will need to create 21 models for each species, with all possible combinations of test and training data to get a comprehensive picture, which modelling approach performs best. As we are comparing two modeling approaches for 20 species we will calculate a total of 840 models, if you are not having sufficient free storage on your PC you can delete the prediction rasters once all metrics are claculated.
+We will need to create 21 models for each species, with all possible combinations of test and training data to get a comprehensive picture, which modelling approach performs best. As we are comparing two modeling approaches for 20 species we will calculate a total of 840 models, if you are not having sufficient free storage on your PC (~ 33 GB) you can delete the prediction rasters once all metrics are calculated.
 
 ## spatialMaxent GUI
 Watch the video below to see how to train the model for the species `can01` and the first combination of training and test data `can01_01` in the spatialMaxent GUI.
