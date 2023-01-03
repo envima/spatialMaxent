@@ -66,5 +66,3 @@ If you are working on the command line these are the aditional parameters to use
 
 A full list of all possible command line parameters can be found [here](https://github.com/envima/spatialMaxent/blob/main/src/density/parameters.csv).
 
-If you are following the Tutorial with the downloaded preporcessed data [go to the Tutorial page next](../040_tutorial). If you are reproducing the whole workflow from front to back including preprocessing the data [go to the page data preprocessing next](../070_preprocessing).
-
