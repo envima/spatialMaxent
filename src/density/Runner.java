@@ -3064,29 +3064,31 @@ public class Runner {
 		for(int beta=0;beta <b.length ; beta++) {
 			//int beta =0;
 			// get path to output directory
-			String outDirOrg = params.getOutputdirectory();
+			//String outDirOrg = params.getOutputdirectory();
 			// create path to subfolders
-			String outDirName = "\\beta\\"+ "betaMultiplier_"+b[beta];
-			String outdir = new File(outDir(), outDirName).getPath();
+			//String outDirName = "\\beta\\"+ "betaMultiplier_"+b[beta];
+			//String outdir = new File(outDir(), outDirName).getPath();
 			//create new directory
-			if(is("allModels")) {
-				new File(outdir).mkdirs();
-			}
+			//if(is("allModels")) {
+			//	new File(outdir).mkdirs();
+			//}
 			// set directories
-			params.setOutputdirectory(outdir);
+			//params.setOutputdirectory(outdir);
 			// set beta multiplier
 			params.setBetamultiplier(b[beta]);
-			System.out.println("beta multiplier: "+betaMultiplier());
+
+			params.setAllModels(false);
 			startNew(bestVariables, FfsFeatures, testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 			end();
-			params.setOutputdirectory(outDirOrg);
+			//params.setOutputdirectory(outDirOrg);
 			//calculate testgain Average
 			double sum = 0;
 			for(double d : testGainOneModel) {
 				sum += d;
 			}
 			Double testGainAverageBeta = (sum / testGainOneModel.size());
-			System.out.println("Test gain average is: "+ testGainAverageBeta);
+			System.out.println("beta multiplier: "+betaMultiplier()+". Decision parameter average is: "+ testGainAverageBeta);
+			//System.out.println("Test gain average is: "+ testGainAverageBeta);
 
 			//add average testgain of one model to testGainAverageBeta to choose best beta model
 			testGainTmp.add(testGainAverageBeta);
@@ -3149,26 +3151,27 @@ public class Runner {
 				//	runner.parallelRunner.clear();
 				tempSelectedFeatures.addAll(selectedFeatures);
 				tempSelectedFeatures.add(featureNames.get(k));
-				System.out.println("Selected features: "+ tempSelectedFeatures);
+				//System.out.println("Selected features: "+ tempSelectedFeatures);
 				//if (Utils.interrupt) return null; include again in function!!!!!
 				int me = k;
 				String myname = "Forward Feature Selection: using " + tempSelectedFeatures;
 				Utils.echoln(myname);
-				System.out.println("Forward Feature Selection: using " + tempSelectedFeatures);
+
 				Utils.reportDoing(theSpecies + ": Forward Feature Selection: " + tempSelectedFeatures + ": ");
 				// clean temporary ArrayLists
 				testGainOneModel.clear();
-
+				params.setAllModels(false);
 				startNew(bestVariables, tempSelectedFeatures,testGainOneModel, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 				end();
-				//params.setOutputdirectory(outDirOrg);
+
 				//calculate testgain Average
 				double sum = 0;
 				for(double d : testGainOneModel) {
 					sum += d;
 				}
 				Double testGainAverage = (sum / testGainOneModel.size());
-				System.out.println("Decision parameter average is: "+ testGainAverage);
+				System.out.println("Forward Feature Selection: using " + tempSelectedFeatures+". Decision parameter average is: "+ testGainAverage);
+
 
 				//add average testgain of one model to testGainAverageBeta to choose best beta model
 				testGainTmp.add(testGainAverage);
