@@ -26,17 +26,21 @@ package density;
 import java.util.HashMap;
 
 public class Sample {
-    int point, row, col, spatial;
+    int point, row, col, spatial,  spatial2, spatial3, spatial4, spatial5;
     double lat, lon;
     String name;
     public HashMap featureMap;  // maps feature names to doubles
 
-    public Sample(int p, int r, int c, double lat, double lon, String s, int spat) { this(p,r,c,lat,lon,s,spat,null); }
-    public Sample(int p, int r, int c, double lat, double lon, String s, int spat, HashMap map) {
+    public Sample(int p, int r, int c, double lat, double lon, String s, int spat, int spat2, int spat3, int spat4, int spat5) { this(p,r,c,lat,lon,s,spat, spat2, spat3, spat4, spat5,null); }
+    public Sample(int p, int r, int c, double lat, double lon, String s, int spat, int spat2, int spat3, int spat4, int spat5, HashMap map) {
 	point = p; row=r; col=c;
 	this.lat = lat;
 	this.lon = lon;
     spatial = spat;
+    spatial2=spat2;
+    spatial3=spat3;
+    spatial4=spat4;
+    spatial5=spat5;
 	featureMap = map;
 	name = s;
     }
@@ -45,7 +49,7 @@ public class Sample {
         featureMap = map;
     }
 
-    public Sample(int p, int r, int c, int lat, int lon, String s, String spat, HashMap map) {
+    public Sample(int p, int r, int c, int lat, int lon, String s, int spat, int spat2, int spat3, int spat4, int spat5, HashMap map) {
     }
 
    /* public Sample(int p, int r, int c, int lat, int lon, String s, HashMap map) {
@@ -60,5 +64,10 @@ public class Sample {
     public double getLat() { return lat; }
     public double getLon() { return lon; }
     public String getName() { return name; }
+    public int getSpatial2() { return spatial2; }
+    public int getSpatial3() { return spatial3; }
+    public int getSpatial4() { return spatial4; }
+    public int getSpatial5() { return spatial5; }
     public int getSpatial() { return spatial; }
+
 }

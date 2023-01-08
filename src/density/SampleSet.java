@@ -24,21 +24,25 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package density;
 
 // works with a collection of samples.
-// new branch test
+
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.HashSet;
 
 public class SampleSet {
+	Params params;
     GridDimension dimension;
     HashMap speciesMap = new HashMap();  // names to ArrayLists of Samples
 
     // locations in a sample file of species, x, y, env1
+
     public static int speciesIndex = 0, xIndex = 1, yIndex = 2, spatialIndex = 3, firstEnvVar = 4, necessaryFields = 4;
     public static void setNCEAS_FORMAT() {
 	speciesIndex = 1; xIndex = 4; yIndex = 5; firstEnvVar = 7; necessaryFields = 6;
     }
+
+
     static IOException necessaryFieldsException() {
 	return new IOException("Sample file needs four columns: "+
 			       "species (column "+(speciesIndex+1)+"), "+
@@ -210,70 +214,136 @@ public class SampleSet {
 
 
 
-/*
+
 
 public static void main (String[] args){
 
 	final Params params = new Params();
-	params.setOutputdirectory("D:\\maxent\\tutorial-data\\outputs");
-	params.setEnvironmentallayers("D:\\maxent\\tutorial-data\\layers");
-	params.setSamplesfile("D:\\maxent\\tutorial-data\\samples\\bradypus_spatialCV.csv");
-	params.setReplicatetype("spatial crossvalidate");
+	params.setOutputdirectory("D:\\Natur40\\FFSCV\\Pyrisitia_lisa\\data\\output\\test_spatialMaxent");
+	params.setEnvironmentallayers("D:\\Natur40\\FFSCV\\Pyrisitia_lisa\\data\\layers");
+	params.setSamplesfile("D:\\Natur40\\FFSCV\\Pyrisitia_lisa\\data\\samples\\pyrisitia_lisa_all_folds.csv");
+	//params.setReplicatetype("spatial crossvalidate");
 	params.setSelections();
 
+
 	Runner runner = new Runner(params);
-	runner.runSpatial();
+	runner.prepFFME();
 	// create sample Set with parameters from Params
+
 	SampleSet sampleSet = runner.sampleSet;
-	/*String[] names = sampleSet.getNames();
-	//SampleSet test1 = sampleSet.splitForCV(3);
-	SampleSet test2 = sampleSet.splitForSpatialCV();
-	//System.out.println(test1.speciesMap);
-	System.out.println(test2.speciesMap);
-
-	List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
-	System.out.println(Arrays.toString(names));
-	List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
-	ArrayList<Integer> order = (ArrayList<Integer>) locations;
-	System.out.println(order);
-	//field1List.forEach(System.out::println);
-	HashSet<Integer> locHset = new HashSet<Integer>(locations);
-	// Converting HashSet to ArrayList
-	List<Integer> locArr = new ArrayList<Integer>(locHset);
-	System.out.println(Collections.unmodifiableList(locArr));
-	ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[0]); //org hashmap with values
-*/
-
-	/**
-	 *  start splitspatial cv
-	 * **/
 
 
-/*
 
-//	SampleSet sampleSet = runner.sampleSet;
-	//SampleSet splitForSpatialCV() {  // returns sampleset of test data //n = number locations
+//	SampleSet splitForEscv() {  // returns sampleset of test data //n = number locations
 		String[] names = sampleSet.getNames();
-		System.out.println(names);
-		/*
 		SampleSet testss = new SampleSet();
 
 		//for (int i=0; i<names.length; i++) { // ist 1
-	int i = 1;
+		int i=0;
+			/** Number locations for spatial folds 1**/
 			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
 			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
-			System.out.println(locations);
-			ArrayList<Integer> order = (ArrayList<Integer>) locations;
-			System.out.println(order);
-			/*
+			ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
 			//field1List.forEach(System.out::println);
 			HashSet<Integer> locHset = new HashSet<Integer>(locations);
 			// Converting HashSet to ArrayList
 			List<Integer> locArr = new ArrayList<Integer>(locHset);
 			ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions = new ArrayList<>();
+			for(int p =0; p<locArr.size(); p++){
+				positions.add(p);
+			}
+			//	System.out.println("locations: "+locations);
+			//	System.out.println("locArr: " +locArr);
+			//	System.out.println("positions " +positions);
+			//	System.out.println(locArr.size());
+			/** Number locations for spatial folds2 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations2 = species.stream().map(Sample::getSpatial2).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList2 = (ArrayList<Integer>) locations2;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset2 = new HashSet<Integer>(locations2);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr2 = new ArrayList<Integer>(locHset2);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions2 = new ArrayList<>();
+			for(int p =0; p<locArr2.size(); p++){
+				positions2.add(p);
+			}
+			/** Number locations for spatial folds3 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations3 = species.stream().map(Sample::getSpatial3).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList3 = (ArrayList<Integer>) locations3;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset3 = new HashSet<Integer>(locations3);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr3 = new ArrayList<Integer>(locHset3);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions3 = new ArrayList<>();
+			for(int p =0; p<locArr3.size(); p++){
+				positions3.add(p);
+			}
+			/** Number locations for spatial folds4 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations4 = species.stream().map(Sample::getSpatial4).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList4 = (ArrayList<Integer>) locations4;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset4 = new HashSet<Integer>(locations4);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr4 = new ArrayList<Integer>(locHset4);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions4 = new ArrayList<>();
+			for(int p =0; p<locArr4.size(); p++){
+				positions4.add(p);
+			}
+			/** Number locations for spatial folds5 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations5 = species.stream().map(Sample::getSpatial5).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList5 = (ArrayList<Integer>) locations5;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset5 = new HashSet<Integer>(locations5);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr5 = new ArrayList<Integer>(locHset5);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions5 = new ArrayList<>();
+			for(int p =0; p<locArr5.size(); p++){
+				positions5.add(p);
+			}
+
+	System.out.println("locations: "+locations);
+	System.out.println("locArr: " +locArr);
+	System.out.println("positions " +positions);
+	System.out.println(locArr.size());
+
+			System.out.println("locations2: "+locations2);
+			System.out.println("locArr2: " +locArr2);
+			System.out.println("positions2 " +positions2);
+			System.out.println(locArr2.size());
+
+			System.out.println("locations3: "+locations3);
+			System.out.println("locArr3: " +locArr3);
+			System.out.println("positions3 " +positions3);
+			System.out.println(locArr3.size());
+
+			System.out.println("locations4: "+locations4);
+			System.out.println("locArr4: " +locArr);
+			System.out.println("positions4 " +positions4);
+			System.out.println(locArr4.size());
+
+			System.out.println("locations5: "+locations5);
+			System.out.println("locArr5: " +locArr5);
+			System.out.println("positions5 " +positions5);
+			System.out.println(locArr5.size());
 
 
-			int num = Math.min(old.size(), locArr.size()); //minimum ist 3
+			int num =  locArr2.size()+locArr.size()+locArr3.size()+locArr4.size()+locArr5.size(); //minimum ist 3
+
+			System.out.println(num);
+
 			ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
 			ArrayList[] test = new ArrayList[num];
 			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
@@ -281,10 +351,97 @@ public static void main (String[] args){
 				test[j] = new ArrayList();
 			} // here data gets split in cv Folds!
 
+			// number of all points (114)
 			for (int k=0; k<old.size(); k++) {
-				int fold = order.get(k); // number 0:9
+
+				int value = locationsArrList.get(k);
+				int index = locArr.indexOf(value);
+				int fold = positions.get(index); // number 0:9
+
+
 				test[fold].add(old.get(k)); // add ONE set to test
-				for (int j=0; j<num; j++)
+				for (int j=0; j<positions.size(); j++)
+					if (j!=fold) train[j].add(old.get(k));
+			}
+
+			/** for second spatial column **/
+			for (int k=0;k<positions2.size();k++){
+				positions2.set(k, positions2.get(k) +positions.size());
+			}
+			System.out.println(positions2);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList2.get(k);
+				//System.out.println(value);
+				int index = locArr2.indexOf(value);
+				//System.out.println(index);
+				int fold = positions2.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j= positions.size(); j<num; j++)
+					if (j!=fold) train[j].add(old.get(k));
+			}
+			/** for third spatial column **/
+			for (int k=0;k<positions3.size();k++){
+				positions3.set(k, positions3.get(k) +positions.size()+ positions2.size());
+			}
+			System.out.println(positions3);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList3.get(k);
+				//System.out.println(value);
+				int index = locArr3.indexOf(value);
+				//System.out.println(index);
+				int fold = positions3.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j= positions.size()+ positions2.size(); j<num; j++)
+					if (j!=fold) train[j].add(old.get(k));
+			}
+			/** for fourth spatial column **/
+			for (int k=0;k<positions4.size();k++){
+				positions4.set(k, positions4.get(k) +positions.size()+positions2.size()+ positions3.size());
+			}
+			System.out.println(positions4);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList4.get(k);
+				//System.out.println(value);
+				int index = locArr4.indexOf(value);
+				//System.out.println(index);
+				int fold = positions4.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j= positions.size()+ positions2.size()+ positions3.size(); j<num; j++)
+					if (j!=fold) train[j].add(old.get(k));
+			}
+/** for fourth spatial column **/
+			for (int k=0;k<positions5.size();k++){
+				positions5.set(k, positions5.get(k) +positions.size()+positions2.size()+ positions3.size()+ positions4.size());
+			}
+			System.out.println(positions5);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList5.get(k);
+				//System.out.println(value);
+				int index = locArr5.indexOf(value);
+				//System.out.println(index);
+				int fold = positions5.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j= positions.size()+ positions2.size()+ positions3.size()+ positions4.size(); j<num; j++)
 					if (j!=fold) train[j].add(old.get(k));
 			}
 
@@ -292,20 +449,220 @@ public static void main (String[] args){
 				sampleSet.speciesMap.put(names[i]+"_"+j, train[j]);
 				testss.speciesMap.put(names[i]+"_"+j, test[j]);
 			}
+	//	}
+
+	//	return testss;
+	//} // end doubled spatialcv method
+
+
+
+
+
+
+}
+
+
+
+
+	SampleSet splitForEscv() {  // returns sampleset of test data //n = number locations
+		String[] names = getNames();
+		SampleSet testss = new SampleSet();
+
+		for (int i=0; i<names.length; i++) { // ist 1
+			//int i=0;
+			/** Number locations for spatial folds 1**/
+			List<Sample> species = (List<Sample>) speciesMap.get(names[i]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions = new ArrayList<>();
+			for(int p =0; p<locArr.size(); p++){
+				positions.add(p);
+			}
+			//	System.out.println("locations: "+locations);
+			//	System.out.println("locArr: " +locArr);
+			//	System.out.println("positions " +positions);
+			//	System.out.println(locArr.size());
+			/** Number locations for spatial folds2 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations2 = species.stream().map(Sample::getSpatial2).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList2 = (ArrayList<Integer>) locations2;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset2 = new HashSet<Integer>(locations2);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr2 = new ArrayList<Integer>(locHset2);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions2 = new ArrayList<>();
+			for(int p =0; p<locArr2.size(); p++){
+				positions2.add(p);
+			}
+			/** Number locations for spatial folds3 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations3 = species.stream().map(Sample::getSpatial3).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList3 = (ArrayList<Integer>) locations3;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset3 = new HashSet<Integer>(locations3);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr3 = new ArrayList<Integer>(locHset3);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions3 = new ArrayList<>();
+			for(int p =0; p<locArr3.size(); p++){
+				positions3.add(p);
+			}
+			/** Number locations for spatial folds4 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations4 = species.stream().map(Sample::getSpatial4).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList4 = (ArrayList<Integer>) locations4;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset4 = new HashSet<Integer>(locations4);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr4 = new ArrayList<Integer>(locHset4);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions4 = new ArrayList<>();
+			for(int p =0; p<locArr4.size(); p++){
+				positions4.add(p);
+			}
+			/** Number locations for spatial folds5 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations5 = species.stream().map(Sample::getSpatial5).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList5 = (ArrayList<Integer>) locations5;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset5 = new HashSet<Integer>(locations5);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr5 = new ArrayList<Integer>(locHset5);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions5 = new ArrayList<>();
+			for(int p =0; p<locArr5.size(); p++){
+				positions5.add(p);
+			}
+
+
+			int num =  locArr2.size()+locArr.size()+locArr3.size()+locArr4.size()+locArr5.size(); //minimum ist 3
+
+
+			ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
+			ArrayList[] test = new ArrayList[num];
+			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
+				train[j] = new ArrayList();
+				test[j] = new ArrayList();
+			} // here data gets split in cv Folds!
+
+			// number of all points (114)
+			for (int k=0; k<old.size(); k++) {
+
+				int value = locationsArrList.get(k);
+				int index = locArr.indexOf(value);
+				int fold = positions.get(index); // number 0:9
+
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				for (int j=0; j<positions.size(); j++) {
+					if (j != fold) train[j].add(old.get(k));
+				}
+			}
+
+			/** for second spatial column **/
+			for (int k=0;k<positions2.size();k++){
+				positions2.set(k, positions2.get(k) +positions.size());
+			}
+			//System.out.println(positions2);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList2.get(k);
+				//System.out.println(value);
+				int index = locArr2.indexOf(value);
+				//System.out.println(index);
+				int fold = positions2.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+
+				for (int j=positions.size(); j<positions.size()+positions2.size(); j++){
+					if (j!=fold) train[j].add(old.get(k));
+			}
+			}
+			/** for third spatial column **/
+			for (int k=0;k<positions3.size();k++){
+				positions3.set(k, positions3.get(k) +positions.size()+ positions2.size());
+			}
+			//System.out.println(positions3);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList3.get(k);
+				//System.out.println(value);
+				int index = locArr3.indexOf(value);
+				//System.out.println(index);
+				int fold = positions3.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j=positions.size()+positions2.size(); j<positions.size()+positions2.size()+positions3.size(); j++) {
+					if (j != fold) train[j].add(old.get(k));
+				}
+			}
+			/** for fourth spatial column **/
+			for (int k=0;k<positions4.size();k++){
+				positions4.set(k, positions4.get(k) +positions.size()+positions2.size()+ positions3.size());
+			}
+			//System.out.println(positions4);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList4.get(k);
+				//System.out.println(value);
+				int index = locArr4.indexOf(value);
+				//System.out.println(index);
+				int fold = positions4.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j=positions.size()+positions2.size()+positions3.size(); j<positions.size()+positions2.size()+positions3.size()+positions4.size(); j++) {
+					if (j != fold) train[j].add(old.get(k));
+				}
+			}
+/** for fifth spatial column **/
+			for (int k=0;k<positions5.size();k++){
+				positions5.set(k, positions5.get(k) +positions.size()+positions2.size()+ positions3.size()+ positions4.size());
+			}
+			//System.out.println(positions5);
+			for (int k=0; k<old.size(); k++) {
+				//int k =0;
+				int value = locationsArrList5.get(k);
+				//System.out.println(value);
+				int index = locArr5.indexOf(value);
+				//System.out.println(index);
+				int fold = positions5.get(index); // number 0:9
+				//System.out.println(fold);
+
+				test[fold].add(old.get(k)); // add ONE set to test
+				/** nicht num sondern position.size()
+				 * num ist die anzahl aller folds!**/
+				for (int j=positions.size()+positions2.size()+positions3.size()+positions4.size(); j<positions.size()+positions2.size()+positions3.size()+positions4.size()+positions5.size(); j++) {
+					if (j != fold) train[j].add(old.get(k));
+				}
+			}
+
+			for (int j=0; j<num; j++) { //3
+				speciesMap.put(names[i]+"_"+j, train[j]);
+				testss.speciesMap.put(names[i]+"_"+j, test[j]);
+			}
 		}
-		//return testss;
-//	}
 
-*/
-
-
-	/** end split spatial cv**/
-
-
-
-
-
-//System.out.println(testss.speciesMap);
+		return testss;
+	} // end doubled spatialcv method
 
 
 
@@ -315,81 +672,9 @@ public static void main (String[] args){
 
 
 
-	//String[] result = (String[]) sampleSet.speciesMap.keySet().toArray(new String[0]);
-
-	//String[] result = (String[]) speciesMap.values().toArray(new String[0]);
-	//System.out.println(Arrays.toString(sampleSet.speciesMap.values().toArray()));
-	//ArrayList union = new ArrayList();
-	//String[] names = sampleSet.getNames();
-	//ArrayList a = (ArrayList) sampleSet.speciesMap.get(names[0]);
-	//System.out.println(a);
-	//for (int i=0; i<a.size(); i++) union.add(a.get(i));
-	//Sample[] sampletest =	(Sample[]) union.toArray(new Sample[0]);
-	//System.out.println(sampletest);
-
-	//System.out.println(Arrays.toString(names));
-	//System.out.println(sampleSet.header.toString());
-	//ArrayList old = (ArrayList) sampleSet.speciesMap.get("bradypus_variegatus");
-	//Sample s = (Sample) old.get(1);
-	//String t = ((Sample) old.get(1)).spatial;
-	//System.out.println(t);
 
 
-	//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get("bradypus_variegatus");
-	//List<String> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
-	//field1List.forEach(System.out::println);
-	//HashSet<String> locHset = new HashSet<String>(locations);
-	//System.out.println(locHset.size());
-
-	// Converting HashSet to ArrayList
-	//List<String> locArr = new ArrayList<String>(locHset);
-	//System.out.println(locArr.get(1));
-	//System.out.println(locArr.get(2));
-	//System.out.println(locArr.get(0));
-
-	/**convert HashSet back to ArrayList**/
-
-	//System.out.println(old);
-	//System.out.println(old.size());
-
-	//System.out.println(sampleSet.header);
-	//System.out.println(sampleSet.getSamples());
-
-	//System.out.println(s.getSpatial());
-	//System.out.println(sampleSet.header);
-	//String headers = sampleSet.header;
-	//System.out.println(headers.length());
-	//Sample s2 = (Sample) old.get(2);
-	//System.out.println(s.lat);
-	//System.out.println(s.col);
-	//System.out.println(s.name);
-	//System.out.println(s.row);
-	//System.out.println(s.point);
-	//System.out.println(s.featureMap);
-	//System.out.println(s.getSpatial());
-/*
-
-	for (int i = 0; i < old.size(); i++)
-
-	{
-
-		for (int j = 0; j < old.get(i).size(); j++) {
-			System.out.println("Value " + old.get(i)[j] + "\n");
-
-		}
-		//printWriter.print("Length " + data.get(j). + "\n");
-	}
-*/
-	//int num = old.size() < 10 ? old.size() : 10;
-	//System.out.println(num);
-	//int[] order = sampleSet.randomPermutation(old.size());
-	//System.out.println(Arrays.toString(order));
-	//int fold = order[0] % num;
-	//System.out.println(fold);
-//}
-
-
-        SampleSet splitForSpatialCV() {  // returns sampleset of test data //n = number locations
+	SampleSet splitForSpatialCV() {  // returns sampleset of test data //n = number locations
             String[] names = getNames();
 			SampleSet testss = new SampleSet();
 

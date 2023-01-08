@@ -49,8 +49,8 @@ public class Runner {
 	static SampleSet sampleSet;
 	static SampleSet testSampleSet = null;
 	static String[] projectPrefix = null;
-	Params params;
 	static CsvWriter results;
+	Params params;
 	GUI gui = null;
 	static String theSpecies;
 	NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
@@ -82,7 +82,7 @@ public class Runner {
 	}
 
 	int replicates(String species) {
-		if (speciesCount == null || !cv() || !spatialCV() || speciesCount.get(species) == null || speciesCount.get(species) > replicates())
+		if (speciesCount == null || !cv() || !spatialCV() || escCV() || speciesCount.get(species) == null || speciesCount.get(species) > replicates())
 			return replicates();
 		return speciesCount.get(species);
 	}
@@ -126,6 +126,10 @@ public class Runner {
 
 	boolean spatialCV() {
 		return params.getString("replicatetype").equals("spatial crossvalidate");
+	}
+
+	boolean escCV() {
+		return params.getString("replicatetype").equals("extended-spatial-crossvalidate");
 	}
 
 	boolean bootstrap() {
@@ -321,7 +325,7 @@ public class Runner {
 		Utils.disposeProgressMonitor();
 	}
 
-	double averageTestGain (double[] testGainOneModelArr){
+	double medianDecisionParameter (double[] testGainOneModelArr){
 		double sum = 0;
 		for(double d : testGainOneModelArr) {
 			sum += d;
@@ -331,6 +335,22 @@ public class Runner {
 	}
 
 
+	double averageTestGain (double[] testGainOneModelArr){
+		Arrays.sort(testGainOneModelArr);
+		double median;
+		if (testGainOneModelArr.length % 2 == 0)
+			median = ((double)testGainOneModelArr[testGainOneModelArr.length/2] + (double)testGainOneModelArr[testGainOneModelArr.length/2 - 1])/2;
+		else
+			median = (double) testGainOneModelArr[testGainOneModelArr.length/2];
+
+		return median;
+	}
+
+
+
+
+
+
 	/**
 	 * start maxent with spatial functionalities : regularization multiplier tuning, forward feature selection, forward variable selection and spatial validation
 	 */
@@ -338,7 +358,7 @@ public class Runner {
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
 			params.setSelections();
-		if (cv() || spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
+		if (cv() || escCV() || spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
 			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
 			params.setRandomtestpoints(0);
 		}
@@ -504,6 +524,90 @@ public class Runner {
 			params.setReplicates(num);
 		}
 
+		if(escCV()){
+			/** Number locations for spatial folds 1**/
+			String[] names = sampleSet.getNames();
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			//ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions = new ArrayList<>();
+			for(int p =0; p<locArr.size(); p++){
+				positions.add(p);
+			}
+			//	System.out.println("locations: "+locations);
+			//	System.out.println("locArr: " +locArr);
+			//	System.out.println("positions " +positions);
+			//	System.out.println(locArr.size());
+			/** Number locations for spatial folds2 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations2 = species.stream().map(Sample::getSpatial2).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList2 = (ArrayList<Integer>) locations2;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset2 = new HashSet<Integer>(locations2);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr2 = new ArrayList<Integer>(locHset2);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions2 = new ArrayList<>();
+			for(int p =0; p<locArr2.size(); p++){
+				positions2.add(p);
+			}
+			/** Number locations for spatial folds3 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations3 = species.stream().map(Sample::getSpatial3).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList3 = (ArrayList<Integer>) locations3;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset3 = new HashSet<Integer>(locations3);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr3 = new ArrayList<Integer>(locHset3);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions3 = new ArrayList<>();
+			for(int p =0; p<locArr3.size(); p++){
+				positions3.add(p);
+			}
+			/** Number locations for spatial folds4 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations4 = species.stream().map(Sample::getSpatial4).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList4 = (ArrayList<Integer>) locations4;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset4 = new HashSet<Integer>(locations4);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr4 = new ArrayList<Integer>(locHset4);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions4 = new ArrayList<>();
+			for(int p =0; p<locArr4.size(); p++){
+				positions4.add(p);
+			}
+			/** Number locations for spatial folds5 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations5 = species.stream().map(Sample::getSpatial5).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList5 = (ArrayList<Integer>) locations5;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset5 = new HashSet<Integer>(locations5);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr5 = new ArrayList<Integer>(locHset5);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions5 = new ArrayList<>();
+			for(int p =0; p<locArr5.size(); p++){
+				positions5.add(p);
+			}
+
+
+			int num =  locArr2.size()+locArr.size()+locArr3.size()+locArr4.size()+locArr5.size(); //minimum ist 3
+
+			// reset replicates
+			Utils.warn2("Resetting replicates  because extended spatial cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setReplicates(num);
+		}
+
 		if (replicates()>1 && !is("manualReplicates")) {
 
 			if (cv()) {
@@ -514,9 +618,12 @@ public class Runner {
 				for (String s: sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
 				testSampleSet = sampleSet.splitForSpatialCV();
+			} else if (escCV()){
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitForEscv();
 
-
-			} else
+		} else
 				sampleSet.replicate(replicates(), bootstrap());
 			ArrayList<String> torun = new ArrayList();
 			for (String s: sampleSet.getNames())
@@ -626,6 +733,166 @@ public class Runner {
 		}
 		if(threads()>1)parallelRunner.close();
 	}
+
+
+
+
+	public void prepFFME() {
+		Utils.applyStaticParams(params);
+		if (params.layers == null)
+			params.setSelections();
+		if (cv() || spatialCV() || escCV() && replicates() > 1 && params.getRandomtestpoints() != 0) {
+			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setRandomtestpoints(0);
+		}
+
+
+		if (subsample() && replicates() > 1 && params.getint("randomTestPoints") <= 0 && !is("manualReplicates")) {
+			popupError("Subsampled replicates require nonzero random test percentage", null);
+			return;
+		}
+
+		if ((subsample() || bootstrap()) && (params.isFfs() || params.isFvs() || params.isTuneRM())) {
+			popupError("Forward Feature Selection, Forward Variable Selection and beta multiplier tuning have to be evaluated with spatial crossvalidation or crossvalidation.", null);
+			return;
+		}
+
+		if (params.isJackknife() && params.isFvs()) {
+			popupError("Using Jackknife and Forward Variable Selection is not possible. Deselect one.", null);
+			return;
+		}
+
+		if (!spatialCV()) {
+			if (!cv() && replicates() > 1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
+				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
+				params.setValue("randomseed", true);
+			}
+		}
+
+		if (outDir() == null || outDir().trim().equals("")) {
+			popupError("An output directory is needed", null);
+			return;
+		}
+		if (is("allModels")) {
+			if (!(new File(outDir()).exists())) {
+				popupError("Output directory does not exist", null);
+				return;
+			}
+		}
+		if (!biasFile().equals("") && gridsFromFile()) {
+			popupError("Bias grid cannot be used with SWD-format background", null);
+			return;
+		}
+		if (is("perSpeciesResults") && replicates() > 1) {
+			Utils.warn2("PerSpeciesResults is not supported with replicates>1, setting perSpeciesResults to false", "unsettingPerSpeciesResults");
+			params.setValue("perSpeciesResults", false);
+		}
+		if (is("allModels")) {
+			// other parameter consistency checks?
+			if (is("allModels")) {
+				try {
+					Utils.openLog(outDir(), params.getString("logFile"));
+				} catch (IOException e) {
+					popupError("Error opening log file", e);
+					return;
+				}
+			}
+		}
+		Utils.startTimer();
+		Utils.echoln(new Date().toString());
+		Utils.echoln("MaxEnt version " + Utils.version);
+		Utils.interrupt = false;
+		if (threads() > 1)
+			parallelRunner = new ParallelRun(threads());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY - 1);
+		if (params.layers == null || params.layers.length == 0) {
+			popupError("No environmental layers selected", null);
+			return;
+		}
+		if (params.species.length == 0) {
+			popupError("No species selected", null);
+			return;
+		}
+		if (Utils.progressMonitor != null)
+			Utils.progressMonitor.setMaximum(100);
+
+		Utils.generator = new Random(!params.isRandomseed() ? 0 : System.currentTimeMillis());
+		gs = initializeGrids();
+		if (Utils.interrupt || gs == null) return;
+
+		SampleSet2 sampleSet2 = gs.train;
+
+		if (projectionLayers().length() > 0) {
+			String[] dirs = projectionLayers().trim().split(",");
+			projectPrefix = new String[dirs.length];
+			for (int i = 0; i < projectPrefix.length; i++)
+				projectPrefix[i] = (new File(dirs[i].trim())).getPath();
+		}
+
+		if (!testSamplesFile().equals("")) {
+			testSampleSet = gs.test;
+		}
+
+		if (Utils.interrupt) return;
+		if (is("removeDuplicates"))
+			sampleSet2.removeDuplicates(gridsFromFile() ? null : gs.getDimension());
+
+		Feature[] baseFeatures;
+		baseFeatures = (gs == null) ? null : gs.toFeatures();
+		coords = gs.getDimension().coords;
+		if (baseFeatures == null || baseFeatures.length == 0 || baseFeatures[0].n == 0) {
+			popupError("No background points with data in all layers", null);
+			return;
+		}
+
+
+		/**
+		 *
+		 * create sampleset with background points for AICC
+		 *
+		 * **/
+
+		//SampleSet backgroundPoints = null;
+		ArrayList<Sample> bgpArrayList = new ArrayList<>();
+
+		for (int no = 0; no < baseFeatures[0].n; no++) {
+			HashMap featureMap = new HashMap();
+			for (int i = 0; i < baseFeatures.length; i++) {
+				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
+			}
+			Sample bgp = new Sample(no, featureMap);
+			bgpArrayList.add(no, bgp);
+		}
+
+
+		/**
+		 *
+		 * end create sampleset with background points for AICC
+		 *
+		 * **/
+
+		// note.
+		boolean addSamplesToFeatures = samplesAddedToFeatures =
+				is("addSamplesToBackground") &&
+						(sampleSet2.samplesHaveData || (gs instanceof Extractor));
+
+
+		if (addSamplesToFeatures)
+			Utils.echoln("Adding samples to background in feature space");
+
+		Feature[] features = null;
+
+		if (!addSamplesToFeatures) {
+			features = makeFeatures(baseFeatures);
+			if (Utils.interrupt) return;
+		}
+
+		sampleSet = sampleSet2;
+		speciesCount = new HashMap();
+	}
+
+
+
 
 	public void startNew(ArrayList<String> bestVariables,ArrayList<String> bestFeatures, ArrayList<Double> testGainOneModel,
 						 Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
@@ -1147,6 +1414,91 @@ public class Runner {
 			params.setReplicates(num);
 		}
 
+		if(escCV()){
+			/** Number locations for spatial folds 1**/
+			String[] names = sampleSet.getNames();
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			//ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions = new ArrayList<>();
+			for(int p =0; p<locArr.size(); p++){
+				positions.add(p);
+			}
+			//	System.out.println("locations: "+locations);
+			//	System.out.println("locArr: " +locArr);
+			//	System.out.println("positions " +positions);
+			//	System.out.println(locArr.size());
+			/** Number locations for spatial folds2 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations2 = species.stream().map(Sample::getSpatial2).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList2 = (ArrayList<Integer>) locations2;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset2 = new HashSet<Integer>(locations2);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr2 = new ArrayList<Integer>(locHset2);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions2 = new ArrayList<>();
+			for(int p =0; p<locArr2.size(); p++){
+				positions2.add(p);
+			}
+			/** Number locations for spatial folds3 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations3 = species.stream().map(Sample::getSpatial3).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList3 = (ArrayList<Integer>) locations3;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset3 = new HashSet<Integer>(locations3);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr3 = new ArrayList<Integer>(locHset3);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions3 = new ArrayList<>();
+			for(int p =0; p<locArr3.size(); p++){
+				positions3.add(p);
+			}
+			/** Number locations for spatial folds4 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations4 = species.stream().map(Sample::getSpatial4).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList4 = (ArrayList<Integer>) locations4;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset4 = new HashSet<Integer>(locations4);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr4 = new ArrayList<Integer>(locHset4);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions4 = new ArrayList<>();
+			for(int p =0; p<locArr4.size(); p++){
+				positions4.add(p);
+			}
+			/** Number locations for spatial folds5 **/
+			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations5 = species.stream().map(Sample::getSpatial5).collect(Collectors.toList());
+			//System.out.println("locations2: "+ locations2);
+			ArrayList<Integer> locationsArrList5 = (ArrayList<Integer>) locations5;
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset5 = new HashSet<Integer>(locations5);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr5 = new ArrayList<Integer>(locHset5);
+			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+			ArrayList<Integer> positions5 = new ArrayList<>();
+			for(int p =0; p<locArr5.size(); p++){
+				positions5.add(p);
+			}
+
+
+			int num =  locArr2.size()+locArr.size()+locArr3.size()+locations4.size()+locArr5.size(); //minimum ist 3
+
+			// reset replicates
+			Utils.warn2("Resetting replicates  because extended spatial cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setReplicates(num);
+		}
+
+
 		if (replicates()>1 && !is("manualReplicates")) {
 
 			if (cv()) {
@@ -1157,7 +1509,10 @@ public class Runner {
 				for (String s: sampleSet.getNames())
 					speciesCount.put(s, sampleSet.getSamples(s).length);
 				testSampleSet = sampleSet.splitForSpatialCV();
-
+			} else if (escCV()){
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitForEscv();
 
 			} else
 				sampleSet.replicate(replicates(), bootstrap());
@@ -1533,7 +1888,7 @@ public class Runner {
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
 			params.setSelections();
-		if (cv() || spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
+		if (cv() || escCV() || spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
 			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
 			params.setRandomtestpoints(0);
 		}
@@ -2157,6 +2512,8 @@ public class Runner {
 			htmlout.print("-fold cross-validation");
 		else if (spatialCV())
 			htmlout.print("-fold spatial cross-validation");
+		else if (escCV())
+			htmlout.print("-fold extended spatial cross-validation");
 		else if (bootstrap())
 			htmlout.print(" bootstrap models");
 		else htmlout.print(" split-sample models");
@@ -4410,6 +4767,7 @@ public class Runner {
 
 
 			Sample[] sss = sampleSet.getSamples(theSpeciesPar);
+
 			if (!params.allowpartialdata())
 				sss = withAllData(baseFeatures, sss);
 			final Sample[] ss = sss;

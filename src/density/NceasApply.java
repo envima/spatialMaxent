@@ -49,7 +49,7 @@ public class NceasApply {
 			map.put(headers[j], val);
 			map.put(headers[j]+"a", val);
 		    }
-		    samples.add(new Sample(0, 0, 0, 0, 0, "", "", map));
+		    //samples.add(new Sample(0, 0, 0, 0, 0, "", "", map));
 		}
 	    });
 	return (Sample[]) samples.toArray(new Sample[0]);

@@ -145,6 +145,10 @@ public class SampleSet2 extends SampleSet {
 		    double x=0.0, y=0.0;
 		    int r=-1, c=-1;
 			int spatialCol = Integer.parseInt(fields[SampleSet.spatialIndex]);
+			int spatialCol2 = Integer.parseInt(fields[SampleSet.spatialIndex+1]);
+			int spatialCol3 = Integer.parseInt(fields[SampleSet.spatialIndex+2]);
+			int spatialCol4 = Integer.parseInt(fields[SampleSet.spatialIndex+3]);
+			int spatialCol5 = Integer.parseInt(fields[SampleSet.spatialIndex+4]);
 		    try {
 			x = Double.parseDouble(fields[SampleSet.xIndex]);
 			y = Double.parseDouble(fields[SampleSet.yIndex]);
@@ -163,7 +167,7 @@ public class SampleSet2 extends SampleSet {
 			x = 0.0;
 			y = 0.0;
 		    }
-		    Sample s = new Sample(-1, r, c, y, x, spid, spatialCol);
+		    Sample s = new Sample(-1, r, c, y, x, spid, spatialCol, spatialCol2,spatialCol3,spatialCol4,spatialCol5);
 		    
 		    int goodvals = 0;
 		    double[] data = new double[n];
