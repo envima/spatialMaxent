@@ -132,6 +132,10 @@ public class Runner {
 		return params.getString("replicatetype").equals("extended-spatial-crossvalidate");
 	}
 
+	boolean ffescCV() {
+		return params.getString("replicatetype").equals("forward-fold-extended-spatial-crossvalidate");
+	}
+
 	boolean bootstrap() {
 		return params.getString("replicatetype").equals("bootstrap");
 	}
@@ -358,7 +362,7 @@ public class Runner {
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
 			params.setSelections();
-		if (cv() || escCV() || spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
+		if (cv() || escCV() || ffescCV()|| spatialCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
 			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
 			params.setRandomtestpoints(0);
 		}
@@ -524,7 +528,7 @@ public class Runner {
 			params.setReplicates(num);
 		}
 
-		if(escCV()){
+		if(escCV() ||ffescCV()){
 			/** Number locations for spatial folds 1**/
 			String[] names = sampleSet.getNames();
 			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
@@ -600,12 +604,35 @@ public class Runner {
 				positions5.add(p);
 			}
 
+if(escCV()) {
+	int num = locArr2.size() + locArr.size() + locArr3.size() + locArr4.size() + locArr5.size(); //minimum ist 3
 
-			int num =  locArr2.size()+locArr.size()+locArr3.size()+locArr4.size()+locArr5.size(); //minimum ist 3
+	// reset replicates
+	Utils.warn2("Resetting replicates  because extended spatial cross-validation in use", "skippingHoldoutBecauseCV");
+	params.setReplicates(num);
+}
 
-			// reset replicates
-			Utils.warn2("Resetting replicates  because extended spatial cross-validation in use", "skippingHoldoutBecauseCV");
-			params.setReplicates(num);
+if(ffescCV()){
+	Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(locArr), 2);
+	Integer[][] allComb = new Integer[comb.size()][2];
+	Set<Set<Integer>> comb2 = Sets.combinations(Sets.newHashSet(locArr2), 2);
+	Integer[][] allComb2 = new Integer[comb2.size()][2];
+	Set<Set<Integer>> comb3 = Sets.combinations(Sets.newHashSet(locArr3), 2);
+	Integer[][] allComb3 = new Integer[comb3.size()][2];
+	Set<Set<Integer>> comb4 = Sets.combinations(Sets.newHashSet(locArr4), 2);
+	Integer[][] allComb4 = new Integer[comb4.size()][2];
+	Set<Set<Integer>> comb5 = Sets.combinations(Sets.newHashSet(locArr5), 2);
+	Integer[][] allComb5 = new Integer[comb5.size()][2];
+
+	int num = comb.size()+ comb2.size()+ comb3.size()+ comb4.size()+comb5.size(); //minimum ist 3
+
+	// reset replicates
+	Utils.warn2("Resetting replicates to number of distinct locations (replicates: " + num + ") because forward fold extended spatial cross-validation in use", "skippingHoldoutBecauseCV");
+	params.setReplicates(num);
+}
+
+
+
 		}
 
 		if (replicates()>1 && !is("manualReplicates")) {

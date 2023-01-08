@@ -25,6 +25,8 @@ package density;
 
 // works with a collection of samples.
 
+import com.google.common.collect.Sets;
+
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -234,12 +236,15 @@ public static void main (String[] args){
 
 
 
-//	SampleSet splitForEscv() {  // returns sampleset of test data //n = number locations
+
+
+
+	//SampleSet splitForFfescv() {  // returns sampleset of test data //n = number locations
 		String[] names = sampleSet.getNames();
 		SampleSet testss = new SampleSet();
 
 		//for (int i=0; i<names.length; i++) { // ist 1
-		int i=0;
+			int i=0;
 			/** Number locations for spatial folds 1**/
 			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
 			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
@@ -249,15 +254,34 @@ public static void main (String[] args){
 			// Converting HashSet to ArrayList
 			List<Integer> locArr = new ArrayList<Integer>(locHset);
 			ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
-			ArrayList<Integer> positions = new ArrayList<>();
-			for(int p =0; p<locArr.size(); p++){
-				positions.add(p);
+
+
+			/** 1. all combinations of fold in locArr**/
+
+			Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(locArr), 2);
+			// create empty array
+			Integer[][] allComb = new Integer[comb.size()][2];
+
+			//add values from Set<Set<Integer>> to Array
+			for (int c = 0; c < comb.size(); c++) {
+				//get one set
+				Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(c);
+				// get each element of set
+				allComb[c][0] = arr.stream().collect(Collectors.toList()).get(0);
+				allComb[c][1] = arr.stream().collect(Collectors.toList()).get(1);
+			} // END combinations for FFME
+
+			ArrayList<Integer> positionsFFSCV = new ArrayList<>();
+			for(int p =0; p< allComb.length; p++){
+				positionsFFSCV.add(p);
 			}
-			//	System.out.println("locations: "+locations);
+
+	//	System.out.println("locations: "+locations);
 			//	System.out.println("locArr: " +locArr);
 			//	System.out.println("positions " +positions);
 			//	System.out.println(locArr.size());
 			/** Number locations for spatial folds2 **/
+
 			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
 			List<Integer> locations2 = species.stream().map(Sample::getSpatial2).collect(Collectors.toList());
 			//System.out.println("locations2: "+ locations2);
@@ -267,10 +291,32 @@ public static void main (String[] args){
 			// Converting HashSet to ArrayList
 			List<Integer> locArr2 = new ArrayList<Integer>(locHset2);
 			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
-			ArrayList<Integer> positions2 = new ArrayList<>();
-			for(int p =0; p<locArr2.size(); p++){
-				positions2.add(p);
+	/** 2. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb2 = Sets.combinations(Sets.newHashSet(locArr2), 2);
+	// create empty array
+	Integer[][] allComb2 = new Integer[comb2.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb2.size(); c++) {
+		//get one set
+		Set<Integer> arr2 = comb2.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb2[c][0] = arr2.stream().collect(Collectors.toList()).get(0);
+		allComb2[c][1] = arr2.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV2 = new ArrayList<>();
+	for(int p =0; p< allComb2.length; p++){
+		positionsFFSCV2.add(p);
+	}
+
+	/** for second spatial column **/
+
+			for (int k=0;k<positionsFFSCV2.size();k++){
+				positionsFFSCV2.set(k, positionsFFSCV2.get(k) +positionsFFSCV.size());
 			}
+
 			/** Number locations for spatial folds3 **/
 			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
 			List<Integer> locations3 = species.stream().map(Sample::getSpatial3).collect(Collectors.toList());
@@ -281,10 +327,32 @@ public static void main (String[] args){
 			// Converting HashSet to ArrayList
 			List<Integer> locArr3 = new ArrayList<Integer>(locHset3);
 			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
-			ArrayList<Integer> positions3 = new ArrayList<>();
-			for(int p =0; p<locArr3.size(); p++){
-				positions3.add(p);
-			}
+	/** 3. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb3 = Sets.combinations(Sets.newHashSet(locArr3), 2);
+	// create empty array
+	Integer[][] allComb3 = new Integer[comb3.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb3.size(); c++) {
+		//get one set
+		Set<Integer> arr3 = comb3.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb3[c][0] = arr3.stream().collect(Collectors.toList()).get(0);
+		allComb3[c][1] = arr3.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV3 = new ArrayList<>();
+	for(int p =0; p< allComb3.length; p++){
+		positionsFFSCV3.add(p);
+	}
+
+
+	for (int k=0;k<positionsFFSCV3.size();k++){
+		positionsFFSCV3.set(k, positionsFFSCV3.get(k) +positionsFFSCV.size()+ positionsFFSCV2.size());
+	}
+	//System.out.println(positions3);
+
 			/** Number locations for spatial folds4 **/
 			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
 			List<Integer> locations4 = species.stream().map(Sample::getSpatial4).collect(Collectors.toList());
@@ -295,10 +363,29 @@ public static void main (String[] args){
 			// Converting HashSet to ArrayList
 			List<Integer> locArr4 = new ArrayList<Integer>(locHset4);
 			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
-			ArrayList<Integer> positions4 = new ArrayList<>();
-			for(int p =0; p<locArr4.size(); p++){
-				positions4.add(p);
-			}
+	/** 4. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb4 = Sets.combinations(Sets.newHashSet(locArr4), 2);
+	// create empty array
+	Integer[][] allComb4 = new Integer[comb4.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb4.size(); c++) {
+		//get one set
+		Set<Integer> arr4 = comb4.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb4[c][0] = arr4.stream().collect(Collectors.toList()).get(0);
+		allComb4[c][1] = arr4.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV4 = new ArrayList<>();
+	for(int p =0; p< allComb4.length; p++){
+		positionsFFSCV4.add(p);
+	}
+
+	for (int k=0;k<positionsFFSCV4.size();k++){
+		positionsFFSCV4.set(k, positionsFFSCV4.get(k) +positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size());
+	}
 			/** Number locations for spatial folds5 **/
 			//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
 			List<Integer> locations5 = species.stream().map(Sample::getSpatial5).collect(Collectors.toList());
@@ -309,40 +396,59 @@ public static void main (String[] args){
 			// Converting HashSet to ArrayList
 			List<Integer> locArr5 = new ArrayList<Integer>(locHset5);
 			//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
-			ArrayList<Integer> positions5 = new ArrayList<>();
-			for(int p =0; p<locArr5.size(); p++){
-				positions5.add(p);
-			}
+	/** 5. all combinations of fold in locArr**/
 
-	System.out.println("locations: "+locations);
-	System.out.println("locArr: " +locArr);
-	System.out.println("positions " +positions);
-	System.out.println(locArr.size());
+	Set<Set<Integer>> comb5 = Sets.combinations(Sets.newHashSet(locArr5), 2);
+	// create empty array
+	Integer[][] allComb5 = new Integer[comb5.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb5.size(); c++) {
+		//get one set
+		Set<Integer> arr5 = comb5.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb5[c][0] = arr5.stream().collect(Collectors.toList()).get(0);
+		allComb5[c][1] = arr5.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV5 = new ArrayList<>();
+	for(int p =0; p< allComb5.length; p++){
+		positionsFFSCV5.add(p);
+	}
+	for (int k=0;k<positionsFFSCV5.size();k++){
+		positionsFFSCV5.set(k, positionsFFSCV5.get(k) +positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size()+ positionsFFSCV4.size());
+	}
+
+
+	int num = positionsFFSCV.size()+positionsFFSCV2.size()+positionsFFSCV3.size()+positionsFFSCV4.size()+positionsFFSCV5.size(); //minimum ist 3
+System.out.println(num);
+			System.out.println("locations: "+locations);
+			System.out.println("locArr: " +locArr);
+			System.out.println("positions " +positionsFFSCV);
+			System.out.println(locArr.size());
 
 			System.out.println("locations2: "+locations2);
 			System.out.println("locArr2: " +locArr2);
-			System.out.println("positions2 " +positions2);
+			System.out.println("positions2 " +positionsFFSCV2);
 			System.out.println(locArr2.size());
 
 			System.out.println("locations3: "+locations3);
 			System.out.println("locArr3: " +locArr3);
-			System.out.println("positions3 " +positions3);
+			System.out.println("positions3 " +positionsFFSCV3);
 			System.out.println(locArr3.size());
 
 			System.out.println("locations4: "+locations4);
 			System.out.println("locArr4: " +locArr);
-			System.out.println("positions4 " +positions4);
+			System.out.println("positions4 " +positionsFFSCV4);
 			System.out.println(locArr4.size());
 
 			System.out.println("locations5: "+locations5);
 			System.out.println("locArr5: " +locArr5);
-			System.out.println("positions5 " +positions5);
+			System.out.println("positions5 " +positionsFFSCV5);
 			System.out.println(locArr5.size());
 
 
-			int num =  locArr2.size()+locArr.size()+locArr3.size()+locArr4.size()+locArr5.size(); //minimum ist 3
 
-			System.out.println(num);
 
 			ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
 			ArrayList[] test = new ArrayList[num];
@@ -351,107 +457,230 @@ public static void main (String[] args){
 				test[j] = new ArrayList();
 			} // here data gets split in cv Folds!
 
-			// number of all points (114)
-			for (int k=0; k<old.size(); k++) {
 
-				int value = locationsArrList.get(k);
-				int index = locArr.indexOf(value);
-				int fold = positions.get(index); // number 0:9
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** FIRST SPATIAL COLUMN FFSCV**/
 
 
-				test[fold].add(old.get(k)); // add ONE set to test
-				for (int j=0; j<positions.size(); j++)
-					if (j!=fold) train[j].add(old.get(k));
-			}
+	for (int fold = 0; fold < allComb.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations.size(); f++) {
+			int cvFold = locations.get(f);
+			int testFold1 = allComb[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
 
-			/** for second spatial column **/
-			for (int k=0;k<positions2.size();k++){
-				positions2.set(k, positions2.get(k) +positions.size());
-			}
-			System.out.println(positions2);
-			for (int k=0; k<old.size(); k++) {
-				//int k =0;
-				int value = locationsArrList2.get(k);
-				//System.out.println(value);
-				int index = locArr2.indexOf(value);
-				//System.out.println(index);
-				int fold = positions2.get(index); // number 0:9
-				//System.out.println(fold);
 
-				test[fold].add(old.get(k)); // add ONE set to test
-				/** nicht num sondern position.size()
-				 * num ist die anzahl aller folds!**/
-				for (int j= positions.size(); j<num; j++)
-					if (j!=fold) train[j].add(old.get(k));
-			}
-			/** for third spatial column **/
-			for (int k=0;k<positions3.size();k++){
-				positions3.set(k, positions3.get(k) +positions.size()+ positions2.size());
-			}
-			System.out.println(positions3);
-			for (int k=0; k<old.size(); k++) {
-				//int k =0;
-				int value = locationsArrList3.get(k);
-				//System.out.println(value);
-				int index = locArr3.indexOf(value);
-				//System.out.println(index);
-				int fold = positions3.get(index); // number 0:9
-				//System.out.println(fold);
 
-				test[fold].add(old.get(k)); // add ONE set to test
-				/** nicht num sondern position.size()
-				 * num ist die anzahl aller folds!**/
-				for (int j= positions.size()+ positions2.size(); j<num; j++)
-					if (j!=fold) train[j].add(old.get(k));
-			}
-			/** for fourth spatial column **/
-			for (int k=0;k<positions4.size();k++){
-				positions4.set(k, positions4.get(k) +positions.size()+positions2.size()+ positions3.size());
-			}
-			System.out.println(positions4);
-			for (int k=0; k<old.size(); k++) {
-				//int k =0;
-				int value = locationsArrList4.get(k);
-				//System.out.println(value);
-				int index = locArr4.indexOf(value);
-				//System.out.println(index);
-				int fold = positions4.get(index); // number 0:9
-				//System.out.println(fold);
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		//int fold2= positionsFFSCV.size()+fold;
+		int fold2= fold;
+		//		System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
 
-				test[fold].add(old.get(k)); // add ONE set to test
-				/** nicht num sondern position.size()
-				 * num ist die anzahl aller folds!**/
-				for (int j= positions.size()+ positions2.size()+ positions3.size(); j<num; j++)
-					if (j!=fold) train[j].add(old.get(k));
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
 			}
-/** for fourth spatial column **/
-			for (int k=0;k<positions5.size();k++){
-				positions5.set(k, positions5.get(k) +positions.size()+positions2.size()+ positions3.size()+ positions4.size());
-			}
-			System.out.println(positions5);
-			for (int k=0; k<old.size(); k++) {
-				//int k =0;
-				int value = locationsArrList5.get(k);
-				//System.out.println(value);
-				int index = locArr5.indexOf(value);
-				//System.out.println(index);
-				int fold = positions5.get(index); // number 0:9
-				//System.out.println(fold);
+		}
 
-				test[fold].add(old.get(k)); // add ONE set to test
-				/** nicht num sondern position.size()
-				 * num ist die anzahl aller folds!**/
-				for (int j= positions.size()+ positions2.size()+ positions3.size()+ positions4.size(); j<num; j++)
-					if (j!=fold) train[j].add(old.get(k));
-			}
 
-			for (int j=0; j<num; j++) { //3
+
+
+	}// end loop over folds of ffme
+
+
+		// ende zuordnung ein fold in ffme
+
+
+
+
+/** SECOND SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb2.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations2.size(); f++) {
+			int cvFold = locations2.get(f);
+			int testFold1 = allComb2[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb2[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+
+
+
+
+	}// end loop over folds of ffme
+
+
+
+
+/** THIRD SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb3.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations3.size(); f++) {
+			int cvFold = locations3.get(f);
+			int testFold1 = allComb3[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb3[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+positionsFFSCV2.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+	}// end loop over folds of ffme
+
+
+	/** FOURTH SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb4.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations4.size(); f++) {
+			int cvFold = locations4.get(f);
+			int testFold1 = allComb4[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb4[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+	}// end loop over folds of ffme
+
+
+
+/** fifth SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb5.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations5.size(); f++) {
+			int cvFold = locations5.get(f);
+			int testFold1 = allComb5[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb5[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size()+ positionsFFSCV4.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+	}// end loop over folds of ffme
+
+
+
+
+
+
+
+
+
+
+
+	for (int j=0; j<num; j++) { //3
 				sampleSet.speciesMap.put(names[i]+"_"+j, train[j]);
 				testss.speciesMap.put(names[i]+"_"+j, test[j]);
 			}
 	//	}
 
-	//	return testss;
+		//return testss;
 	//} // end doubled spatialcv method
 
 
@@ -460,6 +689,439 @@ public static void main (String[] args){
 
 
 }
+
+
+
+
+
+
+	SampleSet splitForFfescv() {  // returns sampleset of test data //n = number locations
+	String[] names = getNames();
+	SampleSet testss = new SampleSet();
+
+	for (int i=0; i<names.length; i++) { // ist 1
+	//int i=0;
+	/** Number locations for spatial folds 1**/
+	List<Sample> species = (List<Sample>) speciesMap.get(names[i]);
+	List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+	ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
+	//field1List.forEach(System.out::println);
+	HashSet<Integer> locHset = new HashSet<Integer>(locations);
+	// Converting HashSet to ArrayList
+	List<Integer> locArr = new ArrayList<Integer>(locHset);
+	ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+
+
+	/** 1. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(locArr), 2);
+	// create empty array
+	Integer[][] allComb = new Integer[comb.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+			for (int c = 0; c < comb.size(); c++) {
+		//get one set
+		Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb[c][0] = arr.stream().collect(Collectors.toList()).get(0);
+		allComb[c][1] = arr.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV = new ArrayList<>();
+			for(int p =0; p< allComb.length; p++){
+		positionsFFSCV.add(p);
+	}
+
+	//	System.out.println("locations: "+locations);
+	//	System.out.println("locArr: " +locArr);
+	//	System.out.println("positions " +positions);
+	//	System.out.println(locArr.size());
+	/** Number locations for spatial folds2 **/
+
+	//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+	List<Integer> locations2 = species.stream().map(Sample::getSpatial2).collect(Collectors.toList());
+	//System.out.println("locations2: "+ locations2);
+	ArrayList<Integer> locationsArrList2 = (ArrayList<Integer>) locations2;
+	//field1List.forEach(System.out::println);
+	HashSet<Integer> locHset2 = new HashSet<Integer>(locations2);
+	// Converting HashSet to ArrayList
+	List<Integer> locArr2 = new ArrayList<Integer>(locHset2);
+	//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+	/** 2. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb2 = Sets.combinations(Sets.newHashSet(locArr2), 2);
+	// create empty array
+	Integer[][] allComb2 = new Integer[comb2.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb2.size(); c++) {
+		//get one set
+		Set<Integer> arr2 = comb2.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb2[c][0] = arr2.stream().collect(Collectors.toList()).get(0);
+		allComb2[c][1] = arr2.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV2 = new ArrayList<>();
+	for(int p =0; p< allComb2.length; p++){
+		positionsFFSCV2.add(p);
+	}
+
+	/** for second spatial column **/
+
+			for (int k=0;k<positionsFFSCV2.size();k++){
+		positionsFFSCV2.set(k, positionsFFSCV2.get(k) +positionsFFSCV.size());
+	}
+
+	/** Number locations for spatial folds3 **/
+	//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+	List<Integer> locations3 = species.stream().map(Sample::getSpatial3).collect(Collectors.toList());
+	//System.out.println("locations2: "+ locations2);
+	ArrayList<Integer> locationsArrList3 = (ArrayList<Integer>) locations3;
+	//field1List.forEach(System.out::println);
+	HashSet<Integer> locHset3 = new HashSet<Integer>(locations3);
+	// Converting HashSet to ArrayList
+	List<Integer> locArr3 = new ArrayList<Integer>(locHset3);
+	//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+	/** 3. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb3 = Sets.combinations(Sets.newHashSet(locArr3), 2);
+	// create empty array
+	Integer[][] allComb3 = new Integer[comb3.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb3.size(); c++) {
+		//get one set
+		Set<Integer> arr3 = comb3.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb3[c][0] = arr3.stream().collect(Collectors.toList()).get(0);
+		allComb3[c][1] = arr3.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV3 = new ArrayList<>();
+	for(int p =0; p< allComb3.length; p++){
+		positionsFFSCV3.add(p);
+	}
+
+
+	for (int k=0;k<positionsFFSCV3.size();k++){
+		positionsFFSCV3.set(k, positionsFFSCV3.get(k) +positionsFFSCV.size()+ positionsFFSCV2.size());
+	}
+	//System.out.println(positions3);
+
+	/** Number locations for spatial folds4 **/
+	//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+	List<Integer> locations4 = species.stream().map(Sample::getSpatial4).collect(Collectors.toList());
+	//System.out.println("locations2: "+ locations2);
+	ArrayList<Integer> locationsArrList4 = (ArrayList<Integer>) locations4;
+	//field1List.forEach(System.out::println);
+	HashSet<Integer> locHset4 = new HashSet<Integer>(locations4);
+	// Converting HashSet to ArrayList
+	List<Integer> locArr4 = new ArrayList<Integer>(locHset4);
+	//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+	/** 4. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb4 = Sets.combinations(Sets.newHashSet(locArr4), 2);
+	// create empty array
+	Integer[][] allComb4 = new Integer[comb4.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb4.size(); c++) {
+		//get one set
+		Set<Integer> arr4 = comb4.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb4[c][0] = arr4.stream().collect(Collectors.toList()).get(0);
+		allComb4[c][1] = arr4.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV4 = new ArrayList<>();
+	for(int p =0; p< allComb4.length; p++){
+		positionsFFSCV4.add(p);
+	}
+
+	for (int k=0;k<positionsFFSCV4.size();k++){
+		positionsFFSCV4.set(k, positionsFFSCV4.get(k) +positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size());
+	}
+	/** Number locations for spatial folds5 **/
+	//List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+	List<Integer> locations5 = species.stream().map(Sample::getSpatial5).collect(Collectors.toList());
+	//System.out.println("locations2: "+ locations2);
+	ArrayList<Integer> locationsArrList5 = (ArrayList<Integer>) locations5;
+	//field1List.forEach(System.out::println);
+	HashSet<Integer> locHset5 = new HashSet<Integer>(locations5);
+	// Converting HashSet to ArrayList
+	List<Integer> locArr5 = new ArrayList<Integer>(locHset5);
+	//ArrayList old = (ArrayList) sampleSet.speciesMap.get(names[i]); //org hashmap with values
+	/** 5. all combinations of fold in locArr**/
+
+	Set<Set<Integer>> comb5 = Sets.combinations(Sets.newHashSet(locArr5), 2);
+	// create empty array
+	Integer[][] allComb5 = new Integer[comb5.size()][2];
+
+	//add values from Set<Set<Integer>> to Array
+	for (int c = 0; c < comb5.size(); c++) {
+		//get one set
+		Set<Integer> arr5 = comb5.stream().collect(Collectors.toList()).get(c);
+		// get each element of set
+		allComb5[c][0] = arr5.stream().collect(Collectors.toList()).get(0);
+		allComb5[c][1] = arr5.stream().collect(Collectors.toList()).get(1);
+	} // END combinations for FFME
+
+	ArrayList<Integer> positionsFFSCV5 = new ArrayList<>();
+	for(int p =0; p< allComb5.length; p++){
+		positionsFFSCV5.add(p);
+	}
+	for (int k=0;k<positionsFFSCV5.size();k++){
+		positionsFFSCV5.set(k, positionsFFSCV5.get(k) +positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size()+ positionsFFSCV4.size());
+	}
+
+
+	int num = positionsFFSCV.size()+positionsFFSCV2.size()+positionsFFSCV3.size()+positionsFFSCV4.size()+positionsFFSCV5.size(); //minimum ist 3
+System.out.println(num);
+
+
+
+	ArrayList[] train = new ArrayList[num]; // arraylist mit je 3 elementen
+	ArrayList[] test = new ArrayList[num];
+			for (int j=0; j<num; j++) { // darin wird je eine neue arraylist erstellt
+		train[j] = new ArrayList();
+		test[j] = new ArrayList();
+	} // here data gets split in cv Folds!
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** FIRST SPATIAL COLUMN FFSCV**/
+
+
+	for (int fold = 0; fold < allComb.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations.size(); f++) {
+			int cvFold = locations.get(f);
+			int testFold1 = allComb[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		//int fold2= positionsFFSCV.size()+fold;
+		int fold2= fold;
+		//		System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+
+
+
+
+	}// end loop over folds of ffme
+
+
+	// ende zuordnung ein fold in ffme
+
+
+
+
+/** SECOND SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb2.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations2.size(); f++) {
+			int cvFold = locations2.get(f);
+			int testFold1 = allComb2[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb2[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+
+
+
+
+	}// end loop over folds of ffme
+
+
+
+
+/** THIRD SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb3.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations3.size(); f++) {
+			int cvFold = locations3.get(f);
+			int testFold1 = allComb3[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb3[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+positionsFFSCV2.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+	}// end loop over folds of ffme
+
+
+	/** FOURTH SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb4.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations4.size(); f++) {
+			int cvFold = locations4.get(f);
+			int testFold1 = allComb4[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb4[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+	}// end loop over folds of ffme
+
+
+
+/** fifth SPATIAL COLUMN FFSCV**/
+
+
+
+	for (int fold = 0; fold < allComb5.length; fold++) {
+		ArrayList<Integer> valPosition = new ArrayList<>();
+		ArrayList<Integer> trainPosition = new ArrayList<>();
+		for (int f = 0; f < locations5.size(); f++) {
+			int cvFold = locations5.get(f);
+			int testFold1 = allComb5[fold][0];// index 0 needs to be chnaged
+			int testFold2 = allComb5[fold][1];//index 0 needs to be changed
+			if (cvFold == testFold1 || cvFold == testFold2) {
+				valPosition.add(f);
+			} else trainPosition.add(f);
+		}
+
+
+
+		//System.out.println(Arrays.deepToString(allComb));
+		//System.out.println(trainPosition);
+		//System.out.println(valPosition);
+		int fold2= positionsFFSCV.size()+positionsFFSCV2.size()+ positionsFFSCV3.size()+ positionsFFSCV4.size()+fold;
+		//int fold2= fold;
+		//System.out.println(fold2);
+		// here data gets split in cv Folds!
+		for (int k = 0; k < old.size(); k++) {
+			//int k =0;
+
+			//int[][] k2 = new int[1][2];
+			if (valPosition.contains(k)) {
+				test[fold2].add(old.get(k));
+			} else {
+				train[fold2].add(old.get(k));
+			}
+		}
+	}// end loop over folds of ffme
+
+
+
+
+
+
+
+
+
+
+
+	for (int j=0; j<num; j++) { //3
+		speciesMap.put(names[i]+"_"+j, train[j]);
+		testss.speciesMap.put(names[i]+"_"+j, test[j]);
+	}
+		}
+
+	return testss;
+	} // end doubled spatialcv method
+
+
+
+
+
+
+
+
+
 
 
 
