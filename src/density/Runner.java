@@ -329,7 +329,7 @@ public class Runner {
 		Utils.disposeProgressMonitor();
 	}
 
-	double medianDecisionParameter (double[] testGainOneModelArr){
+	double averageTestGain (double[] testGainOneModelArr){
 		double sum = 0;
 		for(double d : testGainOneModelArr) {
 			sum += d;
@@ -339,7 +339,7 @@ public class Runner {
 	}
 
 
-	double averageTestGain (double[] testGainOneModelArr){
+	double medianDecisionParameter (double[] testGainOneModelArr){
 		Arrays.sort(testGainOneModelArr);
 		double median;
 		if (testGainOneModelArr.length % 2 == 0)

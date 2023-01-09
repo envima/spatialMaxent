@@ -685,8 +685,8 @@ System.out.println(num);
 
 
 
-
-
+System.out.println(sampleSet.speciesMap.keySet());
+	System.out.println(sampleSet.speciesMap.size());
 
 }
 
