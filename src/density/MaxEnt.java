@@ -60,7 +60,7 @@ public class MaxEnt {
             params.setSelections();
             Runner runner = new Runner(params);
 
-            runner.runSpatial();
+            runner.runFfme();
 
         }
 

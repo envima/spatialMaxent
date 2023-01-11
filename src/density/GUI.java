@@ -343,7 +343,7 @@ public class GUI {
 		    public Object construct() { 
 			runner = new Runner(params); 
 			try {
-				runner.runSpatial();
+				runner.runFfme();
 
 
 			} catch (OutOfMemoryError e) {
