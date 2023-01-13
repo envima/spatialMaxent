@@ -525,6 +525,104 @@ System.out.println(testss.speciesMap.keySet());
 }
 
 
+/**
+ *
+ * METHOD TO SPLIT SAMPLES IN ALL POSSIBLE 3 FOLD COMBINATIONS
+ *
+ * **/
+	SampleSet splitFfscv3Comb() {  // returns sampleset of test data //n = number locations
+
+		String[] names = getNames();
+		//System.out.println(names);
+
+		SampleSet testss = new SampleSet();
+
+		for (int i=0; i<names.length; i++) { // ist 1
+			//int i = 0;
+			/**        NUMBER OF FOLDS FOR 2 var combinations**/
+			List<Sample> species = (List<Sample>) speciesMap.get(names[i]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
+			ArrayList<Integer> order = (ArrayList<Integer>) locations;
+
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			ArrayList<Integer> positions = new ArrayList<>();
+			for (int p = 0; p < locArr.size(); p++) {
+				positions.add(p);
+			}
+
+			ArrayList old = (ArrayList) speciesMap.get(names[i]); //org hashmap with values
+			//System.out.println(old);
+
+			/**        NUMBER OF FOLDS FOR 3 var combinations**/
+			Set<Set<Integer>> comb3 = Sets.combinations(Sets.newHashSet(locArr), 3);
+			//System.out.println(comb3);
+
+
+			// create empty array
+			Integer[][] allComb3 = new Integer[comb3.size()][3];
+
+			//add values from Set<Set<Integer>> to Array
+			for (int c = 0; c < comb3.size(); c++) {
+				//get one set
+				Set<Integer> arr = comb3.stream().collect(Collectors.toList()).get(c);
+				// get each element of set
+				allComb3[c][0] = arr.stream().collect(Collectors.toList()).get(0);
+				allComb3[c][1] = arr.stream().collect(Collectors.toList()).get(1);
+				allComb3[c][2] = arr.stream().collect(Collectors.toList()).get(2);
+			} // END combinations for FFME
+
+			int num =  allComb3.length; //Anzahl der ffme cv runs (folds)
+
+
+			ArrayList[] train = new ArrayList[num]; // arraylist mit je num elementen
+			ArrayList[] test = new ArrayList[num];
+			for (int j = 0; j < num; j++) { // darin wird je eine neue arraylist erstellt
+				train[j] = new ArrayList();
+				test[j] = new ArrayList();
+			}
+
+/** 3 Fold combination cross-validation **/
+			for (int fold = 0; fold < allComb3.length; fold++) {
+				ArrayList<Integer> valPosition = new ArrayList<>();
+				ArrayList<Integer> trainPosition = new ArrayList<>();
+
+				for (int f = 0; f < order.size(); f++) {
+					int cvFold = order.get(f);
+					int testFold1 = allComb3[fold][0];// index 0 needs to be chnaged
+					int testFold2 = allComb3[fold][1];//index 0 needs to be changed
+					int testFold3 = allComb3[fold][2];//index 0 needs to be changed
+					if (cvFold == testFold1 || cvFold == testFold2 || cvFold == testFold3) {
+						valPosition.add(f);
+					} else trainPosition.add(f);
+				}
+				// here data gets split in cv Folds!
+				for (int k = 0; k < old.size(); k++) {
+					//int k =0;
+
+					int fold2 =  fold;
+					//int[][] k2 = new int[1][2];
+					if (valPosition.contains(k)) {
+						test[fold2].add(old.get(k));
+					} else {
+						train[fold2].add(old.get(k));
+					}
+				}
+				// ende zuordnung ein fold in ffme
+			}// end loop over folds of ffme
+
+			for (int j = 0; j < num; j++) { //3
+				speciesMap.put(names[i] + "_" + j, train[j]);
+				testss.speciesMap.put(names[i] + "_" + j, test[j]);
+			}
+		}
+		return testss;
+	}
+
+
 
 
 	SampleSet splitFfscv() {  // returns sampleset of test data //n = number locations

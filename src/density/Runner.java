@@ -338,6 +338,18 @@ public class Runner {
 		return testGainAverage;
 	}
 
+	public static double calculateSD(double input_array[]) {
+		double sum = 0.0, standard_deviation = 0.0;
+		int array_length = input_array.length;
+		for(double temp : input_array) {
+			sum += temp;
+		}
+		double mean = sum/array_length;
+		for(double temp: input_array) {
+			standard_deviation += Math.pow(temp - mean, 2);
+		}
+		return Math.sqrt(standard_deviation/array_length);
+	}
 
 	public void prepFFME() {
 		Utils.applyStaticParams(params);
@@ -364,7 +376,7 @@ public class Runner {
 			return;
 		}
 
-		if (!spatialCV()) {
+		if (!spatialCV() && !ffsCV() && !cffsCV()) {
 			if (!cv() && replicates() > 1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
 				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
 				params.setValue("randomseed", true);
@@ -493,10 +505,138 @@ public class Runner {
 		speciesCount = new HashMap();
 	}
 
+	public static void main (String[] args){
+		final Params params = new Params();
+		params.setOutputdirectory("D:\\Natur40\\FFSCV\\Pyrisitia_lisa\\data\\output\\test_spatialMaxent");
+		params.setEnvironmentallayers("D:\\Natur40\\FFSCV\\SA\\layer");
+		params.setSamplesfile("D:\\Natur40\\FFSCV\\SA\\samples\\sa04_01spatialFolds_fold10.csv");
+		//params.setReplicatetype("spatial-crossvalidate");
+		params.setSelections();
+
+		Runner runner = new Runner(params);
+
+
+
+			params.setFvs(false);
+			params.setFfs(false);
+			params.setTuneRM(false);
+
+			double rm = 0;
+			rm=1;
+				params.setReplicatetype("combined-forward-fold-spatial-crossvalidate");
+				params.setBetamultiplier(rm);
+			//	System.out.println("use beta multiplier: "+rmCffscv);
+				System.out.println(params.getBetamultiplier());
+				//startFinalModel();
+			//	runSpatial(rmCffscv, variablesCffscv, featuresCffscv);
+
+
+
+	}
+
+	public void runFFME(){
+
+		if(is("fft")) {
+			ArrayList<String> variablesScv = new ArrayList<>();
+			ArrayList<String> featuresScv = new ArrayList<>();
+			ArrayList<Double> rmScv = new ArrayList<>();
+
+			ArrayList<String> variablesFfscv = new ArrayList<>();
+			ArrayList<String> featuresFfscv = new ArrayList<>();
+			ArrayList<Double> rmFfscv = new ArrayList<>();
+
+			ArrayList<String> variablesCffscv = new ArrayList<>();
+			ArrayList<String> featuresCffscv = new ArrayList<>();
+			ArrayList<Double> rmCffscv= new ArrayList<>();
+
+
+			/** START**/
+			params.setReplicatetype("spatial-crossvalidate");
+			ArrayList<Double> testGain = new ArrayList<>();
+			startFFME(testGain, variablesScv, featuresScv, rmScv);
+			System.out.println(testGain);
+			//calculate testgain Average
+			double sum = 0;
+			for (double d : testGain) {
+				sum += d;
+			}
+			Double scvTestGain = (sum / testGain.size());
+			testGain.clear();
+			System.out.println("spatial crossvalidate : " + scvTestGain);
+			/** FFSCV **/
+			params.setReplicatetype("forward-fold-spatial-crossvalidate");
+
+			startFFME(testGain, variablesFfscv, featuresFfscv, rmFfscv);
+			System.out.println("testGain: " + testGain);
+			//calculate testgain Average
+
+			sum = 0;
+			for (double d : testGain) {
+				sum += d;
+			}
+			Double ffscvTestGain = (sum / testGain.size());
+			testGain.clear();
+			System.out.println("testGain: " + testGain);
+			System.out.println("spatial crossvalidate : " + scvTestGain);
+			System.out.println("forward fold spatial crossvalidate: " + ffscvTestGain);
+			/** CFFSCV **/
+			params.setReplicatetype("combined-forward-fold-spatial-crossvalidate");
+
+			startFFME(testGain,variablesCffscv, featuresCffscv, rmCffscv);
+			//calculate testgain Average
+
+			sum = 0;
+			for (double d : testGain) {
+				sum += d;
+			}
+			Double cffscvTestGain = (sum / testGain.size());
+			System.out.println("Combined forward fold spatial crossvalidate:" + cffscvTestGain);
+			System.out.println("spatial crossvalidate : " + scvTestGain);
+			System.out.println("forward fold spatial crossvalidate: " + ffscvTestGain);
+			/** FINAL **/
+
+			params.setFvs(false);
+			params.setFfs(false);
+			params.setTuneRM(false);
+			if (scvTestGain > ffscvTestGain && scvTestGain > cffscvTestGain) {
+				params.setReplicatetype("spatial-crossvalidate");
+				//startFinalModel();
+				params.setBetamultiplier(rmScv.get(0));
+				System.out.println("use beta multiplier: "+rmScv);
+				System.out.println(params.getBetamultiplier());
+				System.out.println(variablesScv);
+				System.out.println(featuresScv);
+				runSpatial(rmScv.get(0), variablesScv, featuresScv);
+			} else if (ffscvTestGain > scvTestGain && ffscvTestGain > cffscvTestGain) {
+				params.setReplicatetype("forward-fold-spatial-crossvalidate");
+				params.setBetamultiplier(rmFfscv.get(0));
+				System.out.println("use beta multiplier: "+rmFfscv);
+				System.out.println(variablesFfscv);
+				System.out.println(featuresFfscv);
+				System.out.println(params.getBetamultiplier());
+				//startFinalModel();
+				runSpatial(rmFfscv.get(0), variablesFfscv, featuresFfscv);
+			} else if (cffscvTestGain > scvTestGain && cffscvTestGain > ffscvTestGain) {
+				params.setReplicatetype("combined-forward-fold-spatial-crossvalidate");
+				params.setBetamultiplier(rmCffscv.get(0));
+				System.out.println("use beta multiplier: "+rmCffscv);
+				System.out.println(params.getBetamultiplier());
+				System.out.println(variablesCffscv);
+				System.out.println(featuresCffscv);
+				//startFinalModel();
+				runSpatial(rmCffscv.get(0), variablesCffscv, featuresCffscv);
+			}
+		} else	{
+		ArrayList<String> vars= new ArrayList<>();
+		ArrayList<String> feat = new ArrayList<>();
+		double rm = 0;
+			runSpatial(rm, vars, feat);
+		}
+	}
 	/**
 	 * start maxent with spatial functionalities : regularization multiplier tuning, forward feature selection, forward variable selection and spatial validation
 	 */
-	public void runSpatial() {
+	public void startFFME(ArrayList<Double> testGain, ArrayList<String> fftVariables, ArrayList<String> fftFeatures, ArrayList<Double> fftRm) {
 		Utils.applyStaticParams(params);
 		if (params.layers==null)
 			params.setSelections();
@@ -521,7 +661,387 @@ public class Runner {
 			return;
 		}
 
-		if (!spatialCV()) {
+		if (!spatialCV() && !ffsCV() && !cffsCV()) {
+			if (!cv() && replicates()>1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
+				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
+				params.setValue("randomseed", true);
+			}
+		}
+
+		if (outDir()==null || outDir().trim().equals("")) {
+			popupError("An output directory is needed", null);
+			return;
+		}
+		if (is("allModels")) {
+			if (!(new File(outDir()).exists())) {
+				popupError("Output directory does not exist", null);
+				return;
+			}
+		}
+		if (!biasFile().equals("") && gridsFromFile()) {
+			popupError("Bias grid cannot be used with SWD-format background", null);
+			return;
+		}
+		if (is("perSpeciesResults") && replicates()>1) {
+			Utils.warn2("PerSpeciesResults is not supported with replicates>1, setting perSpeciesResults to false", "unsettingPerSpeciesResults");
+			params.setValue("perSpeciesResults", false);
+		}
+		if(is("allModels")) {
+			// other parameter consistency checks?
+			if (is("allModels")) {
+				try {
+					Utils.openLog(outDir(), params.getString("logFile"));
+				} catch (IOException e) {
+					popupError("Error opening log file", e);
+					return;
+				}
+			}
+		}
+		Utils.startTimer();
+		Utils.echoln(new Date().toString());
+		Utils.echoln("MaxEnt version "+Utils.version);
+		Utils.interrupt = false;
+		if (threads()>1)
+			parallelRunner = new ParallelRun(threads());
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY-1);
+		if (params.layers == null || params.layers.length==0) {
+			popupError("No environmental layers selected", null);
+			return;
+		}
+		if (params.species.length==0) {
+			popupError("No species selected", null);
+			return;
+		}
+		if (Utils.progressMonitor!=null)
+			Utils.progressMonitor.setMaximum(100);
+
+		Utils.generator = new Random(!params.isRandomseed() ? 0 : System.currentTimeMillis());
+		gs = initializeGrids();
+		if (Utils.interrupt || gs==null) return;
+
+
+
+		SampleSet2 sampleSet2 = gs.train;
+
+		if (projectionLayers().length()>0) {
+			String[] dirs = projectionLayers().trim().split(",");
+			projectPrefix = new String[dirs.length];
+			for (int i=0; i<projectPrefix.length; i++)
+				projectPrefix[i] = (new File(dirs[i].trim())).getPath();
+		}
+
+		if (!testSamplesFile().equals("")) {
+			testSampleSet = gs.test;
+		}
+
+		if (Utils.interrupt) return;
+		if (is("removeDuplicates"))
+			sampleSet2.removeDuplicates(gridsFromFile() ? null : gs.getDimension());
+
+		Feature[] baseFeatures;
+		baseFeatures = (gs==null) ? null : gs.toFeatures();
+		coords = gs.getDimension().coords;
+		if (baseFeatures==null || baseFeatures.length==0 || baseFeatures[0].n==0) {
+			popupError("No background points with data in all layers", null);
+			return;
+		}
+
+
+		/**
+		 *
+		 * create sampleset with background points for AICC
+		 *
+		 * **/
+
+		//SampleSet backgroundPoints = null;
+		ArrayList<Sample> bgpArrayList = new ArrayList<>();
+
+		for (int no=0;no<baseFeatures[0].n; no++) {
+			HashMap featureMap = new HashMap();
+			for (int i = 0; i < baseFeatures.length; i++) {
+				featureMap.put(baseFeatures[i].name, baseFeatures[i].eval(no)); // {cld6190_ann=76.0, ecoreg=10.0, pre6190_l4=54.0, pre6190_l10=41.0, dtr6190_ann=104.0, frs6190_ann=2.0, vap6190_ann=279.0, pre6190_l7=3.0, h_dem=121.0, tmx6190_ann=337.0, pre6190_l1=84.0, tmp6190_ann=266.0, tmn6190_ann=192.0, pre6190_ann=46.0};
+			}
+			Sample bgp = new Sample(no, featureMap);
+			bgpArrayList.add( no, bgp);
+		}
+
+
+		/**
+		 *
+		 * end create sampleset with background points for AICC
+		 *
+		 * **/
+
+		// note.
+		boolean addSamplesToFeatures = samplesAddedToFeatures =
+				is("addSamplesToBackground") &&
+						(sampleSet2.samplesHaveData || (gs instanceof Extractor));
+
+
+		if (addSamplesToFeatures)
+			Utils.echoln("Adding samples to background in feature space");
+
+		Feature[] features=null;
+
+		if (!addSamplesToFeatures) {
+			features = makeFeatures(baseFeatures);
+			if (Utils.interrupt) return;
+		}
+
+		sampleSet=sampleSet2;
+		speciesCount = new HashMap();
+
+		// set replicates for spatial cv
+		// get number of distinct locations
+		if(spatialCV()) {
+			String[] names = sampleSet.getNames();
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[0]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			int num = locArr.size(); //minimum ist 3
+
+			// reset replicates
+			Utils.warn2("Resetting replicates to number of distinct locations (replicates: " + num + ") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setReplicates(num);
+		}
+		if(cffsCV() || ffsCV() ){
+			String[] names = sampleSet.getNames();
+
+			int i = 0;
+			/**        NUMBER OF FOLDS FOR 2 var combinations**/
+			List<Sample> species = (List<Sample>) sampleSet.speciesMap.get(names[i]);
+			List<Integer> locations = species.stream().map(Sample::getSpatial).collect(Collectors.toList());
+			ArrayList<Integer> locationsArrList = (ArrayList<Integer>) locations;
+			ArrayList<Integer> order = (ArrayList<Integer>) locations;
+
+			//field1List.forEach(System.out::println);
+			HashSet<Integer> locHset = new HashSet<Integer>(locations);
+			// Converting HashSet to ArrayList
+			List<Integer> locArr = new ArrayList<Integer>(locHset);
+			ArrayList<Integer> positions = new ArrayList<>();
+			for (int p = 0; p < locArr.size(); p++) {
+				positions.add(p);
+			}
+
+			//combinations for ffme
+			// create guava Sets with all possible combinations of var Integer
+			Set<Set<Integer>> comb = Sets.combinations(Sets.newHashSet(locArr), 2);
+			// create empty array
+			Integer[][] allComb = new Integer[comb.size()][2];
+
+			//add values from Set<Set<Integer>> to Array
+			for (int c = 0; c < comb.size(); c++) {
+				//get one set
+				Set<Integer> arr = comb.stream().collect(Collectors.toList()).get(c);
+				// get each element of set
+				allComb[c][0] = arr.stream().collect(Collectors.toList()).get(0);
+				allComb[c][1] = arr.stream().collect(Collectors.toList()).get(1);
+			} // END combinations for FFME
+
+
+			/**        NUMBER OF FOLDS FOR 3 var combinations**/
+			Set<Set<Integer>> comb3 = Sets.combinations(Sets.newHashSet(locArr), 3);
+			System.out.println(comb3);
+
+
+			// create empty array
+			Integer[][] allComb3 = new Integer[comb3.size()][3];
+			System.out.println(comb3.size());
+			System.out.println(Arrays.deepToString(allComb3));
+			//add values from Set<Set<Integer>> to Array
+			for (int c = 0; c < comb3.size(); c++) {
+				//get one set
+				Set<Integer> arr = comb3.stream().collect(Collectors.toList()).get(c);
+				// get each element of set
+				allComb3[c][0] = arr.stream().collect(Collectors.toList()).get(0);
+				allComb3[c][1] = arr.stream().collect(Collectors.toList()).get(1);
+				allComb3[c][2] = arr.stream().collect(Collectors.toList()).get(2);
+			} // END combinations for FFME
+			System.out.println(Arrays.deepToString(allComb3));
+			if (ffsCV()){
+				int num = allComb.length ; //Anzahl der ffme cv runs (folds)
+
+				Utils.warn2("Resetting replicates to: " + num + ") because spatial cross-validation in use", "skippingHoldoutBecauseCV");
+				params.setReplicates(num);
+			} else {
+				int num = allComb.length + allComb3.length; //Anzahl der ffme cv runs (folds)
+
+				Utils.warn2("Resetting replicates to: " + num + ") because combined forward fold spatial cross-validation in use", "skippingHoldoutBecauseCV");
+				params.setReplicates(num);
+			}
+		}
+
+		if (replicates()>1 && !is("manualReplicates")) {
+
+			if (cv()) {
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitForCV(replicates());
+			} else if (spatialCV()){
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitForSpatialCV();
+			} else if (cffsCV()){
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitCombinedFfscv();
+			} else if (ffsCV()){
+				for (String s: sampleSet.getNames())
+					speciesCount.put(s, sampleSet.getSamples(s).length);
+				testSampleSet = sampleSet.splitFfscv();
+
+
+			} else
+				sampleSet.replicate(replicates(), bootstrap());
+			ArrayList<String> torun = new ArrayList();
+			for (String s: sampleSet.getNames())
+				if (s.matches(".*_[0-9]+$"))
+					torun.add(s);
+
+			params.speciesCV = torun.toArray(new String[0]);
+		}
+
+
+
+
+
+		if (testSamplesFile().equals("") && params.getint("randomTestPoints")!=0) {
+			SampleSet train=null;
+			if (!is("randomseed")) Utils.generator = new Random(11111);
+			testSampleSet =
+					sampleSet.randomSample(params.getint("randomTestPoints"));
+		}
+		if (Utils.interrupt) return;
+
+		//ArrayList<Double> testGain = new ArrayList<>();
+		ArrayList<String> bestVariables = new ArrayList<>();
+		ArrayList<String> bestFeatures = new ArrayList<>();
+		if(is("fvs")){
+			//ArrayList with all variables
+			ArrayList<String> varNamesAL = new ArrayList<>();
+			varNamesAL.addAll(List.of(params.layers));
+
+			/** pass best Variables ArrayList to function to save output **/
+			forwardVariableSelectionParallel(varNamesAL ,bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+			if (threads()>1)parallelRunner.clear();
+
+			if(is("ffs")){
+				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+
+
+				if(is("tuneRM")){
+
+					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					params.setBetamultiplier(bestBetaMultiplier);
+
+					fftRm.add(bestBetaMultiplier);
+					//final Model
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				} else {
+					// final run with best parameters
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				}
+			} else {
+				if(is("tuneRM")){
+					double bestBetaMultiplier =  tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					params.setBetamultiplier(bestBetaMultiplier);
+					fftRm.add(bestBetaMultiplier);
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				}  else {
+					//ArrayList<Double> testGain = new ArrayList<>();
+					//ArrayList<Double> testAuc = new ArrayList<>();
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				}
+			}
+		} else {
+			bestVariables.addAll(List.of(params.layers));
+			if(is("ffs")){
+				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+				if (is("tuneRM")) {
+					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					params.setBetamultiplier(bestBetaMultiplier);
+					fftRm.add(bestBetaMultiplier);
+					// final run with best parameters
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				} else {
+					// final run with best parameters
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				}
+			} else {
+
+				if (is("tuneRM")) {
+					double bestBetaMultiplier = tuneBetaMultiplier(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					params.setBetamultiplier(bestBetaMultiplier);
+					fftRm.add(bestBetaMultiplier);
+					//params.setAllModels(true);
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					//if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				} else {
+					//params.setAllModels(true);
+
+					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
+					///if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
+					//end();
+				}
+			}
+		}
+		fftVariables.addAll(bestVariables);
+		fftFeatures.addAll(bestFeatures);
+		if(threads()>1)parallelRunner.close();
+	}
+
+
+	/**
+	 * start maxent with spatial functionalities : regularization multiplier tuning, forward feature selection, forward variable selection and spatial validation
+	 */
+	public void runSpatial(double fftRm, ArrayList<String> bestVariables ,ArrayList<String> bestFeatures ) {
+		Utils.applyStaticParams(params);
+		if (params.layers==null)
+			params.setSelections();
+		if (cv() || spatialCV() || cffsCV() || ffsCV() && replicates()>1 && params.getRandomtestpoints() != 0) {
+			Utils.warn2("Resetting random test percentage to zero because cross-validation in use", "skippingHoldoutBecauseCV");
+			params.setRandomtestpoints(0);
+		}
+
+
+		if (subsample() && replicates()>1 && params.getint("randomTestPoints") <= 0 && !is("manualReplicates")) {
+			popupError("Subsampled replicates require nonzero random test percentage", null);
+			return;
+		}
+
+		if ((subsample() || bootstrap() )&& (params.isFfs() || params.isFvs() || params.isTuneRM())) {
+			popupError("Forward Feature Selection, Forward Variable Selection and beta multiplier tuning have to be evaluated with spatial crossvalidation or crossvalidation.", null);
+			return;
+		}
+
+		if (params.isJackknife() && params.isFvs() ) {
+			popupError("Using Jackknife and Forward Variable Selection is not possible. Deselect one.", null);
+			return;
+		}
+
+		if (!spatialCV() && !ffsCV() && !cffsCV()) {
 			if (!cv() && replicates()>1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
 				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
 				params.setValue("randomseed", true);
@@ -775,8 +1295,8 @@ public class Runner {
 		if (Utils.interrupt) return;
 
 		ArrayList<Double> testGain = new ArrayList<>();
-		ArrayList<String> bestVariables = new ArrayList<>();
-		ArrayList<String> bestFeatures = new ArrayList<>();
+		//ArrayList<String> bestVariables = new ArrayList<>();
+		//ArrayList<String> bestFeatures = new ArrayList<>();
 		if(is("fvs")){
 			//ArrayList with all variables
 			ArrayList<String> varNamesAL = new ArrayList<>();
@@ -824,7 +1344,7 @@ public class Runner {
 				}
 			}
 		} else {
-			bestVariables.addAll(List.of(params.layers));
+			if(!is("fft")) bestVariables.addAll(List.of(params.layers));
 			if(is("ffs")){
 				forwardFeatureSelection(bestVariables, bestFeatures, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 				if (is("tuneRM")) {
@@ -852,8 +1372,8 @@ public class Runner {
 					if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
 				} else {
-					params.setAllModels(true);
 
+					params.setAllModels(true);
 					startNew(bestVariables, bestFeatures, testGain, baseFeatures,  addSamplesToFeatures, features, bgpArrayList);
 					if(is("finalModel"))startFinalModel(bestVariables, bestFeatures, testGain);
 					end();
@@ -1855,7 +2375,7 @@ public class Runner {
 			return;
 		}
 
-		if (!spatialCV()) {
+		if (!spatialCV() && !ffsCV() && !cffsCV()) {
 			if (!cv() && replicates()>1 && !params.getboolean("randomseed") && !is("manualReplicates")) {
 				Utils.warn2("Setting randomseed to true so that replicates are not identical", "settingrandomseedtrue");
 				params.setValue("randomseed", true);
@@ -3617,6 +4137,16 @@ public class Runner {
 		} // end for-loop
 	}
 
+
+	public static long percentile(List<Long> latencies, double percentile) {
+		int index = (int) Math.ceil(percentile / 100.0 * latencies.size());
+		return latencies.get(index-1);
+	}
+
+
+
+
+
 	void forwardVariableSelectionParallel(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
 										  Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 		int num = varNames.size();
@@ -3641,7 +4171,8 @@ public class Runner {
 
 		ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
 
-		final Double[] testGain2var = new Double[allComb.length];
+		final Double[] testGain2var = new Double[allComb.length]; // mean value test gain over all folds
+		final Double[] sD2var = new Double[allComb.length];
 
 		if (threads()>1)
 			parallelRunner.clear();
@@ -3659,7 +4190,7 @@ public class Runner {
 			Runnable task = new Runnable() {
 				@Override
 				public void run() {
-					startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var, me);
+					startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var,sD2var, me);
 					System.out.println(me+" of "+ comb.size()+" Variable combinations");
 				}
 			};
@@ -3678,6 +4209,38 @@ public class Runner {
 				bestTestGain = testGain2var[i];
 			}
 		}
+
+
+
+
+
+
+			List<Long> latencies = new List<Double>() { };
+			Collections.sort(latencies);
+
+			List<Double> latencies2 = new List<Double>();
+			latencies2.addAll(testGain2var);
+
+
+			System.out.println(percentile(latencies, 25));
+			System.out.println(percentile(latencies, 50));
+			System.out.println(percentile(latencies, 75));
+			System.out.println(percentile(latencies, 100));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 		System.out.println("Best decision parameter:"+ bestTestGain);
 		// get var combination of best model
@@ -4777,7 +5340,7 @@ public class Runner {
 
 	/** make private for multithreading **/
 	void startParallel(String[] bestVariables,ArrayList<String> bestFeatures,
-					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
+					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final Double[] testGainSdArray,final int me) {
 		final double testGainOneModel[] = new double[replicates()];
 
 		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
@@ -4867,7 +5430,9 @@ public class Runner {
 
 		//params.speciesCV = null;
 		final double testGainAver = averageTestGain(testGainOneModel);
+		final double testGainSd = calculateSD(testGainOneModel);
 		testGainFinal[me] = testGainAver;
+		testGainSdArray[me] = testGainSd;
 		//System.out.println("Decision Parameter: "+testGainAver);
 	}
 
