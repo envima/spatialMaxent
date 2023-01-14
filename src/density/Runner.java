@@ -125,7 +125,7 @@ public class Runner {
 	}
 
 	boolean spatialCV() {
-		return params.getString("replicatetype").equals("spatial crossvalidate");
+		return params.getString("replicatetype").equals("spatial-crossvalidate");
 	}
 
 	boolean bootstrap() {
@@ -3046,8 +3046,9 @@ public class Runner {
 	public double tuneBetaMultiplier(ArrayList<String> bestVariables, ArrayList<String> FfsFeatures, Feature[] baseFeatures, boolean addSamplesToFeatures, Feature[] features, ArrayList<Sample> bgpArrayList) {
 		/** test beta values **/
 		ArrayList<Double> testGainOneModel = new ArrayList<>();
-		ArrayList<Double> testAucOneModel = new ArrayList<>();
+		//ArrayList<Double> testAucOneModel = new ArrayList<>();
 		ArrayList<Double> testGainTmp = new ArrayList<>();
+		ArrayList<Double> sDArrayListTmp = new ArrayList<>();
 
 		//get all beta Multipliers
 		double bStart = params.getRMMin();
@@ -3087,11 +3088,13 @@ public class Runner {
 				sum += d;
 			}
 			Double testGainAverageBeta = (sum / testGainOneModel.size());
+			double testGainSd = calculateSD(testGainOneModel);
 			System.out.println("beta multiplier: "+betaMultiplier()+". Decision parameter average is: "+ testGainAverageBeta);
 			//System.out.println("Test gain average is: "+ testGainAverageBeta);
 
 			//add average testgain of one model to testGainAverageBeta to choose best beta model
 			testGainTmp.add(testGainAverageBeta);
+			sDArrayListTmp.add(testGainSd);
 			testGainOneModel.clear();
 
 
@@ -3100,20 +3103,16 @@ public class Runner {
 		/**
 		 * get best model and return beta multiplier **/
 		//Best Model:
-		double currentTestGain=0.0000;
-		if (decideOnTestGain() | decideOnTestAuc()) {
-			 currentTestGain = Collections.max(testGainTmp);
-		} else if (decideOnAICC()){
-			 currentTestGain = Collections.min(testGainTmp);
-		}
-		//System.out.println(currentTestGain);
-		// get var combination of best model
-		int indexTemp = testGainTmp.indexOf(currentTestGain);
+
+
+		int indexTemp = indexbestModel(testGainTmp, sDArrayListTmp);
+		double currentTestGain = testGainTmp.get(indexTemp);
 
 		double bestBetaValue = b[indexTemp];
-		System.out.println(bestBetaValue);
+		System.out.println("Best regularization multiplier: "+bestBetaValue);
 
 		testGainTmp.clear();
+		sDArrayListTmp.clear();
 		//testAucTmp.clear();
 		params.setBetamultiplier(bestBetaValue);
 		return bestBetaValue;
@@ -3133,6 +3132,7 @@ public class Runner {
 		// ArrayLists for results
 		ArrayList<Double> testGainOneModel = new ArrayList<>();
 		ArrayList<Double> testGainTmp = new ArrayList<>();
+		ArrayList<Double> sdArrayTmp = new ArrayList<>();
 		double bestTestGain = 0.0;
 		double currentTestGain=0.0000;
 
@@ -3170,44 +3170,31 @@ public class Runner {
 					sum += d;
 				}
 				Double testGainAverage = (sum / testGainOneModel.size());
+				double testGainSd = calculateSD(testGainOneModel);
 				System.out.println("Forward Feature Selection: using " + tempSelectedFeatures+". Decision parameter average is: "+ testGainAverage);
 
 
 				//add average testgain of one model to testGainAverageBeta to choose best beta model
 				testGainTmp.add(testGainAverage);
+				sdArrayTmp.add(testGainSd);
 				testGainOneModel.clear();
 				tempSelectedFeatures.clear();
 
 			} // end for loop
 
-			//Best Model:
-			if (decideOnTestAuc() | decideOnTestGain()){
-				currentTestGain = Collections.max(testGainTmp);
-			} else if(decideOnAICC()){
-				 currentTestGain = Collections.min(testGainTmp);
-			}
+
 			// get var combination of best model
-			int indexTemp = testGainTmp.indexOf(currentTestGain);
+			//currentTestGain = Collections.max(testGainTmp);
+			//int indexTemp = testGainTmp.indexOf(currentTestGain);
+			int indexTemp= indexbestModel(testGainTmp, sdArrayTmp);
+			System.out.println(indexTemp);
+			currentTestGain= testGainTmp.get(indexTemp);
+System.out.println(currentTestGain);
 
 			if (i == 0){
 				 bestTestGain = currentTestGain;
 			}
-			if (decideOnAICC()) {
-					if (currentTestGain <= bestTestGain) {
-						bestTestGain = currentTestGain;
-						selectedFeatures.add(featureNames.get(indexTemp));
-						featureNames.remove(indexTemp);
-					} else {
-						/** return what ?
-						 * needs to return: ArrayList FvsVariables
-						 * **/
-						FfsFeatures.addAll(selectedFeatures);
-						System.out.println(FfsFeatures);
-						break;
-					}
-				} else if (decideOnTestAuc() | decideOnTestGain()) {
-
-					if (currentTestGain >= bestTestGain) {
+			if (currentTestGain >= bestTestGain) {
 						bestTestGain = currentTestGain;
 						selectedFeatures.add(featureNames.get(indexTemp));
 						featureNames.remove(indexTemp);
@@ -3219,13 +3206,121 @@ public class Runner {
 						System.out.println("Selected features: "+FfsFeatures);
 						break;
 					}
-				}
+
 
 
 			testGainTmp.clear();
-
+			sdArrayTmp.clear();
 			//testAucTmp.clear();
 		} // end for-loop
+	}
+
+	public static double calculateSD(double input_array[]) {
+		double sum = 0.0, standard_deviation = 0.0;
+		int array_length = input_array.length;
+		for(double temp : input_array) {
+			sum += temp;
+		}
+		double mean = sum/array_length;
+		for(double temp: input_array) {
+			standard_deviation += Math.pow(temp - mean, 2);
+		}
+		return Math.sqrt(standard_deviation/array_length);
+	}
+
+	public static double calculateSD(ArrayList<Double> input_array) {
+		double sum = 0.0, standard_deviation = 0.0;
+		int array_length = input_array.size();
+		for(double temp : input_array) {
+			sum += temp;
+		}
+		double mean = sum/array_length;
+		for(double temp: input_array) {
+			standard_deviation += Math.pow(temp - mean, 2);
+		}
+		return Math.sqrt(standard_deviation/array_length);
+	}
+
+	public static int indexbestModel (Double [] testGain2var, Double [] sD2var){
+		System.out.println(Arrays.toString(testGain2var));
+		// Derive top 5/10 % of models
+		ArrayList <Double> bestDecisionParameters = new ArrayList<>();
+		bestDecisionParameters.addAll(List.of(testGain2var));
+		Collections.sort(bestDecisionParameters);
+		double threshold = percentile(bestDecisionParameters, 75);
+
+		System.out.println("threshold: "+threshold);
+		// 2. get standard deviations
+		ArrayList<Double> bestModels = new ArrayList<>();
+		for (int i = 0; i < testGain2var.length; i++) {
+			if (testGain2var[i] >= threshold) {
+				bestModels.add(testGain2var[i]);
+			}
+		}
+		System.out.println("best models:" + bestModels);
+		//2.1 get index of these models AUC
+		ArrayList<Double> bestSd = new ArrayList<>();
+		for(int i=0;i<bestModels.size();i++){
+			int index = Arrays.asList(testGain2var).indexOf(bestModels.get(i));
+			bestSd.add(sD2var[index]);
+		}
+		//2.2 get sd values with index
+		System.out.println("best models sd: "+bestSd);
+		//2.3  choose lowest sd value
+		double minSd = bestSd.get(0);
+		for (int i = 1; i < bestSd.size(); i++) {
+			if (minSd > bestSd.get(i))
+				minSd = bestSd.get(i);
+		}
+
+		//3. select model with lowest sd
+		int index = Arrays.asList(sD2var).indexOf(minSd);
+		System.out.println("minimum sd"+minSd+" index is: "+index);
+		return index;
+	}
+
+	public static int indexbestModel (ArrayList<Double> testGain2var, ArrayList<Double> sD2var){
+		System.out.println(testGain2var);
+		// Derive top 5/10 % of models
+		ArrayList <Double> bestDecisionParameters = new ArrayList<>();
+		bestDecisionParameters.addAll(testGain2var);
+		Collections.sort(bestDecisionParameters);
+		double threshold = percentile(bestDecisionParameters, 75);
+
+		System.out.println("threshold: "+threshold);
+		// 2. get standard deviations
+		ArrayList<Double> bestModels = new ArrayList<>();
+		for (int i = 0; i < testGain2var.size(); i++) {
+			if (testGain2var.get(i) >= threshold) {
+				bestModels.add(testGain2var.get(i));
+			}
+		}
+		System.out.println("best models:" + bestModels);
+		//2.1 get index of these models AUC
+		ArrayList<Double> bestSd = new ArrayList<>();
+		for(int i=0;i<bestModels.size();i++){
+			int index = testGain2var.indexOf(bestModels.get(i));
+			System.out.println(index);
+			bestSd.add(sD2var.get(index));
+		}
+		//2.2 get sd values with index
+		System.out.println("best models sd: "+bestSd);
+		//2.3  choose lowest sd value
+		double minSd = bestSd.get(0);
+		for (int i = 1; i < bestSd.size(); i++) {
+			if (minSd > bestSd.get(i))
+				minSd = bestSd.get(i);
+		}
+
+		//3. select model with lowest sd
+		int index = sD2var.indexOf(minSd);
+		System.out.println("minimum sd"+minSd+" index is: "+index);
+		return index;
+	}
+
+	public static Double percentile(ArrayList<Double> input, double percentile) {
+		int index = (int) Math.ceil(percentile / 100.0 * input.size());
+		return input.get(index-1);
 	}
 
 	void forwardVariableSelectionParallel(ArrayList<String> varNames, ArrayList<String> FvsVariables, ArrayList<String> bestFeatures,
@@ -3250,9 +3345,10 @@ public class Runner {
 			allComb[i][1] = arr.stream().collect(Collectors.toList()).get(1);
 		}
 
-		ArrayList<Double> testGainOneModel = new ArrayList<>(); // beinhaltet nicht gemittelte test gains von mehreren folds
+		ArrayList<Double> testGainOneModel = new ArrayList<>();
 
-		final Double[] testGain2var = new Double[allComb.length];
+		final Double[] testGain2var = new Double[allComb.length]; // gemittelte werte der folds
+		final Double[] sD2var = new Double[allComb.length]; // sd werte über alle folds
 
 		if (threads()>1)
 			parallelRunner.clear();
@@ -3270,7 +3366,7 @@ public class Runner {
 			Runnable task = new Runnable() {
 				@Override
 				public void run() {
-					startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var, me);
+					startParallel(twoVarComb, bestFeatures, baseFeatures, addSamplesToFeatures, testGain2var,sD2var, me);
 					System.out.println(me+" of "+ comb.size()+" Variable combinations");
 				}
 			};
@@ -3282,19 +3378,22 @@ public class Runner {
 		if(threads()>1){parallelRunner.runall("fvs", is("verbose"));}
 		if (threads()>1)parallelRunner.clear();
 
-		//derive best testgain/auc:
+		/*
+		//derive best MAX testgain/auc:
 		double bestTestGain  = 0;
 		for (int i = 0; i < testGain2var.length; i++) {
 			if (testGain2var[i] > bestTestGain) {
 				bestTestGain = testGain2var[i];
 			}
 		}
+		 */
 
-		System.out.println("Best decision parameter:"+ bestTestGain);
+		int index = indexbestModel(testGain2var, sD2var);
+		double bestTestGain = testGain2var[index];
+		System.out.println("best test gain: "+bestTestGain);
+		//System.out.println("Best decision parameter:"+ bestTestGain);
 		// get var combination of best model
-
-		/** Why index -1 ????? **/
-		int index = Arrays.asList(testGain2var).indexOf(bestTestGain);
+		//int index = Arrays.asList(testGain2var).indexOf(bestTestGain);
 
 		//get position of two best variables:
 		int var2 = allComb[index][0];
@@ -3317,7 +3416,9 @@ public class Runner {
 
 		/** create temporary array that is somewhat to large for test gain?**/
 		Double[] testGainTmpArray = new Double[varNames.size()];
+		Double[] sdTmpArray = new Double[varNames.size()];
 		Arrays.fill(testGainTmpArray, 0.0);
+		Arrays.fill(sdTmpArray, 0.0);
 
 		ArrayList<String> tempSelectedVars = new ArrayList<>();
 		int noPredictors = varNames.size();
@@ -3339,7 +3440,7 @@ public class Runner {
 					@Override
 					public void run() {
 						System.out.println("Forward Variable Selection: using " + Arrays.toString(tempSelectedVarsArray));
-						startParallel2(tempSelectedVarsArray, bestFeatures, baseFeatures, addSamplesToFeatures, testGainTmpArray, me);
+						startParallel2(tempSelectedVarsArray, bestFeatures, baseFeatures, addSamplesToFeatures, testGainTmpArray,sdTmpArray ,me);
 					}
 				};
 				if (threads()<=1) task.run();
@@ -3357,6 +3458,7 @@ public class Runner {
 
 			/** determine test gain for one run over all variables **/
 			//Best Model:
+			/*
 			double currentTestGain = 0;
 			if(decideOnTestGain() | decideOnTestAuc()) {
 
@@ -3368,23 +3470,14 @@ public class Runner {
 			} else if (decideOnAICC()){
 				//currentTestGain = Collections.min(testGainTmp);
 			}
-			int indexTemp = Arrays.asList(testGainTmpArray).indexOf(currentTestGain);
+
+			 */
+
+			int indexTemp = indexbestModel(testGainTmpArray, sdTmpArray);
+			double currentTestGain =testGainTmpArray[indexTemp];
 			System.out.println("Decision parameter: "+currentTestGain);
 			/** end determine test gain for one run over all variables **/
 
-			if(decideOnAICC()){
-					/*
-					if(currentTestGain < bestTestGain) {
-						bestTestGain = currentTestGain;
-						selectedVars.add(varNames.get(indexTemp));
-						varNames.remove(indexTemp);
-					} else {
-						FvsVariables.addAll(selectedVars);
-						System.out.println(FvsVariables);
-						break;
-					}
-					*/
-			} else if (decideOnTestGain() | decideOnTestAuc()) {
 				if(currentTestGain > bestTestGain) {
 					bestTestGain = currentTestGain;
 					selectedVars.add(varNames.get(indexTemp));
@@ -3394,8 +3487,10 @@ public class Runner {
 					System.out.println(FvsVariables);
 					break;
 				}
-			}
+
 			Arrays.fill(testGainTmpArray, 0.0);
+			Arrays.fill(sdTmpArray, 0.0);
+
 		} // end for-loop
 	}
 
@@ -4388,7 +4483,7 @@ public class Runner {
 
 	/** make private for multithreading **/
 	void startParallel(String[] bestVariables,ArrayList<String> bestFeatures,
-					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
+					   final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final Double[] sD2var,final int me) {
 		final double testGainOneModel[] = new double[replicates()];
 
 		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
@@ -4478,13 +4573,15 @@ public class Runner {
 
 		//params.speciesCV = null;
 		final double testGainAver = averageTestGain(testGainOneModel);
+		final double decisionParameterSd = calculateSD(testGainOneModel);
 		testGainFinal[me] = testGainAver;
+		sD2var[me]=decisionParameterSd;
 		//System.out.println("Decision Parameter: "+testGainAver);
 	}
 
 	/** make private for multithreading **/
 	void startParallel2(String[] bestVariables,ArrayList<String> bestFeatures,
-						final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final int me) {
+						final Feature[] baseFeatures, boolean addSamplesToFeatures, final Double[] testGainFinal,final Double[] sD2var,final int me) {
 		final double testGainOneModel[] = new double[replicates()];
 
 		/** set theSpecies to final String to create local variables for each thread -> theSpeciesPar **/
@@ -4573,6 +4670,9 @@ public class Runner {
 		//params.speciesCV = null;
 		final double testGainAver = averageTestGain(testGainOneModel);
 		testGainFinal[me] = testGainAver;
+		final double decisionParameterSd = calculateSD(testGainOneModel);
+		sD2var[me]=decisionParameterSd;
+
 		//System.out.println("Decision Parameter: "+testGainAver);
 	}
 
