@@ -21,18 +21,9 @@ You don't need any extra data for this workflow and the processing time as well 
 The chapter is especially well suited to subsequently apply the workflow to your own data.
 
 ## Tutorial
-If you want to reproduce the entire workflow of the spatialMaxent paper, you can do the comprehensive tutorial on a sample dataset covering 20 species. This is much more time-consuming than the [short standalone workflow](../050_standalone_workflow) and requires a significant amount of computing time and storage space. You can do this in one of two possible ways: 
+If you want to reproduce the entire workflow of the spatialMaxent paper, you can do the comprehensive tutorial on a sample dataset covering 20 species. This is much more time-consuming than the [short standalone workflow](../050_standalone_workflow) and requires a significant amount of computing time and storage space.
 
-**Either** start with
-
-1.	[getting spatialMaxent to run]( ../020_spatialMaxent) on your PC
-1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software and the page explaining the [data structure]( ../040_data_structure).
-1.	Then download the preprocessed tutorial data [here](https://hessenbox.uni-marburg.de/getlink/fiUeey1V4M5w8hCQFN845dKX/) 
-1.	and follow the [tutorial](../100_tutorial) chapter,
-
-to just do the modeling with spatialMaxent but skip the data preprocessing.
-
-**OR** start with
+To do this start with
 
 1.	[getting spatialMaxent to run]( ../020_spatialMaxent) on your PC
 1.	and read the [short introduction](../030_spatialMaxent_short_introduction) to the software and the page explaining the [data structure]( ../040_data_structure).

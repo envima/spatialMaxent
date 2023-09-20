@@ -33,3 +33,6 @@ We repeat the same plots again this time with the number of parameters instead o
 
 ![]({{ site.baseurl }}/assets/images/results3.png)
 *Figure: Results of region Ontario, Canada modeled with the methods spatial (yellow) and standard (purple). AUC (point) and Boyce-Index (triangle) on the y-axis and the Number of parameters on the x-axis. For each Species the median value is given.*
+
+
+It is also feasible to conduct an assessment of the influence of fine-tuning on response, as spatialMaxent produces response curve outcomes identical to Maxent. However, in this specific dataset, anonymization constraints prevent us from conducting this assessment here. Nonetheless, we encourage you to explore this aspect with your own non-anonymized data.

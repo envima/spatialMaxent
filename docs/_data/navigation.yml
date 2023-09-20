@@ -31,7 +31,7 @@ docs:
         url: /docs/090_bg/
                      
   - title: Tutorial
-    url: /docs/100_tutorial
+    url: /docs/110_train_maxent/
     children:
       - title: "Train spatialMaxent"
         url: /docs/110_train_maxent/ 

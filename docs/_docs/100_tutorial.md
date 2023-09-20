@@ -1,5 +1,6 @@
 ---
 title: Tutorial
+published: false
 header:
   image: "/assets/images/title_image.jpg"
   caption: "Data: [OpenStreetMap](https://www.openstreetmap.org/copyright) & [Elith et al. 2020](https://doi.org/10.17161/bi.v15i2.13384)"
