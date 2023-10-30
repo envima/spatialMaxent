@@ -1,5 +1,7 @@
 # main links
 main:
+  - title: "Publication"
+    url: https://doi.org/10.1002/ece3.10635
   - title: "How to navigate this tutorial"
     url: /docs/010_how_to_navigate_this_tutorial
   - title: "Source"

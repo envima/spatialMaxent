@@ -21,7 +21,7 @@ You don't need any extra data for this workflow and the processing time as well 
 The chapter is especially well suited to subsequently apply the workflow to your own data.
 
 ## Tutorial
-If you want to reproduce the entire workflow of the spatialMaxent paper, you can do the comprehensive tutorial on a sample dataset covering 20 species. This is much more time-consuming than the [short standalone workflow](../050_standalone_workflow) and requires a significant amount of computing time and storage space.
+If you want to reproduce the entire workflow of the [spatialMaxent publication](https://doi.org/10.1002/ece3.10635), you can do the comprehensive tutorial on a sample dataset covering 20 species. This is much more time-consuming than the [short standalone workflow](../050_standalone_workflow) and requires a significant amount of computing time and storage space.
 
 To do this start with
 
